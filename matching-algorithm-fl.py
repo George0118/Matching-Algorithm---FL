@@ -5,7 +5,7 @@
 from Classes.User import User
 from Classes.Server import Server
 from Classes.CriticalPoint import CP
-from helping_functions import approximate_fedlearner_matching
+from approximate_matching import approximate_fedlearner_matching
 
 # General Parameters
 
@@ -38,7 +38,7 @@ for i in range(N):
     y = math.sin(phi) * math.sin(theta)
     z = math.cos(phi)
     
-    user = User(x,y,z)
+    user = User(x,y,z,i)
     
     users.append(user)
     
@@ -94,7 +94,7 @@ for i in range(N):
 
 # Assumptions: No noise, channel gain is inversely proportional with the distance between user and server, transmit power is the same for all users and their servers thus is neglected, bandwidth 50Mbps
 
-B = 50 * 10^6 # 50 Mbps
+B = 50 * 10**6 # 50 Mbps
 
 # Finding Max Data Rate
 max_dr = 0
@@ -211,4 +211,10 @@ unmatched_users = users
     
 approximate_fedlearner_matching(unmatched_users, servers)
 
+for s in servers:
+    coalition = s.get_coalition()
+
+    print("I am server ", s.num, " and my coalition after the approximate fedlearner matching consists of:")
+    for u in coalition:
+        print("I am member of the coalition and my name is: ", u.num)
 # =================================================================================== #

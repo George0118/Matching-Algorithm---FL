@@ -5,7 +5,7 @@ class Server:
         self._y = y
         self._z = z
         self._p = p
-        self._num= num
+        self._num = num
         self.coalition = []
         self.invitations = []
 
@@ -40,3 +40,7 @@ class Server:
     
     def get_invitations_list(self):
         return self.invitations
+    
+    def clear_invitations_list(self):
+        self.invitations = []
+        return 0

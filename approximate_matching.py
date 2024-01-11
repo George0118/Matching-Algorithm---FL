@@ -1,44 +1,13 @@
-# Parameters
-
-alpha = 1
-beta = 1
-gamma = 1
-delta = 1
-epsilon = 1
-
-# User’s Utility function
-
-def user_utility(user, server):
-    index = server.num
-    
-    datarate_list = user.get_datarate()
-    payment_list = user.get_payment()
-    dataquality_list = user.get_dataquality()
-    E_local = user.get_Elocal()
-    
-    utility = alpha * datarate_list[index] + beta * payment_list[index] - gamma * (E_local + 1/datarate_list[index]) + delta * dataquality_list[index]
-
-    return utility
-
-#Server's Utility function
-
-def server_utility(server, users_list):
-    utility = 0
-    
-    for i in range(len(users_list)):
-        user = users_list[i]
-        utility += user_utility(user,server) - epsilon * server.p^2
-        
-    return utility  
+from utility_functions import user_utility, server_utility
 
 #Approximate Matching Function
 
 def approximate_fedlearner_matching(unmatched_users, servers):
     
-    server_availability = [True] * len(unmatched_users) # Initialize users' server availability
-    flag = True # flag that shows at least one user has available servers
+    server_availability = [True] * len(unmatched_users)         # Initialize users' server availability
+    flag = True      # flag that shows at least one user has available servers
     
-    while(unmatched_users and flag):
+    while(flag):
 
         for u in unmatched_users:       # Users sending invitations
             available_servers = u.get_available_servers()
@@ -68,9 +37,29 @@ def approximate_fedlearner_matching(unmatched_users, servers):
                         favorite_User = u
 
                 server.add_to_coalition(favorite_User)      # server adds favorite User to its Coalition 
+                # print("Favorite User = ", favorite_User.num)
                 favorite_User.set_available_servers([])     # favorite User deletes all its available servers since he is matched
-
+                num_list = [obj.num for obj in invitations]
+                # print("Invitations for server ", server.num," are ", num_list)
                 for u in invitations:           # The rest of the users need to remove this server from their available servers
                     if(u != favorite_User):
+                        # print("Removing server ", server.num," from user", u.num)
                         available_servers = u.get_available_servers()
+                        num_list = [obj.num for obj in available_servers]
+                        # print("User ", u.num, "available servers are: ", num_list)
                         available_servers.remove(server)
+                        u.set_available_servers(available_servers)          # Update user's new available servers
+
+                server.clear_invitations_list()
+
+        for u in unmatched_users:                   # if a user has not more available servers set its flag to False
+            if(not u.get_available_servers()):
+                server_availability[u.num] = False
+
+        # print(server_availability)
+        
+        flag = False                                # if there are no available servers for any user set the global flag to False
+        for f in server_availability:
+            if(f):
+                flag = True 
+                break

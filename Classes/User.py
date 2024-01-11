@@ -1,9 +1,10 @@
 # User Class
 class User:
-    def __init__(self, x, y, z):
+    def __init__(self, x, y, z, num):
         self._x = x
         self._y = y
         self._z = z
+        self._num = num
         self.E_local = 1        # Energy Consumption to train model locally: We assume its the same for all users
         self.importance = []
         self.datarate = []
@@ -26,8 +27,8 @@ class User:
     def set_Elocal(self, value):    # Set user's E_local
         self.E_local = value   
         
-    def set_available_servers(self, value):  # Available server list for this user
-        self.available_servers = value  
+    def set_available_servers(self, list):  # Available server list for this user
+        self.available_servers = list[:] 
         
     @property
     def x(self):
@@ -40,6 +41,10 @@ class User:
     @property
     def z(self):
         return self._z
+    
+    @property
+    def num(self):
+        return self._num
     
     def get_importance(self):
         return self.importance
