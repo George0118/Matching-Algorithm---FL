@@ -6,6 +6,7 @@ class User:
         self._z = z
         self._num = num
         self.E_local = 1        # Energy Consumption to train model locally: We assume its the same for all users
+        self.belongs_to = None
         self.importance = []
         self.datarate = []
         self.payment = []
@@ -29,6 +30,9 @@ class User:
         
     def set_available_servers(self, list):  # Available server list for this user
         self.available_servers = list[:] 
+
+    def change_server(self, server):
+        self.belongs_to = server
         
     @property
     def x(self):
@@ -63,3 +67,6 @@ class User:
     
     def get_available_servers(self):
         return self.available_servers
+    
+    def get_alligiance(self):
+        return self.belongs_to
