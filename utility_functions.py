@@ -22,12 +22,33 @@ def user_utility(user, server):
 
 #Server's Utility function
 
-def server_utility(server, users_list):
+def server_utility(server, coalition):
     utility = 0
     
-    for i in range(len(users_list)):
-        user = users_list[i]
-        utility += user_utility(user,server) - epsilon * server.p**2
+    for u in coalition:
+        utility += user_utility(u,server) 
+
+    utility -= epsilon * server.p**2
         
     return utility  
 
+
+#Server's Utility function with externality
+
+def server_utility_externality(servers, coalition, server):
+    utility = 0
+    
+    for u in coalition:
+        utility += user_utility(u,server) 
+
+    utility -= epsilon * server.p**2
+
+    added_payment_of_rest = 0
+
+    for s in servers:
+        if(s != server):
+            added_payment_of_rest += s.p
+
+    utility = utility/added_payment_of_rest
+        
+    return utility  

@@ -6,6 +6,7 @@ from Classes.User import User
 from Classes.Server import Server
 from Classes.CriticalPoint import CP
 from approximate_matching import approximate_fedlearner_matching
+from accurate_matching import accurate_fedlearner_matching
 
 # General Parameters
 
@@ -23,7 +24,7 @@ import math
 servers = []
 
 for i in range(S):
-    p = random.randint(1,10)
+    p = random.randint(3,10)
     server = Server(0,0,0,p,i)
     servers.append(server)
     
@@ -207,14 +208,27 @@ for i in range(N):
     u = users[i]
     u.set_available_servers(servers)
     
-unmatched_users = users
-    
-approximate_fedlearner_matching(unmatched_users, servers)
+approximate_fedlearner_matching(users, servers)
 
-for s in servers:
-    coalition = s.get_coalition()
+print("Approximate FedLearner Matching:\n")
 
-    print("I am server ", s.num, " and my coalition after the approximate fedlearner matching consists of:")
-    for u in coalition:
-        print("I am member of the coalition and my name is: ", u.num)
+for u in users:
+    allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+    print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+print()
 # =================================================================================== #
+
+
+# ============================== Accurate Matching ============================== #
+    
+accurate_fedlearner_matching(users, servers)
+
+print("Accurate FedLearner Matching:\n")
+
+for u in users:
+    allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+    print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+print()
+# =============================================================================== #
