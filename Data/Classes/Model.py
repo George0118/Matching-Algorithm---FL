@@ -9,50 +9,51 @@ from keras.layers import Conv2D
 from keras.layers import Dropout
 from keras.layers import Activation
 from keras.layers import Rescaling
+from keras.layers import RandomFlip
+from keras.layers import RandomRotation
+
 
 class Model:
   
   def __init__(self):
     pass
-
-  # def global_models(self):
-  #   model= Sequential([
-  #         Flatten(input_shape=(224, 224, 3)),
-  #         Dense(128, activation='relu'),
-  #         Dropout(0.2),
-  #         Dense(10, activation='softmax')
-  #     ])
-  #   return model
   
   def global_model(self):
 
-    model = Sequential()
+    # Input layer
+    input = keras.Input(shape=(224,224,3))
 
-    model.add(Rescaling(1./255, input_shape=(224, 224, 3)))
+    # Data augmentation
+    x = RandomFlip("horizontal")(input)
+    x = RandomRotation(0.1)(x)
 
-    model.add(Conv2D(32, (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    x = Rescaling(1./255)(x)
 
-    model.add(Conv2D(32, (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    x = Conv2D(32, (3, 3))(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    model.add(Conv2D(64, (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    x = Conv2D(32, (3, 3))(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    model.add(Flatten())
-    model.add(Dense(64))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(1))
-    model.add(Activation('sigmoid'))
+    x = Conv2D(64, (3, 3))(x)
+    x = Activation('relu')(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Flatten()(x)
+    x = Dense(64)(x)
+    x = Activation('relu')(x)
+    x = Dropout(0.5)(x)
+    x = Dense(1)(x)
+    output = Activation('sigmoid')(x)
+
+    model = tf.keras.Model(inputs=input, outputs=output)
 
     return model
 
   def evaluate_model(self,model,test_X, test_y):
-    model.compile(optimizer='sgd',
+    model.compile(optimizer='adam',
                   loss='binary_crossentropy', 
                   metrics=['accuracy'])
     score=model.evaluate(test_X, test_y)
