@@ -7,6 +7,7 @@ from Classes.Server import Server
 from Classes.CriticalPoint import CP
 from approximate_matching import approximate_fedlearner_matching
 from accurate_matching import accurate_fedlearner_matching
+from Data.federated_learning import Servers_FL
 
 # General Parameters
 
@@ -24,7 +25,7 @@ import math
 servers = []
 
 for i in range(S):
-    p = random.randint(3,10)
+    p = random.randint(10,20)
     server = Server(0,0,0,p,i)
     servers.append(server)
     
@@ -45,15 +46,26 @@ for i in range(N):
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
+disasters = ["fire", "flood", "earthquake"]
 
 for i in range(K):
     x = random.uniform(-1,1)
     y = random.uniform(-1,1)
     y = random.uniform(-1,1)
+    disaster = disasters[i%3]
     
-    cp = CP(x,y,z)
+    cp = CP(x,y,z,i,disaster)
     
     critical_points.append(cp)
+
+# Associate Critical Points with their Servers
+for cp in critical_points:
+    if(cp.get_disaster() == "fire"):
+        servers[0].add_critical_point(cp)       # All fire CPs with Server 1
+    elif(cp.get_disaster() == "flood"):
+        servers[1].add_critical_point(cp)       # All flood CPs with Server 2
+    else:
+        servers[2].add_critical_point(cp)       # All earthquake CPs with Server 3
 
 # ========================================================================================== #  
     
@@ -100,14 +112,14 @@ B = 50 * 10**6 # 50 Mbps
 # Finding Max Data Rate
 max_dr = 0
 for i in range(N):
-    for j in range(K):
+    for j in range(S):
         user = users[i]
         user_x, user_y, user_z = user.x, user.y, user.z
 
-        cp = critical_points[j]
-        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
 
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 1/distance
         
@@ -122,10 +134,10 @@ for i in range(N):
         user = users[i]
         user_x, user_y, user_z = user.x, user.y, user.z
 
-        cp = critical_points[j]
-        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
 
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 1/distance
         
@@ -232,3 +244,9 @@ for u in users:
 
 print()
 # =============================================================================== #
+
+rounds=100 # number of global rounds
+lr=0.001 # learning rate
+epoch=1 # local iterations
+
+server_losses, server_accuracy = Servers_FL(users, servers, rounds, lr, epoch)

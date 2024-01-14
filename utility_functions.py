@@ -10,13 +10,23 @@ epsilon = 1
 
 def user_utility(user, server):
     index = server.num
+
+    critical_points = server.get_critical_points()
     
     datarate_list = user.get_datarate()
     payment_list = user.get_payment()
     dataquality_list = user.get_dataquality()
+
+    # Calculate average dataquality of user depending on the Critical Points that concern this server
+    avg_dataquality = 0
+    for cp in critical_points:
+        avg_dataquality += dataquality_list[cp.num]
+
+    avg_dataquality = avg_dataquality/len(critical_points)
+
     E_local = user.get_Elocal()
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index] - gamma * (E_local + 1/datarate_list[index]) + delta * dataquality_list[index]
+    utility = alpha * datarate_list[index] + beta * payment_list[index] - gamma * (E_local + 1/datarate_list[index]) + delta * avg_dataquality
 
     return utility
 
