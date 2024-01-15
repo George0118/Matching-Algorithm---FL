@@ -1,6 +1,7 @@
 import tensorflow as tf
 from Data.Classes.Model import Model
 from keras.optimizers.legacy import SGD
+import keras
 
 class Client:
   
@@ -42,9 +43,9 @@ class Client:
     model=Model().global_model()
 
     model.compile(optimizer=self.optimizer,
-                loss='binary_crossentropy',
-                metrics=['accuracy'])
-    
+                  loss=keras.losses.BinaryCrossentropy(),
+                  metrics=[keras.metrics.BinaryAccuracy(name="acc")]
+    )
     model.set_weights(global_weights)
     model.fit(X,y,epochs=self.epoch)
     weights=model.get_weights()
