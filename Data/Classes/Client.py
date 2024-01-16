@@ -40,21 +40,20 @@ class Client:
     return weight_final
 
   def training(self, X, y, global_weights):
+      model = Model().global_model()
+      model.compile(optimizer="rmsprop",
+                    loss=self.loss,
+                    metrics=self.metrics
+                    )
+      model.set_weights(global_weights)
+      
       n_splits = 3
-
       kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
       cv_weights = []
 
       print("CrossValidation")
 
       for train_index, val_index in kf.split(X):
-
-          model = Model().global_model()
-          model.compile(optimizer="rmsprop",
-                        loss=self.loss,
-                        metrics=self.metrics
-                        )
-          model.set_weights(global_weights)
           model.fit(X[train_index], y[train_index], epochs=self.epoch)
 
           val_loss = model.evaluate(X[val_index], y[val_index])[0]
