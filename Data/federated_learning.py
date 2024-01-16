@@ -12,9 +12,8 @@ tf.test.gpu_device_name()
 from Data.Classes.Client import Client
 from Data.Classes.Data import Get_data
 from Data.Classes.Model import Model
-from keras.layers import RandomFlip
-from keras.layers import RandomRotation
 from tensorflow import data as tf_data
+from collections import deque
 
 
 def Servers_FL(users, servers, K, lr, epoch):
@@ -47,8 +46,9 @@ def Servers_FL(users, servers, K, lr, epoch):
       y_test_server = np.concatenate((y_test_server, y_test[u.num]))
 
     y_test_server = server.specify_disaster(y_test_server)    # set labels for specific disaster
+
     for u in server.get_coalition():
-       y_train[u.num] = server.specify_disaster(y_train[u.num])
+      y_train[u.num] = server.specify_disaster(y_train[u.num])
 
     with strategy.scope():
       global_model=Model().global_model()
@@ -57,6 +57,8 @@ def Servers_FL(users, servers, K, lr, epoch):
       losses=[]
 
       factors = server.factors_calculation(X_train[0].nbytes, len(users))   # Calculate factors to multiply the weigths
+
+      accuracy_history = deque(maxlen=3)
 
       for k in range(K):
         print(k)
@@ -75,6 +77,11 @@ def Servers_FL(users, servers, K, lr, epoch):
         loss,acc=Model().evaluate_model(global_model,X_test_server,y_test_server)
         losses.append(loss)
         accuracy.append(acc)
+
+        accuracy_history.append(acc)
+        if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k >= 10:
+          print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
+          break
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)

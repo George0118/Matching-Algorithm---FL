@@ -2,14 +2,15 @@ import tensorflow as tf
 from Data.Classes.Model import Model
 from keras.optimizers.legacy import SGD
 import keras
+from sklearn.model_selection import KFold
 
 class Client:
   
   def __init__(self,lr,epoch):
     self.epoch=epoch
     self.lr = lr
-    self.loss='binary_crossentropy'
-    self.metrics = ['accuracy']
+    self.loss=keras.losses.BinaryCrossentropy(),
+    self.metrics=[keras.metrics.BinaryAccuracy(name="acc")]
     self.optimizer = SGD(learning_rate=self.lr, 
                 decay=self.lr / 2, 
                 momentum=0.9
@@ -38,16 +39,29 @@ class Client:
       
     return weight_final
 
-  def training(self,X,y,global_weights):
+  def training(self, X, y, global_weights):
+      n_splits = 3
 
-    model=Model().global_model()
+      kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+      cv_weights = []
 
-    model.compile(optimizer=self.optimizer,
-                  loss=keras.losses.BinaryCrossentropy(),
-                  metrics=[keras.metrics.BinaryAccuracy(name="acc")]
-    )
-    model.set_weights(global_weights)
-    model.fit(X,y,epochs=self.epoch)
-    weights=model.get_weights()
+      print("CrossValidation")
 
-    return weights
+      for train_index, val_index in kf.split(X):
+
+          model = Model().global_model()
+          model.compile(optimizer="rmsprop",
+                        loss=self.loss,
+                        metrics=self.metrics
+                        )
+          model.set_weights(global_weights)
+          model.fit(X[train_index], y[train_index], epochs=self.epoch)
+
+          val_loss = model.evaluate(X[val_index], y[val_index])[0]
+          print(f'Validation Loss: {val_loss}')
+
+          cv_weights.append(model.get_weights())
+
+      avg_weights = [sum(weight[i] for weight in cv_weights) / n_splits for i in range(len(cv_weights[0]))]
+
+      return avg_weights

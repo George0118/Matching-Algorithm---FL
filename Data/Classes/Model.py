@@ -14,6 +14,8 @@ from keras.layers import RandomRotation
 from keras.layers import BatchNormalization
 from keras.layers import SeparableConv2D
 from keras.layers import GlobalAveragePooling2D
+from keras.regularizers import L2
+from keras.applications import VGG16
 
 class Model:
 
@@ -46,6 +48,8 @@ class Model:
 
   def global_model(self):
 
+    regularization_strength = 0.01
+
     inputs = keras.Input(shape=(224,224,3))
 
     # Data Augmentation
@@ -53,20 +57,20 @@ class Model:
 
     x = Rescaling(1./255)(x)
 
-    x = Conv2D(32, (3, 3))(x)
+    x = Conv2D(32, (3, 3), kernel_regularizer=L2(regularization_strength))(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    x = Conv2D(32, (3, 3))(x)
+    x = Conv2D(32, (3, 3), kernel_regularizer=L2(regularization_strength))(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
 
-    x = Conv2D(64, (3, 3))(x)
+    x = Conv2D(64, (3, 3), kernel_regularizer=L2(regularization_strength))(x)
     x = Activation('relu')(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
 
     x = Flatten()(x)
-    x = Dense(64)(x)
+    x = Dense(64, kernel_regularizer=L2(regularization_strength))(x)
     x = Activation('relu')(x)
     x = Dropout(0.5)(x)
     x = Dense(1)(x)
@@ -74,10 +78,29 @@ class Model:
 
     model = tf.keras.Model(inputs=inputs, outputs=output)
 
+    # ================ VGG16 Version ================= #
+
+    # baseModel = VGG16(weights="imagenet", include_top=False,
+	  #                   input_tensor=x)
+    
+    # x = baseModel.output
+
+    # x = Flatten()(x)
+    # x = Dense(512, kernel_regularizer=L2(regularization_strength))(x)
+    # x = Activation('relu')(x)
+    # x = Dropout(0.5)(x)
+
+    # x = Dense(1, kernel_regularizer=L2(regularization_strength))(x)
+    # output = Activation('sigmoid')(x)
+
+    # model = keras.models.Model(inputs=inputs, outputs=output)
+
+    # ================================================= #
+
     return model
 
   def evaluate_model(self,model,test_X, test_y):
-    model.compile(optimizer='sgd',
+    model.compile(optimizer='rmsprop',
                   loss=keras.losses.BinaryCrossentropy(),
                   metrics=[keras.metrics.BinaryAccuracy(name="acc")]
     )

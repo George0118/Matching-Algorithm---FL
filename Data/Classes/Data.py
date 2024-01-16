@@ -65,34 +65,12 @@ class Get_data:
         if c_data.size > 0:
             s_data.append(c_data)
     return s_data
-  
-  def one_hot_encode(self, X_train, y_train):
-    label_encoder = LabelEncoder()
-    onehot_encoder = OneHotEncoder(sparse_output=False, categories='auto')
-
-    # Encode labels to numerical values
-    y_train_encoded = label_encoder.fit_transform(y_train)
-
-    # Convert numerical labels to one-hot encoded matrices
-    y_train_onehot = onehot_encoder.fit_transform(y_train_encoded.reshape(-1, 1))
-
-    return X_train, y_train_onehot
 
   def pre_data(self):
 
     (X_train_fire, X_test_fire, y_train_fire, y_test_fire) ,\
     (X_train_flood, X_test_flood, y_train_flood, y_test_flood),\
     (X_train_earthquake, X_test_earthquake, y_train_earthquake, y_test_earthquake) = self.load_data()
-
-    # # One Hot Encode Labels
-    # X_train_fire, y_train_fire = self.one_hot_encode(X_train_fire, y_train_fire)
-    # X_test_fire, y_test_fire = self.one_hot_encode(X_test_fire, y_test_fire)
-
-    # X_train_flood, y_train_flood = self.one_hot_encode(X_train_flood, y_train_flood)
-    # X_test_flood, y_test_flood = self.one_hot_encode(X_test_flood, y_test_flood)
-
-    # X_train_earthquake, y_train_earthquake = self.one_hot_encode(X_train_earthquake, y_train_earthquake)
-    # X_test_earthquake, y_test_earthquake = self.one_hot_encode(X_test_earthquake, y_test_earthquake)
 
     # Split fire data to each user
     X_train_fire=self.split_data(X_train_fire) 
