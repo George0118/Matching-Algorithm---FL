@@ -51,7 +51,7 @@ class Model:
     x = Rescaling(1./255)(x)
 
     # Convolutional layers
-    x = Conv2D(16, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(input)
+    x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(input)
     x = MaxPooling2D(2, 2)(x)
 
     x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
@@ -63,7 +63,7 @@ class Model:
     x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
     x = MaxPooling2D(2, 2)(x)
 
-    x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    x = Conv2D(128, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
     x = MaxPooling2D(2, 2)(x)
 
     # Flatten the results to feed into a DNN
