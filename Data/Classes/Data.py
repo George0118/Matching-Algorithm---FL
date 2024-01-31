@@ -2,12 +2,14 @@ from Data.load_images import load_images
 from Data.load_images import earthquake_input_paths, fire_input_paths, flood_input_paths
 from sklearn.utils import shuffle
 import numpy as np
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import math
 
 # to get the training data, and split the data via the number of clients
 class Get_data:
-  def __init__(self,n):
-    self.n=n # number of clients
+  def __init__(self, users, servers):
+    self.users = users    # clients
+    self.servers = servers    # servers
+    self.n = len(users)   # num of clients
 
   def load_data(self):
 
@@ -33,37 +35,43 @@ class Get_data:
            (X_train_flood, X_test_flood, y_train_flood, y_test_flood),\
            (X_train_earthquake, X_test_earthquake, y_train_earthquake, y_test_earthquake)
 
-  # def flatten_data(self,X):
-  #   data=[]
-  #   for i in X:
-  #     da=i.flatten()
-  #     data.append(da)
-  #   return data
 
-  # def one_d_to_n_d(self,X):
-  #   data=[]
-  #   for i in X:
-  #     da=i.reshape(224,224)
-  #     data.append(da)
-  #   return data
+  def split_data(self, data, server): 
+    users = self.users
+    critical_points = server.get_critical_points()
+    user_min_distances = [-1]*len(users)
 
-  # def non_iid(self,X,y):
-  #   train_X=self.flatten_data(X)
-  #   train_y=list(y)
-  #   train_data=np.c_[train_X,train_y]
-  #   sort_data=train_data[np.argsort(train_data[:,224**2])]
-  #   train_x=sort_data[:,0:224**2]
-  #   train_Y=np.array(sort_data[:,224**2])
-  #   train_x_da=np.array(self.one_d_to_n_d(train_x))
-  #   return train_x_da,train_Y
+    for u in users:
+      u_min_distance = -1
+      for cp in critical_points:
+        user_x, user_y, user_z = u.x, u.y, u.z
+        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
-  def split_data(self, data): 
-    size=int(len(data) / self.n)
+        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+
+        if(distance < u_min_distance or u_min_distance == -1):
+          u_min_distance = distance
+
+      user_min_distances[u.num] = u_min_distance
+
+    sizes = [0]*len(users)
+
+    print("Sizes:")
+
+    for i in range(len(users)):
+      sizes[i] = int(len(data)*math.sqrt(1/user_min_distances[i])/len(users))
+
+    total_size = sum(sizes)
+    sizes = [size * len(data) // total_size for size in sizes]
+
     s_data = []
-    for i in range(0, int(len(data)) + 1, size):
-        c_data = data[i:i + size]
-        if c_data.size > 0:
-            s_data.append(c_data)
+    index = 0
+    
+    for size in sizes:
+        c_data = data[index:index + size]
+        s_data.append(c_data)
+        index += size
+    
     return s_data
 
   def pre_data(self):
@@ -73,22 +81,22 @@ class Get_data:
     (X_train_earthquake, X_test_earthquake, y_train_earthquake, y_test_earthquake) = self.load_data()
 
     # Split fire data to each user
-    X_train_fire=self.split_data(X_train_fire) 
-    y_train_fire=self.split_data(y_train_fire)
-    X_test_fire=self.split_data(X_test_fire) 
-    y_test_fire=self.split_data(y_test_fire)
+    X_train_fire=self.split_data(X_train_fire, self.servers[0]) 
+    y_train_fire=self.split_data(y_train_fire, self.servers[0])
+    X_test_fire=self.split_data(X_test_fire, self.servers[0]) 
+    y_test_fire=self.split_data(y_test_fire, self.servers[0])
 
     # Split flood data to each user
-    X_train_flood=self.split_data(X_train_flood) 
-    y_train_flood=self.split_data(y_train_flood)
-    X_test_flood=self.split_data(X_test_flood) 
-    y_test_flood=self.split_data(y_test_flood)
+    X_train_flood=self.split_data(X_train_flood, self.servers[1]) 
+    y_train_flood=self.split_data(y_train_flood, self.servers[1])
+    X_test_flood=self.split_data(X_test_flood, self.servers[1]) 
+    y_test_flood=self.split_data(y_test_flood, self.servers[1])
 
     # Split earthquake data to each user
-    X_train_earthquake=self.split_data(X_train_earthquake) 
-    y_train_earthquake=self.split_data(y_train_earthquake)
-    X_test_earthquake=self.split_data(X_test_earthquake) 
-    y_test_earthquake=self.split_data(y_test_earthquake)
+    X_train_earthquake=self.split_data(X_train_earthquake, self.servers[2]) 
+    y_train_earthquake=self.split_data(y_train_earthquake, self.servers[2])
+    X_test_earthquake=self.split_data(X_test_earthquake, self.servers[2]) 
+    y_test_earthquake=self.split_data(y_test_earthquake, self.servers[2])
 
     print("Splited Successfully\n")
 

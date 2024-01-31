@@ -20,15 +20,26 @@ def Servers_FL(users, servers, K, lr, epoch):
 
   gpus = tf.config.list_physical_devices('GPU')
   print(gpus)
+  print()
   if gpus:
     for gpu in gpus:
         tf.config.experimental.set_virtual_device_configuration(gpu,[tf.config.experimental.VirtualDeviceConfiguration(memory_limit=14800)])
 
   strategy = tf.distribute.MirroredStrategy()
 
-  get_data=Get_data(len(users))
+  get_data=Get_data(users, servers)
 
   X_train, y_train, X_test, y_test=get_data.pre_data()
+
+  X_train_length = type(X_train)
+  y_train_length = type(y_train)
+  X_test_length = type(X_test)
+  y_test_length = type(y_test)
+
+  print("Length of X_train:", X_train_length)
+  print("Length of y_train:", y_train_length)
+  print("Length of X_test:", X_test_length)
+  print("Length of y_test:", y_test_length)
 
   server_losses = []
   server_accuracy = []

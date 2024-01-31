@@ -1,3 +1,9 @@
+import random
+
+a = 2 * 10**(-28)
+fn = 1
+qn = 20
+
 # User Class
 class User:
     def __init__(self, x, y, z, num):
@@ -5,7 +11,8 @@ class User:
         self._y = y
         self._z = z
         self._num = num
-        self.E_local = 1        # Energy Consumption to train model locally: We assume its the same for all users
+        self.E_local = (a * random.uniform(0.95, 1.05) * qn * random.uniform(0.95, 1.05) * fn**2)/2  # Energy Consumption to train model locally
+        self.E_transmit = []
         self.belongs_to = None
         self.importance = []
         self.datarate = []
@@ -22,11 +29,14 @@ class User:
     def add_payment(self, value):        # Normalized Payment user will receive from each server
         self.payment.append(value)
 
-    def add_dataquality(self, value):    # Normalized Payment user will receive from each server
+    def add_dataquality(self, value):    # Normalized dataquality of user for each server
         self.dataquality.append(value)    
 
     def set_Elocal(self, value):    # Set user's E_local
         self.E_local = value   
+
+    def add_Etransmit(self, value):    # Normalized Energy Transmission
+        self.E_transmit.append(value)   
         
     def set_available_servers(self, list):  # Available server list for this user
         self.available_servers = list[:] 
@@ -64,6 +74,9 @@ class User:
     
     def get_Elocal(self):
         return self.E_local
+    
+    def get_Etransmit(self):
+        return self.E_transmit
     
     def get_available_servers(self):
         return self.available_servers

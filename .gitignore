@@ -9,3 +9,6 @@ __pycache__/
 # Ignore images
 *.jpg
 *.png
+
+# Personal Notes
+notes.txt

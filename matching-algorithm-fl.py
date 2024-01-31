@@ -25,7 +25,7 @@ import math
 servers = []
 
 for i in range(S):
-    p = random.randint(10,20)
+    p = random.randint(4,6)
     server = Server(0,0,0,p,i)
     servers.append(server)
     
@@ -107,7 +107,9 @@ for i in range(N):
 
 # Assumptions: No noise, channel gain is inversely proportional with the distance between user and server, transmit power is the same for all users and their servers thus is neglected, bandwidth 50Mbps
 
-B = 50 * 10**6 # 50 Mbps
+I0 = ((10 * 10**6) * 3.981 * 10**(-21))/N
+
+P = [[random.uniform(0.7, 1) for _ in range(N)] for _ in range(S)]
 
 # Finding Max Data Rate
 max_dr = 0
@@ -123,14 +125,14 @@ for i in range(N):
         
         g = 1/distance
         
-        dr = B * math.log2(1 + g)
+        dr = math.log2(1 + g*P[j][i]/I0)
         
         if(dr > max_dr):
             max_dr = dr
 
 # Calculating Normalized Data Rates
 for i in range(N):
-    for j in range(K):
+    for j in range(S):
         user = users[i]
         user_x, user_y, user_z = user.x, user.y, user.z
 
@@ -141,7 +143,7 @@ for i in range(N):
         
         g = 1/distance
         
-        dr = B * math.log2(1 + g)
+        dr = math.log2(1 + g*P[j][i]/I0)
         
         user.add_datarate(dr/max_dr)
         
@@ -186,28 +188,75 @@ for i in range(N):
     user.set_Elocal(E_local/max_Elocal)
 
 
-# Energy Consumption to transmit the local model parameters to the server: We assume each user transmits the same amount of bits
-# and thus the energy to transmit is 1/normalized_datarate
+# Normalized Energy Consumption to transmit the local model parameters to the server
+    
+# Find Max Transmission Energy
+max_E_transmit = 0
+for i in range(N):
+    user = users[i]
+    for j in range(S):
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 1/distance
+        
+        dr = math.log2(1 + g*P[j][i]/I0)
+
+        Z = 28.1 * random.uniform(0.95,1.05) * 10**3
+
+        E_transmit = Z*P[j][i]/dr
+
+        if(E_transmit > max_E_transmit):
+            max_E_transmit = E_transmit
+
+# Calculate Normalized Energy Transmission
+for i in range(N):
+    user = users[i]
+    for j in range(S):
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 1/distance
+        
+        dr = math.log2(1 + g*P[j][i]/I0)
+
+        Z = 28.1 * random.uniform(0.95,1.05) * 10**3
+
+        E_transmit = Z*P[j][i]/dr
+
+        user.add_Etransmit(E_transmit/max_E_transmit)
+
 
 # ==================================================================
 
 # Normalized Data Quality: We assume all users have the same Dn
 
-# Finding Max Data Quality
-max_dq = 0
-for i in range(N):
-    user = users[i]
-    data_importance = user.get_importance()
-    for j in range(K):
-        if(data_importance[j] > max_dq):
-            max_dq = data_importance[j]
-            
-# Calculating Normalized Data Quality   
-for i in range(N):
-    user = users[i]
-    data_importance = user.get_importance()
-    for j in range(K):
-        user.add_dataquality(data_importance[j]/max_dq)
+for i in range(K):
+
+    # Finding Max Data Quality
+    max_dq = 0
+    for j in range(N):
+        user = users[j]
+        data_importance = user.get_importance()
+        dq = data_importance[i]
+        if (dq > max_dq):
+            max_dq = dq
+
+    # Calculating Normalized Data Quality
+    for j in range(N):
+        user = users[j]
+        data_importance = user.get_importance()
+        dq = data_importance[i]
+        user.add_dataquality(dq/max_dq)        
+
 
 
 # =================================================================================== #

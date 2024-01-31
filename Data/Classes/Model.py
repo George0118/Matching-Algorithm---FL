@@ -50,51 +50,58 @@ class Model:
     # Rescaling
     x = Rescaling(1./255)(x)
 
-    # Convolutional layers
-    x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(input)
-    x = MaxPooling2D(2, 2)(x)
+    # =========== Normal Small Model ============ #
 
-    x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
-    x = MaxPooling2D(2, 2)(x)
+    # # Convolutional layers
+    # x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(input)
+    # x = MaxPooling2D(2, 2)(x)
 
-    x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
-    x = MaxPooling2D(2, 2)(x)
+    # x = Conv2D(32, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    # x = MaxPooling2D(2, 2)(x)
 
-    x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
-    x = MaxPooling2D(2, 2)(x)
+    # x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    # x = MaxPooling2D(2, 2)(x)
 
-    x = Conv2D(128, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
-    x = MaxPooling2D(2, 2)(x)
+    # x = Conv2D(64, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    # x = MaxPooling2D(2, 2)(x)
 
-    # Flatten the results to feed into a DNN
-    x = Flatten()(x)
+    # x = Conv2D(128, (3, 3), activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    # x = MaxPooling2D(2, 2)(x)
 
-    # Dense layer
-    x = Dense(512, activation='relu', kernel_regularizer=L2(regularization_strength))(x)
-    x = Dropout(0.5)(x)
+    # # Flatten the results to feed into a DNN
+    # x = Flatten()(x)
 
-    # Output layer
-    output = Dense(1, activation='sigmoid')(x)
+    # # Dense layer
+    # x = Dense(512, activation='relu', kernel_regularizer=L2(regularization_strength))(x)
+    # x = Dropout(0.5)(x)
 
-    # Create the model
-    model = keras.Model(inputs=input, outputs=output)
+    # # Output layer
+    # output = Dense(1, activation='sigmoid')(x)
+
+    # # Create the model
+    # model = keras.Model(inputs=input, outputs=output)
+
+    # ================================================= #
 
     # ================ VGG16 Version ================= #
 
-    # baseModel = VGG16(weights="imagenet", include_top=False,
-	  #                   input_tensor=x)
+    baseModel = VGG16(weights="imagenet", include_top=False,
+	                    input_tensor=x)
     
-    # x = baseModel.output
+    for layer in baseModel.layers:
+            layer.trainable = False
+    
+    x = baseModel.output
 
-    # x = Flatten()(x)
-    # x = Dense(512, kernel_regularizer=L2(regularization_strength))(x)
-    # x = Activation('relu')(x)
-    # x = Dropout(0.5)(x)
+    x = Flatten()(x)
+    x = Dense(512, kernel_regularizer=L2(regularization_strength))(x)
+    x = Activation('relu')(x)
+    x = Dropout(0.5)(x)
 
-    # x = Dense(1, kernel_regularizer=L2(regularization_strength))(x)
-    # output = Activation('sigmoid')(x)
+    x = Dense(1)(x)
+    output = Activation('sigmoid')(x)
 
-    # model = keras.models.Model(inputs=inputs, outputs=output)
+    model = keras.models.Model(inputs=input, outputs=output)
 
     # ================================================= #
 

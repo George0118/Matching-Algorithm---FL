@@ -33,8 +33,6 @@ flood_input_paths = [
     "../data/flooding-image-dataset/Flood Images"  
 ]
 
-images_for_each_disaster = 10000
-
 import cv2
 import os
 import numpy as np
@@ -45,12 +43,9 @@ def load_images(file_paths, disaster, test_size=0.2, random_state=42):
     labels = []
 
     for path in file_paths:
-        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Enable when running on kaggle
+        #path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Enable when running on kaggle
         for root, dirs, files in os.walk(path):
             for file in files:
-
-                if len(images) >= images_for_each_disaster:
-                    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)
 
                 image_path = os.path.join(root, file)
                 image = cv2.imread(image_path)
