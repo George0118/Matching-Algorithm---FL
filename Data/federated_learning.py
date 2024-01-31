@@ -31,16 +31,6 @@ def Servers_FL(users, servers, K, lr, epoch):
 
   X_train, y_train, X_test, y_test=get_data.pre_data()
 
-  X_train_length = type(X_train)
-  y_train_length = type(y_train)
-  X_test_length = type(X_test)
-  y_test_length = type(y_test)
-
-  print("Length of X_train:", X_train_length)
-  print("Length of y_train:", y_train_length)
-  print("Length of X_test:", X_test_length)
-  print("Length of y_test:", y_test_length)
-
   server_losses = []
   server_accuracy = []
 

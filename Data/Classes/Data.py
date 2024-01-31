@@ -14,22 +14,25 @@ class Get_data:
   def load_data(self):
 
     # Load and shuffle fire data
-    print("Loading Images for Fires\n")
+    print("Loading Images for Fires...")
     X_train_fire, X_test_fire, y_train_fire, y_test_fire = load_images(fire_input_paths, "fire")
     X_train_fire, y_train_fire = shuffle(X_train_fire, y_train_fire, random_state=42)
     X_test_fire, y_test_fire = shuffle(X_test_fire, y_test_fire, random_state=42)
+    print("Fire Images loaded!\n")
 
     # Load and shuffle flood data
-    print("Loading Images for Floods\n")
+    print("Loading Images for Floods...")
     X_train_flood, X_test_flood, y_train_flood, y_test_flood = load_images(flood_input_paths, "flood")
     X_train_flood, y_train_flood = shuffle(X_train_flood, y_train_flood, random_state=42)
     X_test_flood, y_test_flood = shuffle(X_test_flood, y_test_flood, random_state=42)
+    print("Flood Images loaded!\n")
 
     # Load and shuffle earthquake data
-    print("Loading Images for Earthquakes\n")
+    print("Loading Images for Earthquakes...")
     X_train_earthquake, X_test_earthquake, y_train_earthquake, y_test_earthquake = load_images(earthquake_input_paths, "earthquake")
     X_train_earthquake, y_train_earthquake = shuffle(X_train_earthquake, y_train_earthquake, random_state=42)
     X_test_earthquake, y_test_earthquake = shuffle(X_test_earthquake, y_test_earthquake, random_state=42)
+    print("Earthquake Images loaded!\n")
 
     return (X_train_fire, X_test_fire, y_train_fire, y_test_fire) ,\
            (X_train_flood, X_test_flood, y_train_flood, y_test_flood),\
@@ -55,8 +58,6 @@ class Get_data:
       user_min_distances[u.num] = u_min_distance
 
     sizes = [0]*len(users)
-
-    print("Sizes:")
 
     for i in range(len(users)):
       sizes[i] = int(len(data)*math.sqrt(1/user_min_distances[i])/len(users))

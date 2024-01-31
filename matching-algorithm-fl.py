@@ -8,6 +8,8 @@ from Classes.CriticalPoint import CP
 from approximate_matching import approximate_fedlearner_matching
 from accurate_matching import accurate_fedlearner_matching
 from Data.federated_learning import Servers_FL
+from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths
+import os
 
 # General Parameters
 
@@ -25,7 +27,7 @@ import math
 servers = []
 
 for i in range(S):
-    p = random.randint(4,6)
+    p = random.randint(int(0.333*N), int(0.5*N))
     server = Server(0,0,0,p,i)
     servers.append(server)
     
@@ -71,6 +73,65 @@ for cp in critical_points:
     
 
 # ===================== Initialization of Users' Utility Values ===================== #
+        
+# Data size for each user
+        
+Dn = [0]*N
+        
+for s in servers:
+    cps = s.get_critical_points()
+    user_min_distances = [-1]*len(users)
+    sizes = [0]*len(users)
+
+    image_num = 0
+
+    if(s.num == 0):
+        for path in fire_input_paths:
+            files = os.listdir(path)
+            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+            image_num += len(image_files)
+        print("Fire Images: ", image_num)
+    elif(s.num == 1):
+        for path in flood_input_paths:
+            files = os.listdir(path)
+            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+            image_num += len(image_files)
+        print("Flood Images: ", image_num)
+    else:
+        for path in earthquake_input_paths:
+            files = os.listdir(path)
+            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+            image_num += len(image_files)
+        print("Earthquake Images: ", image_num)
+
+
+    for u in users:
+      u_min_distance = -1
+      for cp in cps:
+        user_x, user_y, user_z = u.x, u.y, u.z
+        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
+
+        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+
+        if(distance < u_min_distance or u_min_distance == -1):
+          u_min_distance = distance
+
+      user_min_distances[u.num] = u_min_distance
+
+    for i in range(N):
+      sizes[i] = int(image_num*math.sqrt(1/user_min_distances[i])/N)
+
+    total_size = sum(sizes)
+    sizes = [size * image_num // total_size for size in sizes]
+
+    for i in range(N):
+        Dn[i] += sizes[i]
+
+    for i in range(N):
+        user = users[i]
+        user.set_datasize(Dn[i])
+
+# =================================================================================== #
     
 # Normalized Data Importance
 
@@ -237,7 +298,7 @@ for i in range(N):
 
 # ==================================================================
 
-# Normalized Data Quality: We assume all users have the same Dn
+# Normalized Data Quality
 
 for i in range(K):
 
@@ -246,7 +307,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = data_importance[i]
+        dq = data_importance[i] * user.get_datasize()
         if (dq > max_dq):
             max_dq = dq
 
@@ -254,10 +315,8 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = data_importance[i]
+        dq = data_importance[i] * user.get_datasize()
         user.add_dataquality(dq/max_dq)        
-
-
 
 # =================================================================================== #
 

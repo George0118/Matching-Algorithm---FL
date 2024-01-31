@@ -11,7 +11,8 @@ class User:
         self._y = y
         self._z = z
         self._num = num
-        self.E_local = (a * random.uniform(0.95, 1.05) * qn * random.uniform(0.95, 1.05) * fn**2)/2  # Energy Consumption to train model locally
+        self.datasize = 0
+        self.E_local = (a * random.uniform(0.95, 1.05) * qn * random.uniform(0.95, 1.05) * self.datasize * fn**2)/2  # Energy Consumption to train model locally
         self.E_transmit = []
         self.belongs_to = None
         self.importance = []
@@ -19,6 +20,10 @@ class User:
         self.payment = []
         self.dataquality = []
         self.available_servers = []
+
+    def set_datasize(self,value):       # Local Datasize of User
+        self.datasize = value
+        self.E_local = (a * random.uniform(0.95, 1.05) * qn * random.uniform(0.95, 1.05) * self.datasize * fn**2)/2 # Update E_local
 
     def add_importance(self, value):     # Normalized Data importance of user for each server
         self.importance.append(value)
@@ -32,7 +37,7 @@ class User:
     def add_dataquality(self, value):    # Normalized dataquality of user for each server
         self.dataquality.append(value)    
 
-    def set_Elocal(self, value):    # Set user's E_local
+    def set_Elocal(self, value):    # Set user's normalized E_local
         self.E_local = value   
 
     def add_Etransmit(self, value):    # Normalized Energy Transmission
@@ -59,6 +64,9 @@ class User:
     @property
     def num(self):
         return self._num
+    
+    def get_datasize(self):
+        return self.datasize
     
     def get_importance(self):
         return self.importance
