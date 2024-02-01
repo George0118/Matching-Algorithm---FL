@@ -8,7 +8,7 @@ from Classes.CriticalPoint import CP
 from approximate_matching import approximate_fedlearner_matching
 from accurate_matching import accurate_fedlearner_matching
 from Data.federated_learning import Servers_FL
-from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths
+from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 import os
 
 # General Parameters
@@ -70,20 +70,9 @@ for cp in critical_points:
         servers[2].add_critical_point(cp)       # All earthquake CPs with Server 3
 
 # ========================================================================================== #  
-    
-def count_images(input_paths):  # Count images in input paths
-    image_num = 0
-
-    for path in input_paths:
-        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
-        files = os.listdir(path)
-        image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-        image_num += len(image_files)
-    
-    return image_num
-
         
 print()
+
 # ===================== Initialization of Users' Utility Values ===================== #
         
 # Data size for each user
@@ -95,18 +84,27 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     user_avg_distances = [0]*N
     sizes = [0]*N
 
-    # For each server count the images
+    # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
+        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(fire_input_paths)
-        image_num = 10000
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         print("Fire Images: ", image_num)
     elif(s.num == 1):
+        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(flood_input_paths)
-        image_num = 10000
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         print("Flood Images: ", image_num)
     else:
+        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(earthquake_input_paths)
-        image_num = 10000
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         print("Earthquake Images: ", image_num)
 
     # For each user calculate the average distance from the relevant Critical Points

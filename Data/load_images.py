@@ -35,12 +35,32 @@ flood_input_paths = [
 
 import cv2
 import os
-import random
+import math
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+factor = 1.6
+
+def count_images(input_paths):  # Count images in input paths
+    image_num = 0
+
+    for path in input_paths:
+        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
+        files = os.listdir(path)
+        image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+        image_num += len(image_files)
+    
+    return image_num
+
 def load_images(file_paths, disaster, test_size=0.2, random_state=42):
-    images_for_each_disaster = 10000 * random.uniform(1.1,1.3)
+
+    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
+    image_num = count_images(file_paths)
+    ratio = image_num/total_images
+    ratio = 1-math.sqrt(ratio)
+    image_num = int(factor*ratio*image_num)
+
+    images_for_each_disaster = image_num
     images = []
     labels = []
 
@@ -51,6 +71,7 @@ def load_images(file_paths, disaster, test_size=0.2, random_state=42):
         for root, dirs, files in os.walk(path):
             for file in files:
                 if(count >= images_for_each_disaster):
+                    print(count)
                     return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)
 
                 image_path = os.path.join(root, file)
