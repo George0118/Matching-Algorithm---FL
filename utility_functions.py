@@ -10,6 +10,7 @@ epsilon = 1
 
 def user_utility(user, server):
     index = server.num
+    current_coalition = server.get_coalition()
 
     critical_points = server.get_critical_points()
     
@@ -27,7 +28,7 @@ def user_utility(user, server):
 
     E_local = user.get_Elocal()
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index] - gamma * (E_local + E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (E_local + E_transmit_list[index]) + delta * avg_dataquality
 
     return utility
 

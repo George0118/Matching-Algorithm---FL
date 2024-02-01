@@ -35,21 +35,28 @@ flood_input_paths = [
 
 import cv2
 import os
+import random
 import numpy as np
 from sklearn.model_selection import train_test_split
 
 def load_images(file_paths, disaster, test_size=0.2, random_state=42):
+    images_for_each_disaster = 10000 * random.uniform(1.1,1.3)
     images = []
     labels = []
+
+    count = 0
 
     for path in file_paths:
         path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
         for root, dirs, files in os.walk(path):
             for file in files:
+                if(count >= images_for_each_disaster):
+                    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)
 
                 image_path = os.path.join(root, file)
                 image = cv2.imread(image_path)
                 images.append(image)
                 labels.append(disaster)
+                count += 1
 
     return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)

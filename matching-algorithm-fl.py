@@ -71,69 +71,74 @@ for cp in critical_points:
 
 # ========================================================================================== #  
     
+def count_images(input_paths):  # Count images in input paths
+    image_num = 0
 
+    for path in input_paths:
+        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
+        files = os.listdir(path)
+        image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+        image_num += len(image_files)
+    
+    return image_num
+
+        
+print()
 # ===================== Initialization of Users' Utility Values ===================== #
         
 # Data size for each user
         
 Dn = [0]*N
         
-for s in servers:
-    cps = s.get_critical_points()
-    user_min_distances = [-1]*len(users)
-    sizes = [0]*len(users)
+for s in servers:   # For each server(disaster) calculate number of images each user will receive
+    cps = s.get_critical_points()   # Get the relevant Critical Points
+    user_avg_distances = [0]*N
+    sizes = [0]*N
 
-    image_num = 0
-
-    if(s.num == 0):
-        for path in fire_input_paths:
-            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
-            files = os.listdir(path)
-            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-            image_num += len(image_files)
+    # For each server count the images
+    if(s.num == 0): 
+        image_num = count_images(fire_input_paths)
+        image_num = 10000
         print("Fire Images: ", image_num)
     elif(s.num == 1):
-        for path in flood_input_paths:
-            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
-            files = os.listdir(path)
-            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-            image_num += len(image_files)
+        image_num = count_images(flood_input_paths)
+        image_num = 10000
         print("Flood Images: ", image_num)
     else:
-        for path in earthquake_input_paths:
-            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
-            files = os.listdir(path)
-            image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-            image_num += len(image_files)
+        image_num = count_images(earthquake_input_paths)
+        image_num = 10000
         print("Earthquake Images: ", image_num)
 
-
+    # For each user calculate the average distance from the relevant Critical Points
     for u in users:
-      u_min_distance = -1
       for cp in cps:
         user_x, user_y, user_z = u.x, u.y, u.z
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
-        if(distance < u_min_distance or u_min_distance == -1):
-          u_min_distance = distance
+        user_avg_distances[u.num] += distance
 
-      user_min_distances[u.num] = u_min_distance
+      user_avg_distances[u.num] /= len(cps)
 
+    # Calculate the data sizes based on the user average distance from the CPs
     for i in range(N):
-      sizes[i] = int(image_num*math.sqrt(1/user_min_distances[i])/N)
+      sizes[i] = int(image_num*math.sqrt(1/user_avg_distances[i])/N)
 
+    # Normalize them
     total_size = sum(sizes)
     sizes = [size * image_num // total_size for size in sizes]
 
+    # And add to the Dn of each user
     for i in range(N):
         Dn[i] += sizes[i]
 
+    # Set the User final datasize
     for i in range(N):
         user = users[i]
         user.set_datasize(Dn[i])
 
+print()
 # =================================================================================== #
     
 # Normalized Data Importance
@@ -213,7 +218,7 @@ for i in range(N):
         
 # ==================================================================
 
-# Normalized User Payment: Each server pays a random predetermined value between 1 and 10 to each of its users
+# Normalized User Payment
 
 # Finding Max Payment
 max_payment = 0
