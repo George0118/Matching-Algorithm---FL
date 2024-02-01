@@ -81,8 +81,10 @@ Dn = [0]*N
         
 for s in servers:   # For each server(disaster) calculate number of images each user will receive
     cps = s.get_critical_points()   # Get the relevant Critical Points
-    user_avg_distances = [0]*N
+    user_min_distances = [-1]*N
     sizes = [0]*N
+
+    image_num = 0
 
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
@@ -115,13 +117,12 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
-        user_avg_distances[u.num] += distance
-
-      user_avg_distances[u.num] /= len(cps)
+        if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
+            user_min_distances[u.num] = distance
 
     # Calculate the data sizes based on the user average distance from the CPs
     for i in range(N):
-      sizes[i] = int(image_num*math.sqrt(1/user_avg_distances[i])/N)
+      sizes[i] = int(image_num*math.sqrt(1/user_min_distances[i])/N)
 
     # Normalize them
     total_size = sum(sizes)
@@ -129,12 +130,12 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     # And add to the Dn of each user
     for i in range(N):
-        Dn[i] += sizes[i]
+        Dn[i] += sizes[i]*3*224*224*8 # number of bits for all images
 
-    # Set the User final datasize
-    for i in range(N):
-        user = users[i]
-        user.set_datasize(Dn[i])
+# Set the User final datasize
+for i in range(N):
+    user = users[i]
+    user.set_datasize(Dn[i])
 
 print()
 # =================================================================================== #

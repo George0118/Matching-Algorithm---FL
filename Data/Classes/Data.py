@@ -42,7 +42,7 @@ class Get_data:
   def split_data(self, data, server): 
     users = self.users
     critical_points = server.get_critical_points()
-    user_avg_distances = [0]*len(users)
+    user_min_distances = [-1]*len(users)
 
     for u in users:
       for cp in critical_points:
@@ -51,14 +51,13 @@ class Get_data:
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
-        user_avg_distances[u.num] += distance
-
-      user_avg_distances[u.num] /= len(critical_points) 
+        if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
+          user_min_distances[u.num] = distance
 
     sizes = [0]*len(users)
 
     for i in range(len(users)):
-      sizes[i] = int(len(data)*math.sqrt(1/user_avg_distances[i])/len(users))
+      sizes[i] = int(len(data)*math.sqrt(1/user_min_distances[i])/len(users))
 
     total_size = sum(sizes)
     sizes = [size * len(data) // total_size for size in sizes]
