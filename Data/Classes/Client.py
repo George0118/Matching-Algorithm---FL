@@ -3,6 +3,7 @@ from Data.Classes.Model import Model
 from keras.optimizers.legacy import SGD
 import keras
 from sklearn.model_selection import KFold
+import numpy as np
 
 class Client:
   
@@ -39,13 +40,17 @@ class Client:
       
     return weight_final
 
-  def training(self, X, y, global_weights):
+  def training(self, train_dataset, global_weights):
       model = Model().global_model()
       model.compile(optimizer="rmsprop",
                     loss=self.loss,
                     metrics=self.metrics
                     )
       model.set_weights(global_weights)
+
+      X, y = tuple(zip(*train_dataset))
+      X = np.array(X)
+      y = np.array(y)
       
       n_splits = 3
       kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)

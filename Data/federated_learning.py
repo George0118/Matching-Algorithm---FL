@@ -38,6 +38,9 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     print("Training model for Server ", server.num, "\n")
 
+    train_dataset = [tf.data.Dataset.from_tensor_slices(([], [])) for _ in range(len(users))]
+    test_dataset = tf.data.Dataset.from_tensor_slices(([], []))
+
     X_test_server = np.empty_like(X_test[0])
     y_test_server = np.empty_like(y_test[0])
 
@@ -50,6 +53,11 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     for u in server.get_coalition():
       y_train[u.num] = server.specify_disaster(y_train[u.num])
+      train_dataset[u.num] = tf.data.Dataset.from_tensor_slices((X_train[u.num], y_train[u.num]))
+      train_dataset[u.num] = train_dataset[u.num].prefetch(tf.data.AUTOTUNE)
+    
+    test_dataset = tf.data.Dataset.from_tensor_slices((X_test_server, y_test_server))
+    test_dataset = test_dataset.prefetch(tf.data.AUTOTUNE)
 
     with strategy.scope():
       global_model=Model().global_model()
@@ -69,13 +77,15 @@ def Servers_FL(users, servers, K, lr, epoch):
         for u in server.get_coalition():
           client=Client(lr,epoch)
 
-          weix=client.training(X_train[u.num],y_train[u.num],global_weights)
+          weix=client.training(train_dataset[u.num],global_weights)
           weix=client.scale_model_weights(weix,factors,u.num)
           weit.append(weix)
 
         global_weight=server.sum_scaled_weights(weit) # fedavg
+        print("hi")
         global_model.set_weights(global_weight)
-        loss,acc=Model().evaluate_model(global_model,X_test_server,y_test_server)
+        print("hi")
+        loss,acc=Model().evaluate_model(global_model,test_dataset)
         losses.append(loss)
         accuracy.append(acc)
 

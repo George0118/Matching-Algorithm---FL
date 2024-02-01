@@ -16,6 +16,7 @@ from keras.layers import SeparableConv2D
 from keras.layers import GlobalAveragePooling2D
 from keras.regularizers import L2
 from keras.applications import VGG16
+import numpy as np
 
 class Model:
 
@@ -107,11 +108,16 @@ class Model:
 
     return model
 
-  def evaluate_model(self,model,test_X, test_y):
+  def evaluate_model(self,model,test_dataset):
     model.compile(optimizer='rmsprop',
                   loss=keras.losses.BinaryCrossentropy(),
                   metrics=[keras.metrics.BinaryAccuracy(name="acc")]
     )
+
+    X, y = tuple(zip(*test_dataset))
+    test_X = np.array(X)
+    test_y = np.array(y)
+    
     score=model.evaluate(test_X, test_y)
     print("Test Loss:", score[0])
     print('Test Accuracy:', score[1])
