@@ -111,7 +111,7 @@ class Server:
 
         return labels
     
-    def factors_calculation(self, Dn, N):
+    def factors_calculation(self, N):
         coalition = self.get_coalition()
         critical_points = self.get_critical_points()
 
@@ -121,13 +121,13 @@ class Server:
         for u in coalition:
             importance_list = u.get_importance()
             for cp in critical_points:
-                denominator += importance_list[cp.num] * Dn
+                denominator += importance_list[cp.num] * u.get_datasize()
 
         for u in coalition:
             importance_list = u.get_importance()
             numerator = 0
             for cp in critical_points:
-                numerator += importance_list[cp.num] * Dn
+                numerator += importance_list[cp.num] * u.get_datasize()
             factors[u.num] = numerator/denominator
 
         return factors

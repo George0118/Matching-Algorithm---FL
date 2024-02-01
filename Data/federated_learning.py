@@ -57,7 +57,7 @@ def Servers_FL(users, servers, K, lr, epoch):
       accuracy=[]
       losses=[]
 
-      factors = server.factors_calculation(X_train[0].nbytes, len(users))   # Calculate factors to multiply the weigths
+      factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
 
       accuracy_history = deque(maxlen=3)
 

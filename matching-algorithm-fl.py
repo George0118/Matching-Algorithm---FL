@@ -87,18 +87,21 @@ for s in servers:
 
     if(s.num == 0):
         for path in fire_input_paths:
+            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
             files = os.listdir(path)
             image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
             image_num += len(image_files)
         print("Fire Images: ", image_num)
     elif(s.num == 1):
         for path in flood_input_paths:
+            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
             files = os.listdir(path)
             image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
             image_num += len(image_files)
         print("Flood Images: ", image_num)
     else:
         for path in earthquake_input_paths:
+            path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
             files = os.listdir(path)
             image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
             image_num += len(image_files)
