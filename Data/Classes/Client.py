@@ -3,7 +3,7 @@ from Data.Classes.Model import Model
 from keras.optimizers.legacy import SGD
 import keras
 from sklearn.model_selection import KFold
-import numpy as np
+from itertools import combinations
 
 class Client:
   
@@ -40,7 +40,7 @@ class Client:
       
     return weight_final
 
-  def training(self, train_dataset, global_weights):
+  def training(self, train_dataset, global_weights, batch_size = 128, n_splits = 3):
       model = Model().global_model()
       model.compile(optimizer="rmsprop",
                     loss=self.loss,
@@ -48,24 +48,29 @@ class Client:
                     )
       model.set_weights(global_weights)
 
-      X, y = tuple(zip(*train_dataset))
-      X = np.array(X)
-      y = np.array(y)
+      train_dataset = train_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+
+      split_size = len(train_dataset) // n_splits
+
+      splits = [train_dataset.skip(i * split_size).take(split_size) for i in range(n_splits)]
+
+      splits_combinations = list(combinations(splits, n_splits-1))
       
-      n_splits = 3
-      kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
       cv_weights = []
 
       print("CrossValidation")
 
-      for train_index, val_index in kf.split(X):
-          model.fit(X[train_index], y[train_index], epochs=self.epoch)
+      for sc in splits_combinations:
+        train_ds = sc[0]
+        for split in sc[1:]:
+          train_ds = train_ds.concatenate(split)
 
-          val_loss = model.evaluate(X[val_index], y[val_index])[0]
-          print(f'Validation Loss: {val_loss}')
+        model.fit(train_ds, epochs=self.epoch)
 
-          cv_weights.append(model.get_weights())
+        cv_weights.append(model.get_weights())
 
       avg_weights = [sum(weight[i] for weight in cv_weights) / n_splits for i in range(len(cv_weights[0]))]
+
+      print()
 
       return avg_weights

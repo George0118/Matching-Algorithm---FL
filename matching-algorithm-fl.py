@@ -85,31 +85,29 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     sizes = [0]*N
 
     image_num = 0
+    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
 
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
-        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(fire_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
         print("Fire Images: ", image_num)
     elif(s.num == 1):
-        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(flood_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
         print("Flood Images: ", image_num)
     else:
-        total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
         print("Earthquake Images: ", image_num)
 
-    # For each user calculate the average distance from the relevant Critical Points
+    # For each user calculate the minimum distance from the relevant Critical Points
     for u in users:
       for cp in cps:
         user_x, user_y, user_z = u.x, u.y, u.z
@@ -120,7 +118,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
             user_min_distances[u.num] = distance
 
-    # Calculate the data sizes based on the user average distance from the CPs
+    # Calculate the data sizes based on the user minimum distance from the CPs
     for i in range(N):
       sizes[i] = int(image_num*math.sqrt(1/user_min_distances[i])/N)
 
@@ -142,30 +140,30 @@ print()
     
 # Normalized Data Importance
 
-for i in range(N):
-    max_dist = 0
-    for j in range(K):          # Finding Max Distance for each user
-        user = users[i]
+max_dist = [0]*K
+for i in range(K):
+    for j in range(N):          # Finding Max Distance for each user
+        user = users[j]
         user_x, user_y, user_z = user.x, user.y, user.z
 
-        cp = critical_points[j]
+        cp = critical_points[i]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
-        if distance > max_dist:
-            max_dist = distance
+        if distance > max_dist[i]:
+            max_dist[i] = distance
 
-    for j in range(K):          # Calculating Importance for each user
-        user = users[i]
+    for j in range(N):          # Calculating Importance for each user
+        user = users[j]
         user_x, user_y, user_z = user.x, user.y, user.z
 
-        cp = critical_points[j]
+        cp = critical_points[i]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)   
 
-        importance = distance / max_dist
+        importance = distance / max_dist[i]
 
         user.add_importance(importance)
         
@@ -314,7 +312,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = data_importance[i] * user.get_datasize()
+        dq = (2 - data_importance[i]) * user.get_datasize()
         if (dq > max_dq):
             max_dq = dq
 
@@ -322,7 +320,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = data_importance[i] * user.get_datasize()
+        dq = (2 - data_importance[i]) * user.get_datasize()
         user.add_dataquality(dq/max_dq)        
 
 # =================================================================================== #

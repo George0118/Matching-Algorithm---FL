@@ -30,6 +30,12 @@ def user_utility(user, server):
     
     utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (E_local + E_transmit_list[index]) + delta * avg_dataquality
 
+    # print("Utility: ", utility)
+    # print("Datarate: ", datarate_list[index])
+    # print("Payment: ", payment_list[index]/(len(current_coalition)+1))
+    # print("Energy: ", E_local + E_transmit_list[index])
+    # print("Dataquality: ", avg_dataquality)
+
     return utility
 
 #Server's Utility function

@@ -108,17 +108,15 @@ class Model:
 
     return model
 
-  def evaluate_model(self,model,test_dataset):
+  def evaluate_model(self,model,test_dataset, batch_size = 128):
     model.compile(optimizer='rmsprop',
-                  loss=keras.losses.BinaryCrossentropy(),
-                  metrics=[keras.metrics.BinaryAccuracy(name="acc")]
+      loss=keras.losses.BinaryCrossentropy(),
+      metrics=[keras.metrics.BinaryAccuracy(name="acc")]
     )
 
-    X, y = tuple(zip(*test_dataset))
-    test_X = np.array(X)
-    test_y = np.array(y)
+    test_dataset = test_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
     
-    score=model.evaluate(test_X, test_y)
+    score=model.evaluate(test_dataset)
     print("Test Loss:", score[0])
     print('Test Accuracy:', score[1])
     return score[0],score[1]

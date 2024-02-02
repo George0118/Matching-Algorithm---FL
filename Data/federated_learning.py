@@ -38,8 +38,7 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     print("Training model for Server ", server.num, "\n")
 
-    train_dataset = [tf.data.Dataset.from_tensor_slices(([], [])) for _ in range(len(users))]
-    test_dataset = tf.data.Dataset.from_tensor_slices(([], []))
+    train_dataset = [None] * len(users)
 
     X_test_server = np.empty_like(X_test[0])
     y_test_server = np.empty_like(y_test[0])
@@ -54,10 +53,8 @@ def Servers_FL(users, servers, K, lr, epoch):
     for u in server.get_coalition():
       y_train[u.num] = server.specify_disaster(y_train[u.num])
       train_dataset[u.num] = tf.data.Dataset.from_tensor_slices((X_train[u.num], y_train[u.num]))
-      train_dataset[u.num] = train_dataset[u.num].prefetch(tf.data.AUTOTUNE)
     
     test_dataset = tf.data.Dataset.from_tensor_slices((X_test_server, y_test_server))
-    test_dataset = test_dataset.prefetch(tf.data.AUTOTUNE)
 
     with strategy.scope():
       global_model=Model().global_model()
@@ -70,29 +67,34 @@ def Servers_FL(users, servers, K, lr, epoch):
       accuracy_history = deque(maxlen=3)
 
       for k in range(K):
+        print("------------------------------------------------------------------")
         print(k)
+        print()
         global_weights=global_model.get_weights()
         weit=[]
 
         for u in server.get_coalition():
+          print("I am user ", u.num, " and I am going to train my local model.\n")
           client=Client(lr,epoch)
 
           weix=client.training(train_dataset[u.num],global_weights)
           weix=client.scale_model_weights(weix,factors,u.num)
           weit.append(weix)
 
+        print("finished")
         global_weight=server.sum_scaled_weights(weit) # fedavg
         print("hi")
         global_model.set_weights(global_weight)
-        print("hi")
         loss,acc=Model().evaluate_model(global_model,test_dataset)
         losses.append(loss)
         accuracy.append(acc)
 
         accuracy_history.append(acc)
-        if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k >= 10:
+        if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k >= 9:
           print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
           break
+
+        print()
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)
