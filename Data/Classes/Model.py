@@ -9,37 +9,21 @@ from keras.layers import RandomFlip
 from keras.layers import RandomRotation
 from keras.models import Sequential
 from keras.regularizers import L2
-from keras.applications import VGG16
-import numpy as np
-import os
+from keras.applications import EfficientNetV2S, MobileNetV3Small, InceptionV3, DenseNet201, NASNetMobile, MobileNetV2
+from keras.applications import inception_v3, mobilenet_v2, densenet, nasnet
 
 class Model:
 
   def __init__(self):
     pass
 
-
-  # ======== Data Augmentation ========= #
-
-  def data_augmentation(self, images):
-      data_augmentation_layers = [
-        RandomFlip("horizontal"),
-        RandomRotation(0.1),
-      ]
-
-      for layer in data_augmentation_layers:
-          images = layer(images)
-      return images
-
-  # ===================================== #
-
   def global_model(self, shape):
 
-    regularization_strength = 0.01
+    regularization_strength = 0.1
 
     model = Sequential()
     model.add(Flatten(input_shape=shape))
-    model.add(Dense(512, activation='relu', kernel_regularizer=L2(regularization_strength)))
+    model.add(Dense(256, activation='relu', kernel_regularizer=L2(regularization_strength)))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
 
@@ -56,21 +40,48 @@ class Model:
     print('Test Accuracy:', score[1])
     return score[0],score[1]
   
-  def base_model(self):
+  # ======== Data Augmentation ========= #
+
+  def data_augmentation(self, images):
+      data_augmentation_layers = [
+        RandomFlip("horizontal"),
+        RandomRotation(0.1),
+      ]
+
+      for layer in data_augmentation_layers:
+          images = layer(images)
+      return images
+
+  # ===================================== #
+  
+  def base_model(self, model):
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
 
     # Data Augmentation
-    x = self.data_augmentation(input)
+    # input = self.data_augmentation(input)
 
-    Rescaling
-    x = Rescaling(1./255)(x)
-     
-    baseModel = VGG16(weights="imagenet", include_top=False,
-                    input_tensor=x)
+    if model == "EfficientNetV2S":
+      baseModel = EfficientNetV2S(weights="imagenet", include_top=False, input_tensor=input)
+    elif model == "MobileNetV2":
+      input = mobilenet_v2.preprocess_input(input)
+      baseModel = MobileNetV2(weights="imagenet", include_top=False, input_tensor=input)
+    elif model == "MobileNetV3Small":
+      baseModel = MobileNetV3Small(weights="imagenet", include_top=False, input_tensor=input)
+    elif model == "InceptionV3":
+      input = inception_v3.preprocess_input(input)
+      baseModel = InceptionV3(weights="imagenet", include_top=False, input_tensor=input)
+    elif model == "DenseNet201":
+      input = densenet.preprocess_input(input)
+      baseModel = DenseNet201(weights="imagenet", include_top=False, input_tensor=input)
+    elif model == "NASNetMobile":
+      input = nasnet.preprocess_input(input)
+      baseModel = NASNetMobile(weights="imagenet", include_top=False, input_tensor=input)
+    else:
+      return None
   
     for layer in baseModel.layers:
-            layer.trainable = False
+      layer.trainable = False
     
     model = keras.models.Model(inputs=input, outputs=baseModel.output)
 

@@ -9,14 +9,11 @@ from approximate_matching import approximate_fedlearner_matching
 from accurate_matching import accurate_fedlearner_matching
 from Data.federated_learning import Servers_FL
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
-import os
+import numpy as np
 
 # General Parameters
 
-N = 10  # Users -- min value: 5
-S = 3   # Servers
-K = 3   # Critical Points
-
+from general_parameters import *
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
 
@@ -48,7 +45,6 @@ for i in range(N):
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
-disasters = ["fire", "flood", "earthquake"]
 
 for i in range(K):
     x = random.uniform(-1,1)
@@ -120,7 +116,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     # Calculate the data sizes based on the user minimum distance from the CPs
     for i in range(N):
-      sizes[i] = int(image_num*math.sqrt(1/user_min_distances[i])/N)
+      sizes[i] = int(image_num*(1/user_min_distances[i]**2)/N)
 
     # Normalize them
     total_size = sum(sizes)
@@ -171,12 +167,6 @@ for i in range(K):
 
 # Normalized Data Rate
 
-# Assumptions: No noise, channel gain is inversely proportional with the distance between user and server, transmit power is the same for all users and their servers thus is neglected, bandwidth 50Mbps
-
-I0 = ((10 * 10**6) * 3.981 * 10**(-21))/N
-
-P = [[random.uniform(0.7, 1) for _ in range(N)] for _ in range(S)]
-
 # Finding Max Data Rate
 max_dr = 0
 for i in range(N):
@@ -189,9 +179,11 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 1/distance
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
         
-        dr = math.log2(1 + g*P[j][i]/I0)
+        power = P[j][i] * distance
+        
+        dr = math.log2(1 + g*power/I0)
         
         if(dr > max_dr):
             max_dr = dr
@@ -207,9 +199,11 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 1/distance
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
         
-        dr = math.log2(1 + g*P[j][i]/I0)
+        power = P[j][i] * distance
+        
+        dr = math.log2(1 + g*power/I0)
         
         user.add_datarate(dr/max_dr)
         
@@ -255,10 +249,6 @@ for i in range(N):
 
 
 # Normalized Energy Consumption to transmit the local model parameters to the server
-    
-Z = [0] * N     
-for i in range(N):
-    Z[i] = 28.1 * random.uniform(0.95,1.05) * 10**3
 
 # Find Max Transmission Energy
 max_E_transmit = 0
@@ -272,11 +262,13 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 1/distance
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
         
-        dr = math.log2(1 + g*P[j][i]/I0)
+        power = P[j][i] * distance
+        
+        dr = math.log2(1 + g*power/I0)
 
-        E_transmit = Z[i]*P[j][i]/dr
+        E_transmit = Z[i]*power/dr
 
         if(E_transmit > max_E_transmit):
             max_E_transmit = E_transmit
@@ -292,11 +284,13 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 1/distance
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
         
-        dr = math.log2(1 + g*P[j][i]/I0)
+        power = P[j][i] * distance
+        
+        dr = math.log2(1 + g*power/I0)
 
-        E_transmit = Z[i]*P[j][i]/dr
+        E_transmit = Z[i]*power/dr
 
         user.add_Etransmit(E_transmit/max_E_transmit)
 

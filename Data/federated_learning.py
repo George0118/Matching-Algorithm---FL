@@ -14,7 +14,7 @@ from Data.Classes.Data import Get_data
 from Data.Classes.Model import Model
 from tensorflow import data as tf_data
 from collections import deque
-
+import time
 
 def Servers_FL(users, servers, K, lr, epoch):
 
@@ -38,7 +38,7 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     print("Training model for Server ", server.num, "\n")
 
-    baseModel = Model().base_model()
+    baseModel = Model().base_model("MobileNetV2")
 
     user_features = [None] * len(users)
 
@@ -61,10 +61,12 @@ def Servers_FL(users, servers, K, lr, epoch):
     with strategy.scope():
 
       # Feature Extraction for all
+      print("Feature Extraction:")
       for u in server.get_coalition():
         user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
       
       server_features = Model().extract_features(baseModel, X_test_server)
+      print()
 
       # Begin training
     
@@ -77,7 +79,15 @@ def Servers_FL(users, servers, K, lr, epoch):
 
       for k in range(K):
         print("------------------------------------------------------------------")
-        print("Epoch: ", k, "\n")
+        print("Epoch: ", k+1, "\n")
+        start_time = time.time()
+
+        if(k%K == 0 and k!=0):      # After a few epochs reaugment datasets and extract features again
+          print("Feature Extraction:")
+          for u in server.get_coalition():
+            user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
+          print()
+
         global_weights=global_model.get_weights()
         weit=[]
 
@@ -96,7 +106,12 @@ def Servers_FL(users, servers, K, lr, epoch):
         accuracy.append(acc)
 
         accuracy_history.append(acc)
-        if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k >= 9:
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        print(f"\nEpoch {k + 1} took {elapsed_time:.2f} seconds")
+
+        if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k+1 >= 10:
           print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
           break
 
