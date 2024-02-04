@@ -112,6 +112,14 @@ class Get_data:
 
     print("Data Concatenated and Shuffled Successfully\n")
 
+    # for i in range(self.n):
+    #   print("I am user ", i, " and my datasize is: ", len(X_train[i]))
+    #   print("My distribution is:")
+    #   print("Fires: ", len(X_train_fire[i]))
+    #   print("Floods: ", len(X_train_flood[i]))
+    #   print("Earthquakes: ", len(X_train_earthquake[i]))
+    #   print()
+
     return X_train, y_train, X_test, y_test
   
   

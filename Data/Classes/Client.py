@@ -2,12 +2,13 @@ import tensorflow as tf
 from Data.Classes.Model import Model
 from keras.optimizers.legacy import SGD
 import keras
-from sklearn.model_selection import KFold
 from itertools import combinations
+import numpy as np
 
 class Client:
   
-  def __init__(self,lr,epoch):
+  def __init__(self,lr,epoch,u_num):
+    self.u_num = u_num
     self.epoch=epoch
     self.lr = lr
     self.loss=keras.losses.BinaryCrossentropy(),
@@ -40,32 +41,29 @@ class Client:
       
     return weight_final
 
-  def training(self, train_dataset, global_weights, batch_size = 128, n_splits = 3):
-      model = Model().global_model()
+  def training(self, features, labels, global_weights, shape, n_splits = 3):
+      model = Model().global_model(shape)
       model.compile(optimizer="rmsprop",
                     loss=self.loss,
                     metrics=self.metrics
                     )
       model.set_weights(global_weights)
 
-      train_dataset = train_dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
+      features_splits = np.array_split(features, n_splits, axis=0)
+      labels_splits = np.array_split(labels, n_splits, axis=0)
 
-      split_size = len(train_dataset) // n_splits
-
-      splits = [train_dataset.skip(i * split_size).take(split_size) for i in range(n_splits)]
-
-      splits_combinations = list(combinations(splits, n_splits-1))
+      all_combinations = list(combinations(range(n_splits), n_splits - 1))
       
       cv_weights = []
 
       print("CrossValidation")
 
-      for sc in splits_combinations:
-        train_ds = sc[0]
-        for split in sc[1:]:
-          train_ds = train_ds.concatenate(split)
+      for index_combination in all_combinations:
 
-        model.fit(train_ds, epochs=self.epoch)
+        concatenated_features = np.concatenate([features_splits[i] for i in index_combination], axis=0)
+        concatenated_labels = np.concatenate([labels_splits[i] for i in index_combination], axis=0)  
+
+        model.fit(concatenated_features, concatenated_labels, epochs=self.epoch)
 
         cv_weights.append(model.get_weights())
 

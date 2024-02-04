@@ -38,7 +38,9 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     print("Training model for Server ", server.num, "\n")
 
-    train_dataset = [None] * len(users)
+    baseModel = Model().base_model()
+
+    user_features = [None] * len(users)
 
     X_test_server = np.empty_like(X_test[0])
     y_test_server = np.empty_like(y_test[0])
@@ -48,44 +50,48 @@ def Servers_FL(users, servers, K, lr, epoch):
       X_test_server = np.concatenate((X_test_server, X_test[u.num]))
       y_test_server = np.concatenate((y_test_server, y_test[u.num]))
 
-    y_test_server = server.specify_disaster(y_test_server)    # set labels for specific disaster
+    factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
+    
+    # Specify labels for the specific server disaster
+    y_test_server = server.specify_disaster(y_test_server)    
 
     for u in server.get_coalition():
       y_train[u.num] = server.specify_disaster(y_train[u.num])
-      train_dataset[u.num] = tf.data.Dataset.from_tensor_slices((X_train[u.num], y_train[u.num]))
-    
-    test_dataset = tf.data.Dataset.from_tensor_slices((X_test_server, y_test_server))
 
     with strategy.scope():
-      global_model=Model().global_model()
+
+      # Feature Extraction for all
+      for u in server.get_coalition():
+        user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
+      
+      server_features = Model().extract_features(baseModel, X_test_server)
+
+      # Begin training
+    
+      global_model=Model().global_model(server_features.shape[1:])
 
       accuracy=[]
       losses=[]
-
-      factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
 
       accuracy_history = deque(maxlen=3)
 
       for k in range(K):
         print("------------------------------------------------------------------")
-        print(k)
-        print()
+        print("Epoch: ", k, "\n")
         global_weights=global_model.get_weights()
         weit=[]
 
         for u in server.get_coalition():
           print("I am user ", u.num, " and I am going to train my local model.\n")
-          client=Client(lr,epoch)
+          client=Client(lr,epoch,u.num)
 
-          weix=client.training(train_dataset[u.num],global_weights)
+          weix=client.training(user_features[u.num], y_train[u.num], global_weights, user_features[u.num].shape[1:])
           weix=client.scale_model_weights(weix,factors,u.num)
           weit.append(weix)
 
-        print("finished")
         global_weight=server.sum_scaled_weights(weit) # fedavg
-        print("hi")
         global_model.set_weights(global_weight)
-        loss,acc=Model().evaluate_model(global_model,test_dataset)
+        loss,acc=Model().evaluate_model(global_model,server_features, y_test_server)
         losses.append(loss)
         accuracy.append(acc)
 

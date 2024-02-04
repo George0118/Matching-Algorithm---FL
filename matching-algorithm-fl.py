@@ -3,7 +3,7 @@
 
 # Imports
 from Classes.User import User
-from Classes.Server import Server
+from Classes.Server import Server, importance_map
 from Classes.CriticalPoint import CP
 from approximate_matching import approximate_fedlearner_matching
 from accurate_matching import accurate_fedlearner_matching
@@ -256,6 +256,10 @@ for i in range(N):
 
 # Normalized Energy Consumption to transmit the local model parameters to the server
     
+Z = [0] * N     
+for i in range(N):
+    Z[i] = 28.1 * random.uniform(0.95,1.05) * 10**3
+
 # Find Max Transmission Energy
 max_E_transmit = 0
 for i in range(N):
@@ -272,9 +276,7 @@ for i in range(N):
         
         dr = math.log2(1 + g*P[j][i]/I0)
 
-        Z = 28.1 * random.uniform(0.95,1.05) * 10**3
-
-        E_transmit = Z*P[j][i]/dr
+        E_transmit = Z[i]*P[j][i]/dr
 
         if(E_transmit > max_E_transmit):
             max_E_transmit = E_transmit
@@ -294,9 +296,7 @@ for i in range(N):
         
         dr = math.log2(1 + g*P[j][i]/I0)
 
-        Z = 28.1 * random.uniform(0.95,1.05) * 10**3
-
-        E_transmit = Z*P[j][i]/dr
+        E_transmit = Z[i]*P[j][i]/dr
 
         user.add_Etransmit(E_transmit/max_E_transmit)
 
@@ -312,7 +312,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = (2 - data_importance[i]) * user.get_datasize()
+        dq = importance_map(data_importance[i]) * user.get_datasize()
         if (dq > max_dq):
             max_dq = dq
 
@@ -320,7 +320,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = (2 - data_importance[i]) * user.get_datasize()
+        dq = importance_map(data_importance[i]) * user.get_datasize()
         user.add_dataquality(dq/max_dq)        
 
 # =================================================================================== #
