@@ -45,7 +45,7 @@ def count_images(input_paths):  # Count images in input paths
     image_num = 0
 
     for path in input_paths:
-        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
+        #path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
         files = os.listdir(path)
         image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
         image_num += len(image_files)
@@ -65,7 +65,7 @@ def load_images(file_paths, disaster, test_size=0.2, random_state=42):
     labels = []
 
     for path in file_paths:
-        path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
+        #path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
         for root, dirs, files in os.walk(path):
             for file in files:
 

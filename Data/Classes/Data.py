@@ -54,13 +54,15 @@ class Get_data:
         if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
           user_min_distances[u.num] = distance
 
-    sizes = [0]*len(users)
+    ratios = [None]*len(users)
 
     for i in range(len(users)):
-      sizes[i] = int(len(data)*math.sqrt(1/user_min_distances[i])/len(users))
+      ratios[i] = 1/(user_min_distances[i] + 1e-6)
 
-    total_size = sum(sizes)
-    sizes = [size * len(data) // total_size for size in sizes]
+    sum_ratios = sum(ratios)
+
+    # Get Sizes
+    sizes = [int(ratio * len(data)/sum_ratios) for ratio in ratios]
 
     s_data = []
     index = 0

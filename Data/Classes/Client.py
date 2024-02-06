@@ -1,9 +1,7 @@
 import tensorflow as tf
 from Data.Classes.Model import Model
-from keras.optimizers.legacy import SGD
+from keras.optimizers import Adam
 import keras
-from itertools import combinations
-import numpy as np
 
 class Client:
   
@@ -12,11 +10,8 @@ class Client:
     self.epoch=epoch
     self.lr = lr
     self.loss=keras.losses.BinaryCrossentropy(),
-    self.metrics=[keras.metrics.BinaryAccuracy(name="acc")]
-    self.optimizer = SGD(learning_rate=self.lr, 
-                decay=self.lr / 2, 
-                momentum=0.9
-               )
+    self.metrics=['accuracy']
+    self.optimizer = Adam(learning_rate=self.lr)
     
   def weight_client(self,data,m,n):
     wei_client = []
@@ -41,34 +36,24 @@ class Client:
       
     return weight_final
 
-  def training(self, features, labels, global_weights, shape, n_splits = 3):
+  def training(self, features, labels, global_weights, class_weights, shape):
       model = Model().global_model(shape)
-      model.compile(optimizer="rmsprop",
+
+      model.compile(optimizer=self.optimizer,
                     loss=self.loss,
-                    metrics=self.metrics
+                    metrics=[
+      keras.metrics.TruePositives(name='tp'),
+      keras.metrics.FalsePositives(name='fp'),
+      keras.metrics.TrueNegatives(name='tn'),
+      keras.metrics.FalseNegatives(name='fn'),
+      keras.metrics.BinaryAccuracy(name='accuracy'),
+      ]
                     )
       model.set_weights(global_weights)
 
-      features_splits = np.array_split(features, n_splits, axis=0)
-      labels_splits = np.array_split(labels, n_splits, axis=0)
-
-      all_combinations = list(combinations(range(n_splits), n_splits - 1))
-      
-      cv_weights = []
-
-      print("CrossValidation")
-
-      for index_combination in all_combinations:
-
-        concatenated_features = np.concatenate([features_splits[i] for i in index_combination], axis=0)
-        concatenated_labels = np.concatenate([labels_splits[i] for i in index_combination], axis=0)  
-
-        model.fit(concatenated_features, concatenated_labels, epochs=self.epoch)
-
-        cv_weights.append(model.get_weights())
-
-      avg_weights = [sum(weight[i] for weight in cv_weights) / n_splits for i in range(len(cv_weights[0]))]
-
+      model.fit(features, labels, epochs=self.epoch, class_weight=class_weights)
       print()
 
-      return avg_weights
+      weights = model.get_weights()
+
+      return weights

@@ -10,6 +10,9 @@ from accurate_matching import accurate_fedlearner_matching
 from Data.federated_learning import Servers_FL
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 import numpy as np
+import time
+from Data.Classes.Model import *
+import os
 
 # General Parameters
 
@@ -19,6 +22,8 @@ from general_parameters import *
 
 import random
 import math
+
+start_time = time.time()
 
 # Servers: on (0,0,0)
 servers = []
@@ -78,7 +83,7 @@ Dn = [0]*N
 for s in servers:   # For each server(disaster) calculate number of images each user will receive
     cps = s.get_critical_points()   # Get the relevant Critical Points
     user_min_distances = [-1]*N
-    sizes = [0]*N
+    ratios = [0]*N
 
     image_num = 0
     total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
@@ -114,13 +119,21 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
             user_min_distances[u.num] = distance
 
-    # Calculate the data sizes based on the user minimum distance from the CPs
-    for i in range(N):
-      sizes[i] = int(image_num*(1/user_min_distances[i]**2)/N)
+    print(user_min_distances)
 
-    # Normalize them
-    total_size = sum(sizes)
-    sizes = [size * image_num // total_size for size in sizes]
+    # Calculate the data size ratios based on the user minimum distance from the CPs
+    for i in range(N):
+      ratios[i] = 1/(user_min_distances[i] + 1e-6)
+
+    print(ratios)
+
+    sum_ratios = sum(ratios)
+
+    # Get Sizes
+    sizes = [int(ratio * image_num/sum_ratios) for ratio in ratios]
+
+    print("Sizes:")
+    print(sizes)
 
     # And add to the Dn of each user
     for i in range(N):
@@ -352,8 +365,32 @@ for u in users:
 print()
 # =============================================================================== #
 
+# ============================== Federated Learning ============================== #
+
 rounds=100 # number of global rounds
 lr=0.001 # learning rate
 epoch=1 # local iterations
 
-server_losses, server_accuracy = Servers_FL(users, servers, rounds, lr, epoch)
+server_losses, server_accuracy, X_test, y_test, models = Servers_FL(users, servers, rounds, lr, epoch)
+
+for i in range(S):
+    print("Server ", i, " achieved:\n")
+    print("Loss: ", server_losses[i][-1])
+    print("Accuracy: ", server_accuracy[i][-1])
+    print()
+
+# Models Validation on whole test sets
+    
+# baseModel = Model().base_model()
+
+# extracted_features = Model().extract_features(baseModel=baseModel, dataset=X_test)
+
+# for i in range(S):
+#     Model().evaluate_model(model=models[i], features=extracted_features, labels=servers[i].specify_disaster(y_test))
+
+# ================================================================================ #
+    
+end_time = time.time()
+elapsed_time = end_time - start_time
+
+print(f"\nLearning took {elapsed_time/60:.2f} minutes\n")

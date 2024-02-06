@@ -3,42 +3,46 @@ import keras
 from keras.layers import Flatten
 from keras.layers import Dense
 from keras.layers import Dropout
-from keras.layers import Activation
-from keras.layers import Rescaling
 from keras.layers import RandomFlip
 from keras.layers import RandomRotation
 from keras.models import Sequential
 from keras.regularizers import L2
-from keras.applications import EfficientNetV2S, MobileNetV3Small, InceptionV3, DenseNet201, NASNetMobile, MobileNetV2
-from keras.applications import inception_v3, mobilenet_v2, densenet, nasnet
+from keras.applications import MobileNetV3Large, MobileNetV3Small
 
 class Model:
 
   def __init__(self):
     pass
 
-  def global_model(self, shape):
 
-    regularization_strength = 0.1
+  def global_model(self, shape):
 
     model = Sequential()
     model.add(Flatten(input_shape=shape))
-    model.add(Dense(256, activation='relu', kernel_regularizer=L2(regularization_strength)))
+    model.add(Dense(16, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
 
     return model
+  
 
-  def evaluate_model(self,model, features, labels):
-    model.compile(optimizer='rmsprop',
+  def evaluate_model(self, model, features, labels):
+    model.compile(optimizer='adam',
       loss=keras.losses.BinaryCrossentropy(),
-      metrics=[keras.metrics.BinaryAccuracy(name="acc")]
+      metrics=[
+      keras.metrics.TruePositives(name='tp'),
+      keras.metrics.FalsePositives(name='fp'),
+      keras.metrics.TrueNegatives(name='tn'),
+      keras.metrics.FalseNegatives(name='fn'),
+      keras.metrics.BinaryAccuracy(name='accuracy'),
+      ]
     )
     
     score=model.evaluate(features, labels)
     print("Test Loss:", score[0])
-    print('Test Accuracy:', score[1])
-    return score[0],score[1]
+    print('Test Accuracy:', score[5])
+    return score[0],score[5]
+  
   
   # ======== Data Augmentation ========= #
 
@@ -53,33 +57,17 @@ class Model:
       return images
 
   # ===================================== #
+
   
-  def base_model(self, model):
+  def base_model(self):
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
 
     # Data Augmentation
     # input = self.data_augmentation(input)
 
-    if model == "EfficientNetV2S":
-      baseModel = EfficientNetV2S(weights="imagenet", include_top=False, input_tensor=input)
-    elif model == "MobileNetV2":
-      input = mobilenet_v2.preprocess_input(input)
-      baseModel = MobileNetV2(weights="imagenet", include_top=False, input_tensor=input)
-    elif model == "MobileNetV3Small":
-      baseModel = MobileNetV3Small(weights="imagenet", include_top=False, input_tensor=input)
-    elif model == "InceptionV3":
-      input = inception_v3.preprocess_input(input)
-      baseModel = InceptionV3(weights="imagenet", include_top=False, input_tensor=input)
-    elif model == "DenseNet201":
-      input = densenet.preprocess_input(input)
-      baseModel = DenseNet201(weights="imagenet", include_top=False, input_tensor=input)
-    elif model == "NASNetMobile":
-      input = nasnet.preprocess_input(input)
-      baseModel = NASNetMobile(weights="imagenet", include_top=False, input_tensor=input)
-    else:
-      return None
-  
+    baseModel = MobileNetV3Large(weights="imagenet", include_top=False, input_tensor=input)
+
     for layer in baseModel.layers:
       layer.trainable = False
     
