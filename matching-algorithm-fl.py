@@ -12,7 +12,6 @@ from Data.load_images import fire_input_paths, flood_input_paths, earthquake_inp
 import numpy as np
 import time
 from Data.Classes.Model import *
-import os
 
 # General Parameters
 
@@ -51,15 +50,30 @@ for i in range(N):
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
 
-for i in range(K):
+i = 0
+
+while(len(critical_points) < K):
+    flag = True  # Flag to check whether there is enough spacing for each disaster
+
     x = random.uniform(-1,1)
     y = random.uniform(-1,1)
     y = random.uniform(-1,1)
-    disaster = disasters[i%3]
+    disaster = disasters[i%S]
     
     cp = CP(x,y,z,i,disaster)
-    
-    critical_points.append(cp)
+
+    for existing_cp in critical_points:
+        if(existing_cp.num%S != i%S):
+            existing_cp_x, existing_cp_y, existing_cp_z = existing_cp.x, existing_cp.y, existing_cp.z
+
+            distance = math.sqrt((existing_cp_x - x)**2 + (existing_cp_y - y)**2 + (existing_cp_z - z)**2)
+            if(distance < 1):
+                flag = False
+                break
+        
+    if flag:
+        critical_points.append(cp)
+        i += 1
 
 # Associate Critical Points with their Servers
 for cp in critical_points:
@@ -368,7 +382,7 @@ print()
 # ============================== Federated Learning ============================== #
 
 rounds=100 # number of global rounds
-lr=0.001 # learning rate
+lr=10e-4 # learning rate
 epoch=1 # local iterations
 
 server_losses, server_accuracy, X_test, y_test, models = Servers_FL(users, servers, rounds, lr, epoch)

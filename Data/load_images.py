@@ -52,7 +52,7 @@ def count_images(input_paths):  # Count images in input paths
     
     return image_num
 
-def load_images(file_paths, disaster, test_size=0.2, random_state=42):
+def load_images(file_paths, disaster, test_size=0.2):
 
     total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
     image_num = count_images(file_paths)
@@ -70,10 +70,10 @@ def load_images(file_paths, disaster, test_size=0.2, random_state=42):
             for file in files:
 
                 if len(images) >= images_for_each_disaster:
-                    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)
+                    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=42)
 
                 image_path = os.path.join(root, file)
                 image = cv2.imread(image_path)
                 images.append(image)
                 labels.append(disaster)
-    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=random_state)
+    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=42)

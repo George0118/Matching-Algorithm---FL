@@ -87,12 +87,11 @@ class Server:
 
     def sum_scaled_weights(self,scaled_weight_list):
         '''Return the sum of the listed scaled weights. The is equivalent to scaled avg of the weights'''
-        with tf.device("/device:GPU:0"):
-            avg_grad = list()
-            #get the average grad accross all client gradients
-            for grad_list_tuple in zip(*scaled_weight_list):
-                layer_mean = tf.math.reduce_sum(grad_list_tuple, axis=0)
-                avg_grad.append(layer_mean)
+        avg_grad = list()
+        #get the average grad accross all client gradients
+        for grad_list_tuple in zip(*scaled_weight_list):
+            layer_mean = tf.math.reduce_sum(grad_list_tuple, axis=0)
+            avg_grad.append(layer_mean)
         return avg_grad
 
     def evaluate(self,model,test_X, test_y):
@@ -121,11 +120,13 @@ class Server:
 
         factors = [0] * N
 
+        Ns = len(list(self.get_coalition()))
+
         denominator = 0
         for u in coalition:
             importance_list = u.get_importance()
             for cp in critical_points:
-                denominator += importance_map(importance_list[cp.num]) * u.get_datasize()
+                denominator += importance_map(importance_list[cp.num]) * u.get_datasize() * Ns
 
         for u in coalition:
             importance_list = u.get_importance()

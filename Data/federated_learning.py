@@ -12,9 +12,11 @@ tf.test.gpu_device_name()
 from Data.Classes.Client import Client
 from Data.Classes.Data import Get_data
 from Data.Classes.Model import Model
+from Data.FL_helping_functions import *
 from tensorflow import data as tf_data
 from collections import deque
 import time
+import threading
 
 def Servers_FL(users, servers, K, lr, epoch):
 
@@ -33,17 +35,14 @@ def Servers_FL(users, servers, K, lr, epoch):
   server_losses = []
   server_accuracy = []
 
-  starting_lr = lr
-
   for server in servers:
-
-    lr = starting_lr
 
     print("Training model for Server ", server.num, "\n")
 
     baseModel = Model().base_model()
 
     user_features = [None] * len(users)
+    class_weights = [None] * len(users)
 
     X_test_server = np.empty_like(X_test[0])
     y_test_server = np.empty_like(y_test[0])
@@ -73,18 +72,27 @@ def Servers_FL(users, servers, K, lr, epoch):
       class_0_samples += np.sum(y_train[u.num] == 0)
       class_1_samples += np.sum(y_train[u.num] == 1)
 
-    class_0_weight = total_samples / (2 * class_0_samples)
-    class_1_weight = total_samples / (2 * class_1_samples)
+      class_0_weight = total_samples / (2 * class_0_samples)
+      class_1_weight = total_samples / (2 * class_1_samples)
 
-    class_weights = {0: class_0_weight, 1: class_1_weight}
+      class_weights[u.num] = {0: class_0_weight, 1: class_1_weight}
 
 
     # Feature Extraction for all
     print("Feature Extraction:")
+
+    threads = []
+
     for u in server.get_coalition():
-      user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
+        thread = threading.Thread(target=extract_features_wrapper, args=(u.num, baseModel, X_train, user_features))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+      thread.join()
     
     server_features = Model().extract_features(baseModel, X_test_server)
+    print(server_features.shape)
     print()
 
     # Begin training
@@ -104,18 +112,15 @@ def Servers_FL(users, servers, K, lr, epoch):
       global_weights=global_model.get_weights()
       weit=[]
 
-      for u in server.get_coalition():
-        print("User ", u.num, ":")
-        client=Client(lr,epoch,u.num)
+      threads = []
 
-        weix=client.training(user_features[u.num],
-                              y_train[u.num],
-                              global_weights,
-                              class_weights,
-                              user_features[u.num].shape[1:]
-                            )
-        weix=client.scale_model_weights(weix,factors,u.num)
-        weit.append(weix)
+      for u in server.get_coalition():
+        thread = threading.Thread(target=training_wrapper, args=(lr, epoch, u.num, user_features, y_train, global_weights, class_weights, factors, weit))
+        threads.append(thread)
+        thread.start()
+
+      for thread in threads:
+        thread.join()
 
       global_weight=server.sum_scaled_weights(weit) # fedavg
       print("Global Model:")
@@ -129,11 +134,10 @@ def Servers_FL(users, servers, K, lr, epoch):
       elapsed_time = end_time - start_time
 
       print(f"\nGlobal Round {k + 1} took {elapsed_time:.2f} seconds\n")
-      lr = lr/2
 
-      # if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k+1 >= 10:
-      #   print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
-      #   break
+      if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k+1 >= 10:
+        print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
+        break
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)

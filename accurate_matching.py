@@ -1,6 +1,7 @@
 import random
-
+import math
 from accurate_matching_conditions import *
+from general_parameters import *
 
 #Accurate Matching Function
 
@@ -10,9 +11,9 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
     while(flag):
         flag = False    # Set flag to False and if change occurs then set it to True
 
-        for i in range(len(apprx_matched_users)):
+        for i in range(round(math.log2(N)*N)):
 
-            random_user = apprx_matched_users[random.randint(0,len(apprx_matched_users)-1)]   # Select random user
+            random_user = apprx_matched_users[random.randint(0,N-1)]   # Select random user
 
             if(random_user.get_alligiance() == None):     # If user does not belong to any coalition
                 max_utility_diff = 0
@@ -31,7 +32,7 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
 
             else:   # else the user belongs in a coalition already
 
-                for j in range(len(servers)):
+                for j in range(round(math.log2(S)*S)):
 
                     current_server = random_user.get_alligiance()
 
@@ -50,9 +51,10 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
                             print("User changed servers")         
 
                     else:   # if the other server has no space
-                        for k in range(len(list(other_server.get_coalition()))):
+                        other_coalition = other_server.get_coalition()
+                        for k in range(round(math.log2(len(list(other_coalition)))*len(list(other_coalition)))):
 
-                            other_user = random.choice(list(other_server.get_coalition()))  # select a random user from its coalition
+                            other_user = random.choice(list(other_coalition))  # select a random user from its coalition
 
                             utility_diff = check_user_exchange(servers, random_user, other_user, current_server, other_server)   # check if the servers exchanging users is beneficial
 

@@ -22,19 +22,11 @@ class Client:
     return wei_client
     
   
-  def scale_model_weights(self,weight,scalar,num):
+  def scale_model_weights(self,weights,scalar):
     '''function for scaling a models weights'''
-    weight_final = []
-    steps = len(weight)
-
-    fac=scalar[num]
-
-    sca=[fac for i in range(steps)]
-
-    for i in range(steps):
-      weight_final.append(sca[i]*weight[i])
+    scaled_weights = [scalar * w for w in weights]
       
-    return weight_final
+    return scaled_weights
 
   def training(self, features, labels, global_weights, class_weights, shape):
       model = Model().global_model(shape)

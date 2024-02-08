@@ -5,9 +5,11 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import RandomFlip
 from keras.layers import RandomRotation
+from keras.layers import GlobalAveragePooling2D
+from keras.layers import Input
 from keras.models import Sequential
 from keras.regularizers import L2
-from keras.applications import MobileNetV3Large, MobileNetV3Small
+from keras.applications import MobileNetV3Large, MobileNetV3Small, NASNetMobile, DenseNet201, InceptionV3
 
 class Model:
 
@@ -15,13 +17,15 @@ class Model:
     pass
 
 
-  def global_model(self, shape):
+  def global_model(self, input_shape):
 
-    model = Sequential()
-    model.add(Flatten(input_shape=shape))
-    model.add(Dense(16, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
+    input = Input(shape=input_shape)
+    
+    x = GlobalAveragePooling2D()(input)
+    x = Dropout(0.2)(x)
+    x_output = Dense(1, activation='sigmoid')(x)
+
+    model = keras.Model(inputs=input, outputs=x_output)
 
     return model
   
@@ -66,7 +70,7 @@ class Model:
     # Data Augmentation
     # input = self.data_augmentation(input)
 
-    baseModel = MobileNetV3Large(weights="imagenet", include_top=False, input_tensor=input)
+    baseModel = MobileNetV3Small(weights="imagenet", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False
