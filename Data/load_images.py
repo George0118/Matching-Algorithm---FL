@@ -37,6 +37,7 @@ import cv2
 import os
 import math
 import numpy as np
+import random
 from sklearn.model_selection import train_test_split
 
 factor = 1.6
@@ -60,7 +61,6 @@ def load_images(file_paths, disaster, test_size=0.2):
     ratio = 1-math.sqrt(ratio)
     image_num = int(factor*ratio*image_num)
 
-    images_for_each_disaster = image_num
     images = []
     labels = []
 
@@ -68,12 +68,13 @@ def load_images(file_paths, disaster, test_size=0.2):
         #path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
         for root, dirs, files in os.walk(path):
             for file in files:
-
-                if len(images) >= images_for_each_disaster:
-                    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=42)
-
                 image_path = os.path.join(root, file)
                 image = cv2.imread(image_path)
                 images.append(image)
                 labels.append(disaster)
-    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=42)
+
+    selected_indices = random.sample(range(len(images)), image_num)
+    selected_images = [images[i] for i in selected_indices]
+    selected_labels = [labels[i] for i in selected_indices]
+
+    return train_test_split(np.array(selected_images), np.array(selected_labels), test_size=test_size, random_state=42)

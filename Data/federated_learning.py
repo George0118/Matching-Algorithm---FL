@@ -24,12 +24,12 @@ def Servers_FL(users, servers, K, lr, epoch):
   print(gpus)
   print()
 
-  get_data=Get_data(users, servers)
+  get_data = Get_data(users, servers)
 
-  X_train, y_train, X_test, y_test=get_data.pre_data()
+  X_train, y_train, X_test, y_test = get_data.pre_data()
 
-  X_test_total = np.empty_like(X_test[0])
-  y_test_total = np.empty_like(y_test[0])
+  X_test_total = None
+  y_test_total = None
   models = []
 
   server_losses = []
@@ -44,16 +44,24 @@ def Servers_FL(users, servers, K, lr, epoch):
     user_features = [None] * len(users)
     class_weights = [None] * len(users)
 
-    X_test_server = np.empty_like(X_test[0])
-    y_test_server = np.empty_like(y_test[0])
+    X_test_server = None
+    y_test_server = None
 
     # Concatenate all the testing data for the specific server
     for u in server.get_coalition():
-      X_test_server = np.concatenate((X_test_server, X_test[u.num]))
-      y_test_server = np.concatenate((y_test_server, y_test[u.num]))
+      if(X_test_server is None):
+        X_test_server = X_test[u.num]
+        y_test_server = y_test[u.num]
+      else:
+        X_test_server = np.concatenate((X_test_server, X_test[u.num]))
+        y_test_server = np.concatenate((y_test_server, y_test[u.num]))
 
-    X_test_total = np.concatenate((X_test_total, X_test_server))
-    y_test_total = np.concatenate((y_test_total, y_test_server))
+    if(X_test_total is None):
+      X_test_total = X_test_server
+      y_test_total = y_test_server
+    else:
+      X_test_total = np.concatenate((X_test_total, X_test_server))
+      y_test_total = np.concatenate((y_test_total, y_test_server))
 
     factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
     

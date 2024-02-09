@@ -5,11 +5,11 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import RandomFlip
 from keras.layers import RandomRotation
-from keras.layers import GlobalAveragePooling2D
+from keras.layers import GlobalMaxPooling2D
 from keras.layers import Input
 from keras.models import Sequential
 from keras.regularizers import L2
-from keras.applications import MobileNetV3Large, MobileNetV3Small, NASNetMobile, DenseNet201, InceptionV3
+from keras.applications import MobileNetV3Large, MobileNetV3Small
 
 class Model:
 
@@ -20,9 +20,9 @@ class Model:
   def global_model(self, input_shape):
 
     input = Input(shape=input_shape)
-    
-    x = GlobalAveragePooling2D()(input)
-    x = Dropout(0.2)(x)
+    x = GlobalMaxPooling2D()(input)
+    x = Dense(64, activation='relu')(x)
+    x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
@@ -41,8 +41,8 @@ class Model:
       keras.metrics.BinaryAccuracy(name='accuracy'),
       ]
     )
-    
-    score=model.evaluate(features, labels)
+
+    score = model.evaluate(features, labels)
     print("Test Loss:", score[0])
     print('Test Accuracy:', score[5])
     return score[0],score[5]
