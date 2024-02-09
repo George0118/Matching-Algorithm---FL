@@ -385,22 +385,13 @@ rounds=100 # number of global rounds
 lr=10e-4 # learning rate
 epoch=1 # local iterations
 
-server_losses, server_accuracy, X_test, y_test, models = Servers_FL(users, servers, rounds, lr, epoch)
+server_losses, server_accuracy = Servers_FL(users, servers, rounds, lr, epoch)
 
 for i in range(S):
     print("Server ", i, " achieved:\n")
     print("Loss: ", server_losses[i][-1])
     print("Accuracy: ", server_accuracy[i][-1])
     print()
-
-# Models Validation on whole test sets
-    
-# baseModel = Model().base_model()
-
-# extracted_features = Model().extract_features(baseModel=baseModel, dataset=X_test)
-
-# for i in range(S):
-#     Model().evaluate_model(model=models[i], features=extracted_features, labels=servers[i].specify_disaster(y_test))
 
 # ================================================================================ #
     

@@ -28,10 +28,6 @@ def Servers_FL(users, servers, K, lr, epoch):
 
   X_train, y_train, X_test, y_test = get_data.pre_data()
 
-  X_test_total = None
-  y_test_total = None
-  models = []
-
   server_losses = []
   server_accuracy = []
 
@@ -55,13 +51,6 @@ def Servers_FL(users, servers, K, lr, epoch):
       else:
         X_test_server = np.concatenate((X_test_server, X_test[u.num]))
         y_test_server = np.concatenate((y_test_server, y_test[u.num]))
-
-    if(X_test_total is None):
-      X_test_total = X_test_server
-      y_test_total = y_test_server
-    else:
-      X_test_total = np.concatenate((X_test_total, X_test_server))
-      y_test_total = np.concatenate((y_test_total, y_test_server))
 
     factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
     
@@ -92,7 +81,7 @@ def Servers_FL(users, servers, K, lr, epoch):
     threads = []
 
     for u in server.get_coalition():
-        thread = threading.Thread(target=extract_features_wrapper, args=(u.num, baseModel, X_train, user_features))
+        thread = threading.Thread(target=extract_features_wrapper, args=(u.num, baseModel, X_train[u.num], user_features))
         threads.append(thread)
         thread.start()
 
@@ -123,7 +112,7 @@ def Servers_FL(users, servers, K, lr, epoch):
       threads = []
 
       for u in server.get_coalition():
-        thread = threading.Thread(target=training_wrapper, args=(lr, epoch, u.num, user_features, y_train, global_weights, class_weights, factors, weit))
+        thread = threading.Thread(target=training_wrapper, args=(lr, epoch, u.num, user_features[u.num], y_train[u.num], global_weights, class_weights[u.num], factors[u.num], weit))
         threads.append(thread)
         thread.start()
 
@@ -149,9 +138,8 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)
-    models.append(global_model)
 
     print("------------------------------------------------------------------")
 
-  return server_losses, server_accuracy, X_test_total, y_test_total, models
+  return server_losses, server_accuracy
 

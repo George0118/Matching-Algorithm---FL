@@ -22,7 +22,6 @@ class Model:
     input = Input(shape=input_shape)
     x = GlobalMaxPooling2D()(input)
     x = Dense(64, activation='relu')(x)
-    x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
