@@ -1,6 +1,6 @@
 import random
 import math
-from accurate_matching_conditions import *
+from GT_Matching.accurate_matching_conditions import *
 from general_parameters import *
 
 #Accurate Matching Function

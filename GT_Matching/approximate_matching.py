@@ -1,5 +1,4 @@
-from utility_functions import user_utility, server_utility
-
+from GT_Matching.utility_functions import user_utility, server_utility
 
 #Approximate Matching Function
 
