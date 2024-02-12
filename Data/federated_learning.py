@@ -31,8 +31,9 @@ def Servers_FL(users, servers, K, lr, epoch):
   server_losses = []
   server_accuracy = []
 
-  for server in servers:
+  for i in tf.range(len(servers)):
 
+    server = servers[i]
     print("Training model for Server ", server.num, "\n")
 
     baseModel = Model().base_model()
@@ -43,8 +44,11 @@ def Servers_FL(users, servers, K, lr, epoch):
     X_test_server = None
     y_test_server = None
 
+    coalition = list(server.get_coalition())
+
     # Concatenate all the testing data for the specific server
-    for u in server.get_coalition():
+    for j in tf.range(len(coalition)):
+      u = coalition[j]
       if(X_test_server is None):
         X_test_server = X_test[u.num]
         y_test_server = y_test[u.num]
@@ -61,7 +65,8 @@ def Servers_FL(users, servers, K, lr, epoch):
     class_0_samples = 0
     class_1_samples = 0  
 
-    for u in server.get_coalition():
+    for j in tf.range(len(coalition)):
+      u = coalition[j]
       y_train[u.num] = server.specify_disaster(y_train[u.num])
 
       # Calculate class weights
@@ -80,12 +85,14 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     threads = []
 
-    for u in server.get_coalition():
+    for j in tf.range(len(coalition)):
+        u = coalition[j]
         thread = threading.Thread(target=extract_features_wrapper, args=(u.num, baseModel, X_train[u.num], user_features))
         threads.append(thread)
         thread.start()
 
-    for thread in threads:
+    for j in tf.range(len(threads)):
+      thread = threads[j]
       thread.join()
     
     server_features = Model().extract_features(baseModel, X_test_server)
@@ -101,9 +108,9 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     accuracy_history = deque(maxlen=3)
 
-    for k in range(K):
+    for k in tf.range(K):
       print("------------------------------------------------------------------")
-      print("Round: ", k+1, "\n")
+      print(f"Round: {k + 1}\n")
       start_time = time.time()
 
       global_weights=global_model.get_weights()
@@ -111,12 +118,14 @@ def Servers_FL(users, servers, K, lr, epoch):
 
       threads = []
 
-      for u in server.get_coalition():
+      for j in tf.range(len(coalition)):
+        u = coalition[j]
         thread = threading.Thread(target=training_wrapper, args=(lr, epoch, u.num, user_features[u.num], y_train[u.num], global_weights, class_weights[u.num], factors[u.num], weit))
         threads.append(thread)
         thread.start()
 
-      for thread in threads:
+      for j in tf.range(len(threads)):
+        thread = threads[j]
         thread.join()
 
       global_weight=server.sum_scaled_weights(weit) # fedavg

@@ -5,8 +5,9 @@
 from Classes.User import User
 from Classes.Server import Server, importance_map
 from Classes.CriticalPoint import CP
-from approximate_matching import approximate_fedlearner_matching
-from accurate_matching import accurate_fedlearner_matching
+from GT_Matching.approximate_matching import approximate_fedlearner_matching
+from GT_Matching.accurate_matching import accurate_fedlearner_matching
+from RL_Matching.rl_matching import rl_fedlearner_matching
 from Data.federated_learning import Servers_FL
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 import numpy as np
@@ -346,19 +347,21 @@ for i in range(K):
 
 # =================================================================================== #
 
+gt_users = users.copy()
+gt_servers = servers.copy()
 
 # ============================== Approximate Matching ============================== #
 
 # Initializing the available servers for each user
 for i in range(N):
-    u = users[i]
-    u.set_available_servers(servers)
+    u = gt_users[i]
+    u.set_available_servers(gt_servers)
     
-approximate_fedlearner_matching(users, servers)
+approximate_fedlearner_matching(gt_users, gt_servers)
 
 print("Approximate FedLearner Matching:\n")
 
-for u in users:
+for u in gt_users:
     allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
@@ -368,11 +371,11 @@ print()
 
 # ============================== Accurate Matching ============================== #
     
-accurate_fedlearner_matching(users, servers)
+accurate_fedlearner_matching(gt_users, gt_servers)
 
 print("Accurate FedLearner Matching:\n")
 
-for u in users:
+for u in gt_users:
     allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
@@ -385,7 +388,7 @@ rounds=100 # number of global rounds
 lr=10e-4 # learning rate
 epoch=1 # local iterations
 
-server_losses, server_accuracy = Servers_FL(users, servers, rounds, lr, epoch)
+server_losses, server_accuracy = Servers_FL(gt_users, gt_servers, rounds, lr, epoch)
 
 for i in range(S):
     print("Server ", i, " achieved:\n")
@@ -394,6 +397,15 @@ for i in range(S):
     print()
 
 # ================================================================================ #
+
+rl_users = user.copy()  
+rl_servers = servers.copy()  
+
+# ============================== Reinforcment Learning ============================== #
+    
+rl_fedlearner_matching(rl_users, rl_servers)
+    
+# =================================================================================== #
     
 end_time = time.time()
 elapsed_time = end_time - start_time

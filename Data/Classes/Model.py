@@ -20,7 +20,7 @@ class Model:
   def global_model(self, input_shape):
 
     input = Input(shape=input_shape)
-    x = GlobalMaxPooling2D()(input)
+    x = Flatten()(input)
     x = Dense(64, activation='relu')(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
