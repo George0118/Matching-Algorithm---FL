@@ -9,7 +9,7 @@ import math
 from pprint import pprint
 import random
 
-c = 1   # degree of exploration
+c = 0.5   # degree of exploration
 Nt = [[0] * (S+1) for _ in range(N)]
 rewards = [[0] * S for _ in range(N)]
 
@@ -207,7 +207,7 @@ def final_matching(users: List[User], servers: List[Server]):
                             u_min_contribute = u
 
                     # if it can and user wants
-                    if user_reward > rewards[u_min_contribute.num][server.num] and user_reward > rewards[user.num][server.num]:        
+                    if user_reward > rewards[u_min_contribute.num][server.num] and user_reward > rewards[user.num][user.get_alligiance().num]:        
                         server.remove_from_coalition(u_min_contribute)                 # remove the other user
                         u_min_contribute.change_server(user.get_alligiance())
                         user.get_alligiance().add_to_coalition(u_min_contribute)       # and add him to the other server

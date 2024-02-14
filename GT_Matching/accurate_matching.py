@@ -28,7 +28,7 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
                     favorite_MEC.add_to_coalition(random_user)
                     random_user.change_server(favorite_MEC)
                     flag = True     # and set flag to True
-                    print("Added user to server")
+                    # print("Added user to server")
 
             else:   # else the user belongs in a coalition already
 
@@ -48,7 +48,7 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
                             other_server.add_to_coalition(random_user)          # add to other server
                             random_user.change_server(other_server)  
                             flag = True     # and set flag to True 
-                            print("User changed servers")         
+                            # print("User changed servers")         
 
                     else:   # if the other server has no space
                         other_coalition = other_server.get_coalition()
@@ -68,7 +68,7 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
                                 other_user.change_server(current_server)
 
                                 flag = True     # and set flag to True
-                                print("User exchange")
+                                # print("User exchange")
                                 break
 
             # Lastly check if removing the user from its current coalition would be beneficial
@@ -81,5 +81,5 @@ def accurate_fedlearner_matching(apprx_matched_users, servers):
                     current_server.remove_from_coalition(random_user)   # remove from coalition
                     random_user.change_server(None)
                     flag = True     # and set flag to True
-                    print("User removed from server")
+                    # print("User removed from server")
 
