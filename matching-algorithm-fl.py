@@ -398,12 +398,20 @@ for i in range(S):
 
 # ================================================================================ #
 
-rl_users = user.copy()  
+rl_users = users.copy()  
 rl_servers = servers.copy()  
 
 # ============================== Reinforcment Learning ============================== #
     
 rl_fedlearner_matching(rl_users, rl_servers)
+
+print("Reinforcement Learning FedLearner Matching:\n")
+
+for u in rl_users:
+    allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+    print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+print()
     
 # =================================================================================== #
     
