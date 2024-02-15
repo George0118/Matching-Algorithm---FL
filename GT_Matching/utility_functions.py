@@ -70,3 +70,9 @@ def server_utility_externality(servers, coalition, server):
     utility = utility/added_payment_of_rest
         
     return utility  
+
+def user_utility_diff_exchange(user1, user2, server1, server2):
+    return user_utility(user1, server1) + user_utility(user2, server2) - user_utility(user1, server2) - user_utility(user2, server1)
+
+def user_utility_diff_servers(user, server1, server2):
+    return user_utility(user, server1) - user_utility(user, server2)

@@ -8,11 +8,14 @@ from Classes.CriticalPoint import CP
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
 from RL_Matching.rl_matching import rl_fedlearner_matching
+from RAND_Matching.random_matching import random_fedlearner_matching
 from Data.federated_learning import Servers_FL
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 import numpy as np
 import time
+import copy
 from Data.Classes.Model import *
+from Data.rl_parameters import *
 
 # General Parameters
 
@@ -346,11 +349,29 @@ for i in range(K):
         user.add_dataquality(dq/max_dq)        
 
 # =================================================================================== #
+        
+ran_users = copy.deepcopy(users)
+ran_servers = copy.deepcopy(servers)
 
-gt_users = users.copy()
-gt_servers = servers.copy()
+# ================================= Random Matching ================================= #
+    
+random_fedlearner_matching(ran_users, ran_servers)
 
-# ============================== Approximate Matching ============================== #
+print("Random FedLearner Matching:\n")
+
+for u in ran_users:
+    allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+    print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+print()
+# =================================================================================== #
+
+gt_users = copy.deepcopy(users)
+gt_servers = copy.deepcopy(servers)
+
+# ============================== Game Theory Matching ============================== #
+
+# ==== Approximate Matching ==== #
 
 # Initializing the available servers for each user
 for i in range(N):
@@ -366,10 +387,8 @@ for u in gt_users:
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
-# =================================================================================== #
 
-
-# ============================== Accurate Matching ============================== #
+# ===== Accurate Matching ==== #
     
 accurate_fedlearner_matching(gt_users, gt_servers)
 
@@ -382,38 +401,53 @@ for u in gt_users:
 print()
 # =============================================================================== #
 
-# ============================== Federated Learning ============================== #
+# # ============================== Federated Learning ============================== #
 
-rounds=100 # number of global rounds
-lr=10e-4 # learning rate
-epoch=1 # local iterations
+# epoch=1 # local iterations
 
-server_losses, server_accuracy = Servers_FL(gt_users, gt_servers, rounds, lr, epoch)
+# server_losses, server_accuracy = Servers_FL(gt_users, gt_servers, rounds, lr, epoch)
 
-for i in range(S):
-    print("Server ", i, " achieved:\n")
-    print("Loss: ", server_losses[i][-1])
-    print("Accuracy: ", server_accuracy[i][-1])
-    print()
+# for i in range(S):
+#     print("Server ", i, " achieved:\n")
+#     print("Loss: ", server_losses[i][-1])
+#     print("Accuracy: ", server_accuracy[i][-1])
+#     print()
 
-# ================================================================================ #
+# # ================================================================================ #
 
-rl_users = users.copy()  
-rl_servers = servers.copy()  
+rl1_users = copy.deepcopy(users)
+rl1_servers = copy.deepcopy(servers)
 
-# ============================== Reinforcment Learning ============================== #
+# =========================== RL Matching - Server Focused =========================== #
     
-rl_fedlearner_matching(rl_users, rl_servers)
+rl_fedlearner_matching(rl1_users, rl1_servers, True)
 
 print("Reinforcement Learning FedLearner Matching:\n")
 
-for u in rl_users:
+for u in rl1_users:
     allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
     
-# =================================================================================== #
+# ==================================================================================== #
+
+rl2_users = copy.deepcopy(users)
+rl2_servers = copy.deepcopy(servers)
+
+# ========================== RL Matching - User Focused ========================== #
+    
+rl_fedlearner_matching(rl2_users, rl2_servers, False)
+
+print("Reinforcement Learning FedLearner Matching:\n")
+
+for u in rl2_users:
+    allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+    print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+print()
+    
+# ================================================================================== #
     
 end_time = time.time()
 elapsed_time = end_time - start_time
