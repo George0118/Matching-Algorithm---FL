@@ -5,6 +5,7 @@
 from Classes.User import User
 from Classes.Server import Server, importance_map
 from Classes.CriticalPoint import CP
+from GT_Matching.utility_functions import user_utility, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
 from RL_Matching.rl_matching import rl_fedlearner_matching
@@ -14,6 +15,10 @@ from Data.load_images import fire_input_paths, flood_input_paths, earthquake_inp
 import numpy as np
 import time
 import copy
+import random
+import math
+import datetime
+import os
 from Data.Classes.Model import *
 from Data.rl_parameters import *
 
@@ -22,9 +27,6 @@ from Data.rl_parameters import *
 from general_parameters import *
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
-
-import random
-import math
 
 start_time = time.time()
 
@@ -210,7 +212,7 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
         
         power = P[j][i] * distance
         
@@ -230,7 +232,7 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
         
         power = P[j][i] * distance
         
@@ -259,6 +261,11 @@ for i in range(N):
         payment = server.p
         
         user.add_payment(payment/max_payment)
+
+# Normalize Payments for servers
+for i in range(S):
+    server = servers[i]
+    server.set_p(server.p/max_payment)
         
 # ==================================================================
 
@@ -293,7 +300,7 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
         
         power = P[j][i] * distance
         
@@ -315,7 +322,7 @@ for i in range(N):
 
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random.uniform(-1, 1)
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
         
         power = P[j][i] * distance
         
@@ -453,3 +460,92 @@ end_time = time.time()
 elapsed_time = end_time - start_time
 
 print(f"\nLearning took {elapsed_time/60:.2f} minutes\n")
+
+
+# For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
+
+matchings = []
+matchings.append((ran_users, ran_servers, "RAN"))
+matchings.append((gt_users, gt_servers, "GT"))
+matchings.append((rl1_users, rl1_servers, "RL1"))
+matchings.append((rl2_users, rl2_servers, "RL2"))
+
+timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
+
+directory_path = "../results"       # Results Directory
+
+# Check if the directory exists
+if not os.path.exists(directory_path):
+    # If it doesn't exist, create the directory
+    os.makedirs(directory_path)
+
+for matching in matchings:
+
+    _users, _servers, matching_label = matching
+
+    # Energy (J)
+    mean_Energy = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Energy += u.get_Elocal() * max_Elocal
+            mean_Energy += u.get_Etransmit()[u.get_alligiance().num] * max_E_transmit
+
+    mean_Energy /= N
+
+    # Local Energy (J)
+    mean_Elocal = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Elocal += u.get_Elocal() * max_Elocal
+
+    mean_Elocal /= N
+
+    # Transfer Energy (J)
+    mean_Etransfer = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Etransfer += u.get_Etransmit()[u.get_alligiance().num] * max_E_transmit
+
+    mean_Etransfer /= N
+
+    # Datarate (bps)
+    mean_Datarate = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Datarate += u.get_datarate()[u.get_alligiance().num] * max_dr
+
+    mean_Datarate /= N
+
+    # User Utility
+    mean_User_Utility = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_User_Utility += user_utility(u, u.get_alligiance())
+
+    mean_User_Utility /= N
+
+    # Server Utility
+    mean_Server_Utility = 0
+    for s in _servers:
+        mean_Server_Utility += server_utility_externality(_servers, s.get_coalition(), s)
+
+    mean_Server_Utility /= S
+
+    # User Payments
+    user_payments = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            user_payments += u.get_payment()[u.get_alligiance().num]
+
+    output_filename = f"../results/u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
+
+    with open(output_filename, 'a') as file:
+        file.write(f"Matching: {matching_label}, Users: {N}, Critical Points: {K}\n\
+    Mean Energy: {mean_Energy} J\n\
+    Mean Elocal: {mean_Elocal} J\n\
+    Mean Etransfer: {mean_Etransfer} J\n\
+    Mean Datarate: {mean_Datarate} bps\n\
+    Mean User Utility: {mean_User_Utility}\n\
+    Mean Server Utility: {mean_Server_Utility}\n\
+    Sum User Payments: {user_payments}\n\
+    \n")

@@ -1,3 +1,5 @@
+import math
+
 # Parameters
 
 alpha = 1
@@ -46,7 +48,7 @@ def server_utility(server, coalition):
     for u in coalition:
         utility += user_utility(u,server) 
 
-    utility -= epsilon * server.p**2
+    utility -= epsilon * math.sqrt(server.p)
         
     return utility  
 

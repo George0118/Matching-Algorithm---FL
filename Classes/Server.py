@@ -19,6 +19,9 @@ class Server:
         self.coalition = set()
         self.invitations = set()
 
+    def set_p(self, value):         # Set payment
+        self._p = value
+
     def get_invitation(self, user):         # Getting Invited by user
         self.invitations.add(user)
 

@@ -18,7 +18,7 @@ from collections import deque
 import time
 import threading
 
-def Servers_FL(users, servers, K, lr, epoch):
+def Servers_FL(users, servers, R, lr, epoch):
 
   gpus = tf.config.list_physical_devices('GPU')
   print(gpus)
@@ -108,9 +108,9 @@ def Servers_FL(users, servers, K, lr, epoch):
 
     accuracy_history = deque(maxlen=3)
 
-    for k in tf.range(K):
+    for r in tf.range(R):
       print("------------------------------------------------------------------")
-      print(f"Round: {k + 1}\n")
+      print(f"Round: {r + 1}\n")
       start_time = time.time()
 
       global_weights=global_model.get_weights()
@@ -139,9 +139,9 @@ def Servers_FL(users, servers, K, lr, epoch):
       end_time = time.time()
       elapsed_time = end_time - start_time
 
-      print(f"\nGlobal Round {k + 1} took {elapsed_time:.2f} seconds\n")
+      print(f"\nGlobal Round {r + 1} took {elapsed_time:.2f} seconds\n")
 
-      if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and k+1 >= 10:
+      if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and r+1 >= 10:
         print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
         break
 
