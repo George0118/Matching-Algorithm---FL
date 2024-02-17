@@ -1,11 +1,17 @@
 
 # Project description
 
+# Argument Parsing
+
+from config import parse_arguments
+
+parse_arguments()
+
 # Imports
 from Classes.User import User
 from Classes.Server import Server, importance_map
 from Classes.CriticalPoint import CP
-from GT_Matching.utility_functions import user_utility, server_utility_externality
+from GT_Matching.utility_functions import user_utility_ext, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
 from RL_Matching.rl_matching import rl_fedlearner_matching
@@ -21,12 +27,6 @@ import random
 import math
 import datetime
 import os
-
-# Argument Parsing
-
-from config import parse_arguments
-
-parse_arguments()
 
 # General Parameters
 
@@ -223,7 +223,7 @@ for i in range(N):
         
         power = P[j][i] * distance
         
-        dr = math.log2(1 + g*power/I0)
+        dr = B*math.log2(1 + g*power/I0)
         
         if(dr > max_dr):
             max_dr = dr
@@ -243,9 +243,66 @@ for i in range(N):
         
         power = P[j][i] * distance
         
-        dr = math.log2(1 + g*power/I0)
+        dr = B*math.log2(1 + g*power/I0)
         
         user.add_datarate(dr/max_dr)
+
+
+# Normalized Data Rate with Externality
+
+# Finding Max Data Rate
+max_dr = 0
+for i in range(N):
+    for j in range(S):
+        user = users[i]
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+        
+        power = P[j][i] * distance
+
+        denominator_sum = 0
+        for k in range(N):
+            u = users[k]
+            user_x, user_y, user_z = u.x, u.y, u.z
+            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            denominator_sum += g_ext * P[j][k] * distance
+
+        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
+        
+        if(dr > max_dr):
+            max_dr = dr
+
+# Calculating Normalized Data Rates
+for i in range(N):
+    for j in range(S):
+        user = users[i]
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+        
+        denominator_sum = 0
+        for k in range(N):
+            u = users[k]
+            user_x, user_y, user_z = u.x, u.y, u.z
+            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            denominator_sum += g_ext * P[j][k] * distance
+
+        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
+        
+        user.add_datarate_ext(dr/max_dr)
         
 # ==================================================================
 
@@ -311,7 +368,7 @@ for i in range(N):
         
         power = P[j][i] * distance
         
-        dr = math.log2(1 + g*power/I0)
+        dr = B*math.log2(1 + g*power/I0)
 
         E_transmit = Z[i]*power/dr
 
@@ -333,11 +390,74 @@ for i in range(N):
         
         power = P[j][i] * distance
         
-        dr = math.log2(1 + g*power/I0)
+        dr = B*math.log2(1 + g*power/I0)
 
         E_transmit = Z[i]*power/dr
 
         user.add_Etransmit(E_transmit/max_E_transmit)
+
+
+# Normalized Energy Consumption to transmit the local model parameters to the server with Externality
+
+# Find Max Transmission Energy
+max_E_transmit = 0
+for i in range(N):
+    user = users[i]
+    for j in range(S):
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+        
+        power = P[j][i] * distance
+        
+        denominator_sum = 0
+        for k in range(N):
+            u = users[k]
+            user_x, user_y, user_z = u.x, u.y, u.z
+            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            denominator_sum += g_ext * P[j][k] * distance
+
+        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
+
+        E_transmit = Z[i]*power/dr
+
+        if(E_transmit > max_E_transmit):
+            max_E_transmit = E_transmit
+
+# Calculate Normalized Energy Transmission
+for i in range(N):
+    user = users[i]
+    for j in range(S):
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        server = servers[j]
+        server_x, server_y, server_z = server.x, server.y, server.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        
+        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+        
+        power = P[j][i] * distance
+        
+        denominator_sum = 0
+        for k in range(N):
+            u = users[k]
+            user_x, user_y, user_z = u.x, u.y, u.z
+            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            denominator_sum += g_ext * P[j][k] * distance
+
+        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
+
+        E_transmit = Z[i]*power/dr
+
+        user.add_Etransmit_ext(E_transmit/max_E_transmit)
 
 
 # ==================================================================
@@ -495,7 +615,7 @@ for matching in matchings:
     for u in _users:
         if u.get_alligiance() is not None:
             mean_Energy += u.get_Elocal() * max_Elocal
-            mean_Energy += u.get_Etransmit()[u.get_alligiance().num] * max_E_transmit
+            mean_Energy += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
 
     mean_Energy /= N
 
@@ -511,7 +631,7 @@ for matching in matchings:
     mean_Etransfer = 0
     for u in _users:
         if u.get_alligiance() is not None:
-            mean_Etransfer += u.get_Etransmit()[u.get_alligiance().num] * max_E_transmit
+            mean_Etransfer += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
 
     mean_Etransfer /= N
 
@@ -519,7 +639,7 @@ for matching in matchings:
     mean_Datarate = 0
     for u in _users:
         if u.get_alligiance() is not None:
-            mean_Datarate += u.get_datarate()[u.get_alligiance().num] * max_dr
+            mean_Datarate += u.get_datarate_ext()[u.get_alligiance().num] * max_dr
 
     mean_Datarate /= N
 
@@ -527,7 +647,7 @@ for matching in matchings:
     mean_User_Utility = 0
     for u in _users:
         if u.get_alligiance() is not None:
-            mean_User_Utility += user_utility(u, u.get_alligiance())
+            mean_User_Utility += user_utility_ext(u, u.get_alligiance())
 
     mean_User_Utility /= N
 

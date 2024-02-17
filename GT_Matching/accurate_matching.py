@@ -1,8 +1,6 @@
 import random
 import math
 from GT_Matching.accurate_matching_conditions import *
-from config import parse_arguments
-parse_arguments()
 from config import N,S
 
 #Accurate Matching Function

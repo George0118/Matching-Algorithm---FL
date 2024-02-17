@@ -4,8 +4,6 @@ from Classes.Server import Server
 from GT_Matching.utility_functions import *
 from GT_Matching.accurate_matching_conditions import *
 from RL_Matching.Action import Action
-from config import parse_arguments
-parse_arguments()
 from config import N,S
 import math
 from pprint import pprint
@@ -77,7 +75,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                 if server_focused:
                     utility_diff = check_user_leaves_server(servers, user, user.get_alligiance())
                 else:
-                    utility_diff = -user_utility(user, user.get_alligiance())
+                    utility_diff = -user_utility_ext(user, user.get_alligiance())
 
                 utility_diff = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
                 if max_utility_diff is None or max_utility_diff < utility_diff:
@@ -96,7 +94,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                     if server_focused:
                         utility_diff = check_user_joins_server(servers, user, target)
                     else:
-                        utility_diff = user_utility(user, target)
+                        utility_diff = user_utility_ext(user, target)
 
                     utility_diff = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
                     if max_utility_diff is None or max_utility_diff < utility_diff:

@@ -14,9 +14,11 @@ class User:
         self.datasize = 0
         self.E_local = (a * random.uniform(0.95, 1.05) * qn * random.uniform(0.95, 1.05) * self.datasize * fn**2)/2  # Energy Consumption to train model locally
         self.E_transmit = []
+        self.E_transmit_ext = []    # Transmission Energy with externality
         self.belongs_to = None
         self.importance = []
         self.datarate = []
+        self.datarate_ext = []  # Datarate with externality
         self.payment = []
         self.dataquality = []
         self.available_servers = []
@@ -30,6 +32,9 @@ class User:
         
     def add_datarate(self, value):       # Normalized Data rate of user for each server
         self.datarate.append(value)
+
+    def add_datarate_ext(self, value):       # Normalized Data rate with externality of user for each server
+        self.datarate_ext.append(value)
         
     def add_payment(self, value):        # Normalized Payment user will receive from each server
         self.payment.append(value)
@@ -42,6 +47,9 @@ class User:
 
     def add_Etransmit(self, value):    # Normalized Energy Transmission
         self.E_transmit.append(value)   
+
+    def add_Etransmit_ext(self, value):    # Normalized Energy Transmission
+        self.E_transmit_ext.append(value)  
         
     def set_available_servers(self, list):  # Available server list for this user
         self.available_servers = list[:] 
@@ -73,6 +81,9 @@ class User:
 
     def get_datarate(self):
         return self.datarate
+    
+    def get_datarate_ext(self):
+        return self.datarate_ext
 
     def get_payment(self):
         return self.payment
@@ -85,6 +96,9 @@ class User:
     
     def get_Etransmit(self):
         return self.E_transmit
+    
+    def get_Etransmit_ext(self):
+        return self.E_transmit_ext
     
     def get_available_servers(self):
         return self.available_servers

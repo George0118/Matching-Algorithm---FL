@@ -4,7 +4,8 @@ from config import *
 disasters = ["fire", "flood", "earthquake"]
 
 # Data Rate
-I0 = 10 ** ((-104 - 30) / 10)
+B = 10**7
+I0 = 10**((-104 - 30) / 10)
 P = [[round(random.uniform(0.01, 1), 2) for _ in range(N)] for _ in range(S)]
 random_matrix = [[random.uniform(-1, 1) for _ in range(N)] for _ in range(S)]
 

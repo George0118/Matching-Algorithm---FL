@@ -1,8 +1,8 @@
 # Matching Algorithm-FL
 
-[![Python Version](https://img.shields.io/badge/python-3.6%2B-blue.svg)](https://www.python.org/downloads/release)
-[![TensorFlow Version](https://img.shields.io/badge/tensorflow-2.x-orange.svg)](https://www.tensorflow.org/)
-[![Keras Version](https://img.shields.io/badge/keras-2.x-red.svg)](https://keras.io/)
+[![Python Version](https://img.shields.io/badge/python-3.11.8-blue.svg)](https://www.python.org/downloads/release/python-3118/)
+[![TensorFlow Version](https://img.shields.io/badge/tensorflow-2.15-orange.svg)](https://www.tensorflow.org/)
+[![Keras Version](https://img.shields.io/badge/keras-2.15-red.svg)](https://keras.io/)
 
 In a Federated Learning Concept we want to train models (one on each server) to detect natural disasters using images from Users.
 
