@@ -4,7 +4,9 @@ from Classes.Server import Server
 from GT_Matching.utility_functions import *
 from GT_Matching.accurate_matching_conditions import *
 from RL_Matching.Action import Action
-from general_parameters import *
+from config import parse_arguments
+parse_arguments()
+from config import N,S
 import math
 from pprint import pprint
 import random

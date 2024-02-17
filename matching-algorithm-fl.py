@@ -12,6 +12,8 @@ from RL_Matching.rl_matching import rl_fedlearner_matching
 from RAND_Matching.random_matching import random_fedlearner_matching
 from Data.federated_learning import Servers_FL
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
+from Data.Classes.Model import *
+from Data.rl_parameters import *
 import numpy as np
 import time
 import copy
@@ -19,11 +21,16 @@ import random
 import math
 import datetime
 import os
-from Data.Classes.Model import *
-from Data.rl_parameters import *
+
+# Argument Parsing
+
+from config import parse_arguments
+
+parse_arguments()
 
 # General Parameters
 
+from config import N,S,K
 from general_parameters import *
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #

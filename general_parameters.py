@@ -1,10 +1,5 @@
 import random 
-
-# Parameters
-
-N = 10  # Users -- min value: 5
-S = 3   # Servers
-K = 3   # Critical Points
+from config import *
 
 disasters = ["fire", "flood", "earthquake"]
 

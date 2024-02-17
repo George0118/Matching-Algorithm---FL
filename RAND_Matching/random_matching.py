@@ -1,7 +1,9 @@
 from typing import List
 from Classes.User import User
 from Classes.Server import Server
-from general_parameters import *
+from config import parse_arguments
+parse_arguments()
+from config import N,S
 import random
 
 def random_fedlearner_matching(users: List[User], servers: List[Server]):
