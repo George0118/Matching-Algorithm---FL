@@ -4,7 +4,7 @@ import math
 
 alpha = 2
 beta = 2
-gamma = 2
+gamma = 1
 delta = 2
 epsilon = 2
 
@@ -37,6 +37,7 @@ def user_utility(user, server):
     # print("Payment: ", payment_list[index]/(len(current_coalition)+1))
     # print("Energy: ", E_local + E_transmit_list[index])
     # print("Dataquality: ", avg_dataquality)
+    # print()
 
     return utility
 
@@ -70,6 +71,7 @@ def user_utility_ext(user, server):
     # print("Energy Local: ", E_local)
     # print("Energy Transmission: ", E_transmit_list[index])
     # print("Dataquality: ", avg_dataquality)
+    # print()
 
     return utility
 
@@ -94,7 +96,7 @@ def server_utility_externality(servers, coalition, server):
     for u in coalition:
         utility += user_utility_ext(u,server) 
 
-    utility -= epsilon * server.p**2
+    utility -= epsilon * math.sqrt(server.p)
 
     added_payment_of_rest = 0
 
@@ -103,6 +105,9 @@ def server_utility_externality(servers, coalition, server):
             added_payment_of_rest += s.p
 
     utility = utility/added_payment_of_rest
+
+    # print("Utility: ", utility)
+    # print(server.p)
         
     return utility  
 

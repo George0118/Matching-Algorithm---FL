@@ -6,13 +6,10 @@ def check_user_joins_server(servers, user, server):
     coalition = server.get_coalition()     # get current coalition of server 
 
     # Get difference in utility 
-    diff = server_utility_externality(servers, coalition.union({user}), server)\
-          - server_utility_externality(servers, coalition ,server)
+    diff = server_utility_externality(servers, coalition.union({user}), server) \
+          - server_utility_externality(servers, coalition, server)
 
-    if(diff > 0 and len(coalition) + 1 <= server.Ns_max):   # if the diff is positive and there is space in the server
-        return diff
-    else:
-        return 0
+    return diff
 
 # User leaves Server - TC2
     
