@@ -2,11 +2,14 @@ import math
 
 # Parameters
 
-alpha = 2
-beta = 2
+alpha = 1
+beta = 1
 gamma = 1
-delta = 2
-epsilon = 2
+delta = 1
+epsilon = 1
+
+w_local = 0.5
+w_trans = 0.5
 
 # User’s Utility function
 
@@ -30,7 +33,7 @@ def user_utility(user, server):
 
     E_local = user.get_Elocal()
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (E_local + E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
     # print("Utility: ", utility)
     # print("Datarate: ", datarate_list[index])
@@ -43,7 +46,7 @@ def user_utility(user, server):
 
 # User Utility with Externality
 
-def user_utility_ext(user, server):
+def user_utility_ext(user, server, verbose = False):
     index = server.num
     current_coalition = server.get_coalition()
 
@@ -63,15 +66,16 @@ def user_utility_ext(user, server):
 
     E_local = user.get_Elocal()
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (E_local + E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
-    # print("Utility: ", utility)
-    # print("Datarate: ", datarate_list[index])
-    # print("Payment: ", payment_list[index]/(len(current_coalition)+1))
-    # print("Energy Local: ", E_local)
-    # print("Energy Transmission: ", E_transmit_list[index])
-    # print("Dataquality: ", avg_dataquality)
-    # print()
+    if verbose:
+        print("Utility: ", utility)
+        print("Datarate: ", datarate_list[index])
+        print("Payment: ", payment_list[index]/(len(current_coalition)+1))
+        print("Energy Local: ", E_local)
+        print("Energy Transmission: ", E_transmit_list[index])
+        print("Dataquality: ", avg_dataquality)
+        print()
 
     return utility
 
@@ -111,8 +115,12 @@ def server_utility_externality(servers, coalition, server):
         
     return utility  
 
-def user_utility_diff_exchange(user1, user2, server1, server2):
-    return user_utility_ext(user1, server1) + user_utility_ext(user2, server2) - user_utility_ext(user1, server2) - user_utility_ext(user2, server1)
+def user_utility_diff_exchange(user1, user2, server1, server2 = None):
+    if server2 is not None:
+        return user_utility_ext(user1, server2) + user_utility_ext(user2, server1) - user_utility_ext(user1, server1) - user_utility_ext(user2, server2)
+    else:
+        return user_utility_ext(user2, server1) - user_utility_ext(user1, server1) 
+
 
 def user_utility_diff_servers(user, server1, server2):
     return user_utility_ext(user, server1) - user_utility_ext(user, server2)

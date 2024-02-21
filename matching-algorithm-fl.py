@@ -8,8 +8,8 @@ from config import parse_arguments
 parse_arguments()
 
 # Imports
+from Classes.Server import Server
 from Classes.User import User
-from Classes.Server import Server, importance_map
 from Classes.CriticalPoint import CP
 from GT_Matching.utility_functions import user_utility_ext, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
@@ -40,10 +40,19 @@ start_time = time.time()
 # Servers: on (0,0,0)
 servers = []
 
-for i in range(S):
-    p = random.randint(int(0.333*N), int(0.5*N))
-    server = Server(0,0,0,p,i)
-    servers.append(server)
+while True:
+    # Create servers with random p values
+    for i in range(S):
+        p = random.randint(int(0.333 * N), int(0.5 * N))
+        server = Server(0,0,0,p,i)
+        servers.append(server)
+
+    # Ensure the sum of p is greater than or equal to N
+    if sum(server.p for server in servers) >= N:
+        break
+    else:
+        # If the condition is not met, empty the list and try again
+        servers = []
     
 # Users: on a sphere (radius = 1) around the servers
 users = [] 
@@ -121,19 +130,16 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
-        print("Fire Images: ", image_num)
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
-        print("Flood Images: ", image_num)
     else:
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
         image_num = int(factor*ratio*image_num)
-        print("Earthquake Images: ", image_num)
 
     # For each user calculate the minimum distance from the relevant Critical Points
     for u in users:
@@ -146,13 +152,9 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
             user_min_distances[u.num] = distance
 
-    print(user_min_distances)
-
     # Calculate the data size ratios based on the user minimum distance from the CPs
     for i in range(N):
       ratios[i] = 1/(user_min_distances[i] + 1e-6)
-
-    print(ratios)
 
     sum_ratios = sum(ratios)
 
@@ -176,7 +178,7 @@ print()
     
 # Normalized Data Importance
 
-max_dist = [0]*K
+min_dist = [None]*K
 for i in range(K):
     for j in range(N):          # Finding Max Distance for each user
         user = users[j]
@@ -187,8 +189,8 @@ for i in range(K):
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
-        if distance > max_dist[i]:
-            max_dist[i] = distance
+        if min_dist[i] is None or distance < min_dist[i]:
+            min_dist[i] = distance
 
     for j in range(N):          # Calculating Importance for each user
         user = users[j]
@@ -199,7 +201,7 @@ for i in range(K):
 
         distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)   
 
-        importance = distance / max_dist[i]
+        importance = min_dist[i] / distance
 
         user.add_importance(importance)
         
@@ -220,6 +222,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -240,6 +244,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -263,6 +269,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
 
@@ -272,6 +280,7 @@ for i in range(N):
             user_x, user_y, user_z = u.x, u.y, u.z
             distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
             g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
             denominator_sum += g_ext * P[j][k] * distance
 
         dr = B*math.log2(1 + g*power/(denominator_sum + I0))
@@ -291,6 +300,10 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
+
+        power = P[j][i] * distance
         
         denominator_sum = 0
         for k in range(N):
@@ -298,6 +311,7 @@ for i in range(N):
             user_x, user_y, user_z = u.x, u.y, u.z
             distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
             g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
             denominator_sum += g_ext * P[j][k] * distance
 
         dr = B*math.log2(1 + g*power/(denominator_sum + I0))
@@ -365,6 +379,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -387,6 +403,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -412,6 +430,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -421,6 +441,7 @@ for i in range(N):
             user_x, user_y, user_z = u.x, u.y, u.z
             distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
             g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
             denominator_sum += g_ext * P[j][k] * distance
 
         dr = B*math.log2(1 + g*power/(denominator_sum + I0))
@@ -442,6 +463,8 @@ for i in range(N):
         distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
         
         g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
+
+        g = 10**(-g / 10)       # path loss --> channel gain from db to power
         
         power = P[j][i] * distance
         
@@ -451,6 +474,7 @@ for i in range(N):
             user_x, user_y, user_z = u.x, u.y, u.z
             distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
             g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
+            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
             denominator_sum += g_ext * P[j][k] * distance
 
         dr = B*math.log2(1 + g*power/(denominator_sum + I0))
@@ -471,7 +495,7 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = importance_map(data_importance[i]) * user.get_datasize()
+        dq = data_importance[i] * user.get_datasize()
         if (dq > max_dq):
             max_dq = dq
 
@@ -479,10 +503,16 @@ for i in range(K):
     for j in range(N):
         user = users[j]
         data_importance = user.get_importance()
-        dq = importance_map(data_importance[i]) * user.get_datasize()
+        dq = data_importance[i] * user.get_datasize()
         user.add_dataquality(dq/max_dq)        
 
 # =================================================================================== #
+        
+for u in users:
+    l=[]
+    for s in servers:
+        l.append(user_utility_ext(u,s,False))
+    print(l) 
         
 ran_users = copy.deepcopy(users)
 ran_servers = copy.deepcopy(servers)

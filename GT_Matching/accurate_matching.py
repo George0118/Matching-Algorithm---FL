@@ -18,26 +18,47 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
     servers = copy.deepcopy(original_servers)
 
     t = 1
-    while(t <= 1000*N):
+    while(t <= 1000*N**2):
 
         random_user = apprx_matched_users[random.randint(0,N-1)]   # Select random user
 
         if(random_user.get_alligiance() == None):     # If user does not belong to any coalition
             max_utility_diff = 0
             favorite_MEC = None
-            for s in servers:       # Find the server that benefits more from him
-                utility_diff = check_user_joins_server(servers,random_user,s)
-                rewards[random_user.num][s.num] += utility_diff
-                if(utility_diff > max_utility_diff and len(s.get_coalition()) < s.Ns_max):
-                    max_utility_diff = utility_diff
-                    favorite_MEC = s
+            for s in servers:       # Find the server that has space and benefits more from him
+                if len(s.get_coalition()) < s.Ns_max:
+                    utility_diff = check_user_joins_server(servers,random_user,s)
+                    rewards[random_user.num][s.num] += utility_diff
+                    if utility_diff > max_utility_diff:
+                        max_utility_diff = utility_diff
+                        favorite_MEC = s
 
             # If there is a server that benefits from the user, add the user to its coalition
-            if(favorite_MEC != None and favorite_MEC.Ns_max > len(favorite_MEC.get_coalition())):
+            if(favorite_MEC is not None):
                 favorite_MEC.add_to_coalition(random_user)
                 random_user.change_server(favorite_MEC)
                 rewards[random_user.num][favorite_MEC.num] += max_utility_diff
                 # print("Added user to server")
+            else:       # Else check for full servers for exchange
+                max_utility_diff = 0
+                favorite_MEC = None
+                exchange_user = None
+                for s in servers:
+                    if len(s.get_coalition()) == s.Ns_max:  # If the server is full check for exchange
+                        for u in s.get_coalition():
+                            utility_diff = check_user_exchange(servers, u, random_user, s, None)
+                            if utility_diff > max_utility_diff:
+                                max_utility_diff = utility_diff
+                                favorite_MEC = s
+                                exchange_user = u
+                if(favorite_MEC is not None and exchange_user is not None):
+                    favorite_MEC.remove_from_coalition(exchange_user)   # remove exchange user from server
+                    exchange_user.change_server(None)
+                    favorite_MEC.add_to_coalition(random_user)          # add random user to server
+                    random_user.change_server(favorite_MEC)
+
+                    rewards[random_user.num][favorite_MEC.num] += max_utility_diff
+                    print("User from None joins server")
 
         else:   # else the user belongs in a coalition already
 
@@ -76,6 +97,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                     other_user.change_server(current_server)
 
                     rewards[random_user.num][other_server.num] += utility_diff
+                    rewards[other_user.num][current_server.num] += utility_diff
                 
                     # print("User exchange")
 
@@ -92,15 +114,18 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
             if(utility_diff > 0):       # If the server benefits from excluding the user
                 current_server.remove_from_coalition(random_user)   # remove from coalition
                 random_user.change_server(None)
-                # rewards[random_user.num][current_server.num] -= utility_diff
                 # print("User removed from server")
             else:       # Reward the user for staying at the coalition
                 rewards[random_user.num][random_user.get_alligiance().num] -= utility_diff
 
         t += 1
+        # print(rewards[0])
+        # for s in servers:
+        #     print(user_utility_ext(apprx_matched_users[0], s, True))
 
     print("\nRewards:")
     pprint(rewards)
+    print()
     final_matching(original_apprx_matched_users, original_servers)
 
 
@@ -170,3 +195,4 @@ def final_matching(users: List[User], servers: List[Server]):
                     flag = True
 
     users.sort(key=lambda x: x.num)     # sort users by number
+    servers.sort(key=lambda x: x.num)     # sort servers by number

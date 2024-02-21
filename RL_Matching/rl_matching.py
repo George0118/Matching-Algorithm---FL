@@ -29,10 +29,15 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
         for u in users:     # For each user get its available actions
             actions = []
             if u.get_alligiance() is None:      # If it belongs to no server 
-                for s in servers:
-                    if s.Ns_max > len(s.get_coalition()):     
-                        action = Action(s)        # add all the available servers if they have the space
+                for s in servers:               # add all the available servers 
+                    if s.Ns_max > len(s.get_coalition()):   # if there is space
+                        action = Action(s)        
                         actions.append(action)
+                    else:                       # else if there is not
+                        for other_user in s.get_coalition():      # add all exchanges with users of the coalition
+                            action = Action(s,other_user)
+                            actions.append(action)
+
                 actions.append(Action(None))         # and the option to stay out
 
             else:                                   # Else if user belongs to a server
@@ -95,7 +100,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
         else:       # The user heads to a server
             if other_user == None:  # If there is no exchange
                 if user.get_alligiance() == None:   # If user was not in a server
-
+                        
                     if server_focused:
                         utility_diff = check_user_joins_server(servers, user, target)
                     else:
@@ -130,15 +135,28 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                             reward = utility_diff
 
             else:        # Else there is exchange happening
-                if server_focused:
-                    utility_diff = check_user_exchange(servers, user, other_user, user.get_alligiance(), target)
-                else:
-                    utility_diff = user_utility_diff_exchange(user, other_user, target, user.get_alligiance())
-                utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                    best_action = a
-                    max_utility_diff = utility_diff_UCB
-                    reward = utility_diff
+                if user.get_alligiance() is None:         # If exchange between target and None
+                    if server_focused:  
+                        utility_diff = check_user_exchange(servers, other_user, user, target, None) 
+                    else:
+                        utility_diff = user_utility_diff_exchange(other_user, user, target)
+
+                    utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
+                    if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
+                        best_action = a
+                        max_utility_diff = utility_diff_UCB
+                        reward = utility_diff
+
+                else:       # Else exchange between servers
+                    if server_focused:
+                        utility_diff = check_user_exchange(servers, user, other_user, user.get_alligiance(), target)
+                    else:
+                        utility_diff = user_utility_diff_exchange(user, other_user, user.get_alligiance(), target)
+                    utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
+                    if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
+                        best_action = a
+                        max_utility_diff = utility_diff_UCB
+                        reward = utility_diff
 
     return best_action, reward
 
@@ -165,7 +183,7 @@ def execute_action(action, reward, user: User):
 
     else:       # The user heads to a server
         if other_user == None:  # If there is no exchange
-            if user.get_alligiance() == None:   # If user was not in a server and joins
+            if user.get_alligiance() is None:   # If user was not in a server and joins
                 user.change_server(target)
                 target.add_to_coalition(user)
                      
@@ -176,15 +194,22 @@ def execute_action(action, reward, user: User):
                 target.add_to_coalition(user)                   # and add to the new
 
         else:        # Else there is exchange happening
-            current_server = user.get_alligiance()
+            if user.get_alligiance() is None:
+                target.remove_from_coalition(other_user)        # remove the exchange user from target's coalition
+                other_user.change_server(None)
+                target.add_to_coalition(user)                   # add the user to the target's coalition
+                user.change_server(target)
 
-            current_server.remove_from_coalition(user)      # remove our user from current server
-            user.change_server(target)
-            target.add_to_coalition(user)                   # and add to the target
+            else:
+                current_server = user.get_alligiance()
 
-            target.remove_from_coalition(other_user)        # remove the exchange user from target
-            other_user.change_server(current_server)
-            current_server.add_to_coalition(other_user)     # and add to our previously current server
+                current_server.remove_from_coalition(user)      # remove our user from current server
+                user.change_server(target)
+                target.add_to_coalition(user)                   # and add to the target
+
+                target.remove_from_coalition(other_user)        # remove the exchange user from target
+                other_user.change_server(current_server)
+                current_server.add_to_coalition(other_user)     # and add to our previously current server
 
         Nt[user.num][target.num] += 1   # Update Nt
         rewards[user.num][target.num] += reward  # and add the reward our environment gets
@@ -256,6 +281,7 @@ def final_matching(users: List[User], servers: List[Server]):
                     flag = True
 
     users.sort(key=lambda x: x.num)     # sort users by number
+    servers.sort(key=lambda x: x.num)     # sort servers by number
 
 
 

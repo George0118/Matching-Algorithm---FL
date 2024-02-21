@@ -1,7 +1,7 @@
 import random
 
 a = 2 * 10**(-28)
-fn = 1
+fn = 1 * 10**9
 qn = 20
 
 # User Class

@@ -2,9 +2,6 @@ import tensorflow as tf
 import numpy as np
 from Data.Classes.Model import Model
 
-def importance_map(i):
-    return 0.3 + 0.7*(1-i)
-
 # Server Class
 class Server:
     def __init__(self, x, y, z, p, num):
@@ -129,13 +126,13 @@ class Server:
         for u in coalition:
             importance_list = u.get_importance()
             for cp in critical_points:
-                denominator += importance_map(importance_list[cp.num]) * u.get_datasize() * Ns
+                denominator += importance_list[cp.num] * u.get_datasize() * Ns
 
         for u in coalition:
             importance_list = u.get_importance()
             numerator = 0
             for cp in critical_points:
-                numerator += importance_map(importance_list[cp.num]) * u.get_datasize()
+                numerator += importance_list[cp.num] * u.get_datasize()
             factors[u.num] = numerator/denominator
 
         return factors
