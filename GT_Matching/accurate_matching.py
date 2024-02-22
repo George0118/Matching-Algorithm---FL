@@ -37,8 +37,9 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
             if(favorite_MEC is not None):
                 favorite_MEC.add_to_coalition(random_user)
                 random_user.change_server(favorite_MEC)
-                rewards[random_user.num][favorite_MEC.num] += max_utility_diff
+                rewards[random_user.num][favorite_MEC.num] += server_reward(servers, random_user, favorite_MEC)
                 # print("Added user to server")
+
             else:       # Else check for full servers for exchange
                 max_utility_diff = 0
                 favorite_MEC = None
@@ -57,7 +58,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                     favorite_MEC.add_to_coalition(random_user)          # add random user to server
                     random_user.change_server(favorite_MEC)
 
-                    rewards[random_user.num][favorite_MEC.num] += max_utility_diff
+                    rewards[random_user.num][favorite_MEC.num] += server_reward(servers, random_user, favorite_MEC)
                     # print("User from None joins server")
 
         else:   # else the user belongs in a coalition already
@@ -75,10 +76,10 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                     current_server.remove_from_coalition(random_user)   # remove from current server
                     other_server.add_to_coalition(random_user)          # add to other server
                     random_user.change_server(other_server)
-                    rewards[random_user.num][other_server.num] += utility_diff  
+                    rewards[random_user.num][other_server.num] += server_reward(servers, random_user, other_server)
                     # print("User changed servers")   
                 else:       # Reward the user for staying at the coalition
-                    rewards[random_user.num][random_user.get_alligiance().num] -= utility_diff      
+                    rewards[random_user.num][current_server.num] += server_reward(servers, random_user, current_server)
 
             else:   # if the other server has no space
                 other_coalition = other_server.get_coalition()
@@ -96,14 +97,14 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                     current_server.add_to_coalition(other_user)         # add other user to current server
                     other_user.change_server(current_server)
 
-                    rewards[random_user.num][other_server.num] += utility_diff
-                    rewards[other_user.num][current_server.num] += utility_diff
+                    rewards[random_user.num][other_server.num] += server_reward(servers, random_user, other_server)
+                    rewards[other_user.num][current_server.num] += server_reward(servers, other_user, current_server)
                 
                     # print("User exchange")
 
                 else:       # Reward the users for staying at their coalition
-                    rewards[random_user.num][random_user.get_alligiance().num] -= utility_diff
-                    rewards[other_user.num][other_server.num] -= utility_diff
+                    rewards[random_user.num][current_server.num] += server_reward(servers, random_user, current_server)
+                    rewards[other_user.num][other_server.num] += server_reward(servers, other_user, other_server)
 
         # Lastly check if removing the user from its current coalition would be beneficial
         if(random_user.get_alligiance() != None):
@@ -112,14 +113,12 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
             utility_diff = check_user_leaves_server(servers, random_user, current_server)
 
             if(utility_diff > 0):       # If the server benefits from excluding the user
+                rewards[random_user.num][current_server.num] += server_reward(servers, random_user, current_server)
                 current_server.remove_from_coalition(random_user)   # remove from coalition
                 random_user.change_server(None)
                 # print("User removed from server")
 
         t += 1
-        # print(rewards[0])
-        # for s in servers:
-        #     print(user_utility_ext(apprx_matched_users[0], s, True))
 
     print("\nRewards:")
     pprint(rewards)
