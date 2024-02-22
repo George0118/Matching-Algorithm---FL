@@ -11,6 +11,21 @@ epsilon = 1
 w_local = 0.5
 w_trans = 0.5
 
+def calculate_weights(ratio):
+    pow = 4
+
+    if ratio == 1:
+        w1 = 0.5
+        w2 = 0.5
+    elif ratio < 1:
+        w2 = 0.5 * ratio**pow
+        w1 = 0.5 * (2 - ratio**pow)
+    else:
+        w2 = 0.5 * (1 / ratio**(1./pow))
+        w1 = 0.5 * (2 - 1 / ratio**(1./pow))
+
+    return w1, w2
+
 # User’s Utility function
 
 def user_utility(user, server):
@@ -32,6 +47,8 @@ def user_utility(user, server):
     avg_dataquality = avg_dataquality/len(critical_points)
 
     E_local = user.get_Elocal()
+
+    w_local, w_trans = calculate_weights(user.get_energy_ratio())
     
     utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
@@ -65,6 +82,10 @@ def user_utility_ext(user, server, verbose = False):
     avg_dataquality = avg_dataquality/len(critical_points)
 
     E_local = user.get_Elocal()
+
+    w_local, w_trans = calculate_weights(user.get_energy_ratio())
+
+    # print("W_local:", w_local, "| W_Trans:", w_trans)
     
     utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 

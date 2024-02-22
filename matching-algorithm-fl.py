@@ -80,6 +80,14 @@ while(len(critical_points) < K):
     x = random.uniform(-1,1)
     y = random.uniform(-1,1)
     y = random.uniform(-1,1)
+    distance = math.sqrt(x**2 + y**2 +z**2)
+
+    while distance < 0.5:  # While CP too close to the servers reselect
+        x = random.uniform(-1,1)
+        y = random.uniform(-1,1)
+        y = random.uniform(-1,1)
+        distance = math.sqrt(x**2 + y**2 +z**2)
+
     disaster = disasters[i%S]
     
     cp = CP(x,y,z,i,disaster)
@@ -354,6 +362,7 @@ max_Elocal = 0
 for i in range(N):
     user = users[i]
     E_local = user.get_Elocal()
+    user.set_energy_ratio(E_local)
     if(E_local > max_Elocal):
         max_Elocal = E_local
 
@@ -448,6 +457,11 @@ for i in range(N):
 
         E_transmit = Z[i]*power/dr
 
+        # Configure Energy Ratio for each user
+        energy_ratio = user.get_energy_ratio()
+        energy_ratio = energy_ratio/E_transmit
+        user.set_energy_ratio(energy_ratio)
+
         if(E_transmit > max_E_transmit):
             max_E_transmit = E_transmit
 
@@ -514,6 +528,8 @@ for u in users:
         l.append(user_utility_ext(u,s,False))
     print(l) 
         
+print()
+
 ran_users = copy.deepcopy(users)
 ran_servers = copy.deepcopy(servers)
 
@@ -642,12 +658,14 @@ for matching in matchings:
 
     # Energy (J)
     mean_Energy = 0
+    matched_users = 0
     for u in _users:
         if u.get_alligiance() is not None:
+            matched_users += 1
             mean_Energy += u.get_Elocal() * max_Elocal
             mean_Energy += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
 
-    mean_Energy /= N
+    mean_Energy /= matched_users
 
     # Local Energy (J)
     mean_Elocal = 0
@@ -655,7 +673,7 @@ for matching in matchings:
         if u.get_alligiance() is not None:
             mean_Elocal += u.get_Elocal() * max_Elocal
 
-    mean_Elocal /= N
+    mean_Elocal /= matched_users
 
     # Transfer Energy (J)
     mean_Etransfer = 0
@@ -663,7 +681,7 @@ for matching in matchings:
         if u.get_alligiance() is not None:
             mean_Etransfer += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
 
-    mean_Etransfer /= N
+    mean_Etransfer /= matched_users
 
     # Datarate (bps)
     mean_Datarate = 0
@@ -671,7 +689,7 @@ for matching in matchings:
         if u.get_alligiance() is not None:
             mean_Datarate += u.get_datarate_ext()[u.get_alligiance().num] * max_dr
 
-    mean_Datarate /= N
+    mean_Datarate /= matched_users
 
     # User Utility
     mean_User_Utility = 0
@@ -679,7 +697,7 @@ for matching in matchings:
         if u.get_alligiance() is not None:
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
 
-    mean_User_Utility /= N
+    mean_User_Utility /= matched_users
 
     # Server Utility
     mean_Server_Utility = 0

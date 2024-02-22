@@ -7,7 +7,7 @@ disasters = ["fire", "flood", "earthquake"]
 B = 10**7
 I0 = 10**(-174 / 10)
 P = [[0.25 for _ in range(N)] for _ in range(S)]
-random_matrix = [[1 for _ in range(N)] for _ in range(S)]
+random_matrix = [[random.uniform(0,1) for _ in range(N)] for _ in range(S)]
 
 # Energy Consumption
 Z = [0] * N     

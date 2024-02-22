@@ -26,6 +26,7 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
     print()
     
     while(t <= 1000*N):
+        random.shuffle(users)
         for u in users:     # For each user get its available actions
             actions = []
             if u.get_alligiance() is None:      # If it belongs to no server 
@@ -60,7 +61,7 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
             execute_action(best_action, max_reward, u)
 
         t += 1 
-    pprint(Nt)
+
     print("\nRewards:")
     pprint(rewards)
     final_matching(original_users, original_servers)  
@@ -89,6 +90,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                     best_action = a
                     max_utility_diff = utility_diff_UCB
                     reward = utility_diff
+
             else:           # If the target is to stay out (utility = 0)
                 utility_diff = 0
                 utility_diff_UCB = UCB_calc(utility_diff, a, t, user)
@@ -128,6 +130,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
 
                     else:       # else the user stays to the same server
                         utility_diff = 0
+
                         utility_diff_UCB = UCB_calc(utility_diff, a, t, user)      # calculate the utility based on the UCB algorithm
                         if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
                             best_action = a
@@ -149,9 +152,10 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
 
                 else:       # Else exchange between servers
                     if server_focused:
-                        utility_diff = check_user_exchange(servers, user, other_user, user.get_alligiance(), target)
+                        utility_diff = check_user_exchange(servers, user, other_user, user.get_alligiance(), target) 
                     else:
                         utility_diff = user_utility_diff_exchange(user, other_user, user.get_alligiance(), target)
+
                     utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
                     if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
                         best_action = a
@@ -161,7 +165,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
     return best_action, reward
 
 def UCB_calc(utility, a, t, user: User):
-    UCB_factor = 1  # set a big starting UCB factor to explore all actions available
+    UCB_factor = 5  # set a big starting UCB factor to explore all actions available
 
     if a.target != None and Nt[user.num][a.target.num] != 0:
         UCB_factor = c * math.sqrt(math.log(t)/Nt[user.num][a.target.num])
@@ -180,6 +184,7 @@ def execute_action(action, reward, user: User):
         if current_server is not None:     # if user is not already out
             current_server.remove_from_coalition(user)
         Nt[user.num][S] += 1    # Update Nt 
+        rewards[user.num][S] += reward  # Update rewards
 
     else:       # The user heads to a server
         if other_user == None:  # If there is no exchange

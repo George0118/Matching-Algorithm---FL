@@ -22,6 +22,7 @@ class User:
         self.payment = []
         self.dataquality = []
         self.available_servers = []
+        self.energy_ratio = 1
 
     def set_datasize(self,value):       # Local Datasize of User
         self.datasize = value
@@ -56,6 +57,9 @@ class User:
 
     def change_server(self, server):
         self.belongs_to = server
+
+    def set_energy_ratio(self, ratio):
+        self.energy_ratio = ratio
         
     @property
     def x(self):
@@ -105,3 +109,6 @@ class User:
     
     def get_alligiance(self):
         return self.belongs_to
+    
+    def get_energy_ratio(self):
+        return self.energy_ratio

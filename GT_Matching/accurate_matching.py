@@ -18,7 +18,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
     servers = copy.deepcopy(original_servers)
 
     t = 1
-    while(t <= 1000*N**2):
+    while(t <= 1000*N):
 
         random_user = apprx_matched_users[random.randint(0,N-1)]   # Select random user
 
@@ -58,7 +58,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                     random_user.change_server(favorite_MEC)
 
                     rewards[random_user.num][favorite_MEC.num] += max_utility_diff
-                    print("User from None joins server")
+                    # print("User from None joins server")
 
         else:   # else the user belongs in a coalition already
 
@@ -115,8 +115,6 @@ def accurate_fedlearner_matching(original_apprx_matched_users, original_servers)
                 current_server.remove_from_coalition(random_user)   # remove from coalition
                 random_user.change_server(None)
                 # print("User removed from server")
-            else:       # Reward the user for staying at the coalition
-                rewards[random_user.num][random_user.get_alligiance().num] -= utility_diff
 
         t += 1
         # print(rewards[0])
