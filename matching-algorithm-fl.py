@@ -53,6 +53,9 @@ while True:
     else:
         # If the condition is not met, empty the list and try again
         servers = []
+
+for s in servers:
+        print("Server", s.num, " Resources: ", s.p)
     
 # Users: on a sphere (radius = 1) around the servers
 users = [] 

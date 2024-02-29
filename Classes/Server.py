@@ -25,8 +25,9 @@ class Server:
     def add_to_coalition(self, user):         # Add user to coalition
         self.coalition.add(user)
 
-    def remove_from_coalition(self, user):    # Remove user from coalition
-        self.coalition.remove(user)
+    def remove_from_coalition(self, num):     # Remove user from coalition
+        user_to_remove = next((user for user in self.coalition if user.num == num), None)
+        self.coalition.remove(user_to_remove)
 
     def add_critical_point(self, cp):
         self.critical_points.append(cp)
