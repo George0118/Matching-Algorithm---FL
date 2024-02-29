@@ -9,21 +9,23 @@ import math
 from pprint import pprint
 import random
 import copy
+from itertools import product
 
 c = 2   # degree of exploration
 Nt = [[0] * (S+1) for _ in range(N)]
 rewards = [[0] * (S) for _ in range(N)]
 
 def rl_fedlearner_matching(original_users: List[User], original_servers: List[Server], server_focused):
+    global Nt, rewards
+
     t = 1
 
     users = copy.deepcopy(original_users)
     servers = copy.deepcopy(original_servers)
 
-    for s in servers:
-        print("Server", s.num, " Resources: ", s.p)
-
-    print()
+    # Set everything to 0 in case the global array its already changed from before
+    Nt = [[0] * (S+1) for _ in range(N)]
+    rewards = [[0] * (S) for _ in range(N)]
     
     while(t <= 1000*N):
         random.shuffle(users)
@@ -77,7 +79,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
         target = a.target
         other_user = a.exchange_user
 
-        if target == None:      # If the target is to leave calculate the utility difference
+        if target is None:      # If the target is to leave calculate the utility difference
             if user.get_alligiance() is not None:
 
                 if server_focused:
@@ -100,8 +102,8 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                     reward = 0
 
         else:       # The user heads to a server
-            if other_user == None:  # If there is no exchange
-                if user.get_alligiance() == None:   # If user was not in a server
+            if other_user is None:  # If there is no exchange
+                if user.get_alligiance() is None:   # If user was not in a server
                         
                     if server_focused:
                         utility_diff = check_user_joins_server(servers, user, target)
@@ -141,7 +143,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                             if server_focused:
                                 reward = server_reward(servers, user, target)
                             else:
-                                reward = user_reward(user, target)
+                                reward = user_utility_ext(user, target)
 
             else:        # Else there is exchange happening
                 if user.get_alligiance() is None:         # If exchange between target and None
@@ -157,7 +159,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                         if server_focused:
                             reward = check_user_joins_server(servers, user, target)
                         else:
-                            reward = user_reward(user, target)
+                            reward = user_utility_ext(user, target)
 
                 else:       # Else exchange between servers
                     if server_focused:
@@ -172,7 +174,7 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
                         if server_focused:
                             reward = check_user_joins_server(servers, user, target)
                         else:
-                            reward = user_reward(user, target)
+                            reward = user_utility_ext(user, target)
 
     return best_action, reward
 
@@ -181,7 +183,7 @@ def UCB_calc(utility, a, t, user: User):
 
     if a.target != None and Nt[user.num][a.target.num] != 0:
         UCB_factor = c * math.sqrt(math.log(t)/Nt[user.num][a.target.num])
-    elif a.target == None and Nt[user.num][S] != 0:
+    elif a.target is None and Nt[user.num][S] != 0:
         UCB_factor = c * math.sqrt(math.log(t)/Nt[user.num][S])
 
     return utility + UCB_factor
@@ -190,29 +192,29 @@ def execute_action(action, reward, user: User):
     target = action.target
     other_user = action.exchange_user
 
-    if target == None:      # If the target is to leave 
+    if target is None:      # If the target is to leave 
         current_server = user.get_alligiance()
         user.change_server(None)
         if current_server is not None:     # if user is not already out
-            current_server.remove_from_coalition(user)
+            current_server.remove_from_coalition(user.num)
         Nt[user.num][S] += 1    # Update Nt
         rewards[user.num][current_server.num] -= reward 
 
     else:       # The user heads to a server
-        if other_user == None:  # If there is no exchange
+        if other_user is None:  # If there is no exchange
             if user.get_alligiance() is None:   # If user was not in a server and joins
                 user.change_server(target)
                 target.add_to_coalition(user)
                      
             else:       # Else user belonged to a server and is changing (leaving from current to go to target)
                 current_server = user.get_alligiance()
-                current_server.remove_from_coalition(user)      # remove from current server
+                current_server.remove_from_coalition(user.num)      # remove from current server
                 user.change_server(target)
                 target.add_to_coalition(user)                   # and add to the new
 
         else:        # Else there is exchange happening
             if user.get_alligiance() is None:
-                target.remove_from_coalition(other_user)        # remove the exchange user from target's coalition
+                target.remove_from_coalition(other_user.num)        # remove the exchange user from target's coalition
                 other_user.change_server(None)
                 target.add_to_coalition(user)                   # add the user to the target's coalition
                 user.change_server(target)
@@ -220,11 +222,11 @@ def execute_action(action, reward, user: User):
             else:
                 current_server = user.get_alligiance()
 
-                current_server.remove_from_coalition(user)      # remove our user from current server
+                current_server.remove_from_coalition(user.num)      # remove our user from current server
                 user.change_server(target)
                 target.add_to_coalition(user)                   # and add to the target
 
-                target.remove_from_coalition(other_user)        # remove the exchange user from target
+                target.remove_from_coalition(other_user.num)        # remove the exchange user from target
                 other_user.change_server(current_server)
                 current_server.add_to_coalition(other_user)     # and add to our previously current server
 
@@ -235,67 +237,94 @@ def execute_action(action, reward, user: User):
 
 def final_matching(users: List[User], servers: List[Server]):
     flag = True     # flag that checks change - if no change the end
+
+    cartesian_product = list(product(servers, users))
     
     while(flag):
         flag = False
-        random.shuffle(servers)     # shuffle servers each iteration to not prioritize any server
-        for server in servers:
-            random.shuffle(users)   # shuffle users each iteration to not prioritize any user
-            for user in users:
-                user_reward = rewards[user.num][server.num]
+        random.shuffle(cartesian_product)     # shuffle cartesian product each iteration to not prioritize any server, user
+        for server, user in cartesian_product:
+            user_reward = rewards[user.num][server.num]
 
-                # if user belongs to None and there is space
-                if user.get_alligiance() is None and len(server.get_coalition()) < server.Ns_max:
-                    if user_reward > 0:     # if user reward > 0
-                        user.change_server(server)      # add the user to the server
-                        server.add_to_coalition(user)
-                        flag = True         # and set flag to True (change happened)
+            # print("Server:", server.num, " | User:", user.num)
 
-                # else if the user belongs to a server and there is space
-                elif user.get_alligiance() is not None and user.get_alligiance() != server and len(server.get_coalition()) < server.Ns_max:
-                    if user_reward > rewards[user.num][user.get_alligiance().num]:  # if this server and user benefit more
-                        user.get_alligiance().remove_from_coalition(user)   # remove from its original server and
-                        user.change_server(server)      # add the user to the server
-                        server.add_to_coalition(user)
-                        flag = True         # and set flag to True (change happened)
+            current_server = None
+            if user.get_alligiance() is not None:
+                for s in servers:
+                    if s.num == user.get_alligiance().num:
+                        current_server = s
+                        break
 
-                # else if the user belongs to None and there is no space
-                elif user.get_alligiance() is None and len(server.get_coalition()) == server.Ns_max:
-                    u_min_contribute = None
-                    for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
-                        if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
-                            u_min_contribute = u
+            # print(f"Current Server of User {user.num} is {current_server.num if current_server is not None else -1}")
 
-                    if user_reward > rewards[u_min_contribute.num][server.num]:        # if it can
-                        server.remove_from_coalition(u_min_contribute)             # remove the other user
-                        u_min_contribute.change_server(None)
+            # if user belongs to None and there is space
+            if current_server is None and len(server.get_coalition()) < server.Ns_max:
+                if user_reward > 0:     # if user reward > 0
+                    user.change_server(server)      # add the user to the server
+                    server.add_to_coalition(user)
+                    flag = True         # and set flag to True (change happened)
 
-                        user.change_server(server)                  # and add our user
-                        server.add_to_coalition(user)
-                        flag = True     # and set flag to True (change happened)
+            # else if the user belongs to a server and there is space
+            elif current_server is not None and current_server.num != server.num and len(server.get_coalition()) < server.Ns_max:
+                if user_reward > rewards[user.num][user.get_alligiance().num]:  # if this server and user benefit more
+                    current_server.remove_from_coalition(user.num)   # remove from its original server and
+                    user.change_server(server)      # add the user to the server
+                    server.add_to_coalition(user)
+                    flag = True         # and set flag to True (change happened)
+                    # print("Changed and server had space")
 
-                # else if the user belongs to another server and there is no space
-                elif user.get_alligiance() is not None and user.get_alligiance() != server and len(server.get_coalition()) == server.Ns_max:
-                    u_min_contribute = None
-                    for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
-                        if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
-                            u_min_contribute = u
+            # else if the user belongs to None and there is no space
+            elif current_server is None and len(server.get_coalition()) == server.Ns_max:
+                u_min_contribute = None
+                for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
+                    if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
+                        for u1 in users:
+                            if u1.num == u.num:
+                                u_min_contribute = u1
+                                break
 
-                    # if it can and user wants
-                    if user_reward > rewards[u_min_contribute.num][server.num] and user_reward > rewards[user.num][user.get_alligiance().num]:        
-                        server.remove_from_coalition(u_min_contribute)                 # remove the other user
-                        u_min_contribute.change_server(user.get_alligiance())
-                        user.get_alligiance().add_to_coalition(u_min_contribute)       # and add him to the other server
+                if user_reward > rewards[u_min_contribute.num][server.num]:        # if it can
+                    server.remove_from_coalition(u_min_contribute.num)             # remove the other user
+                    u_min_contribute.change_server(None)
 
-                        user.get_alligiance().remove_from_coalition(user)   # and remove user from its coalition
-                        user.change_server(server)
-                        server.add_to_coalition(user)                   # and add him to the server
-                        flag = True     # and set flag to True (change happened)
+                    user.change_server(server)                  # and add our user
+                    server.add_to_coalition(user)
+                    flag = True     # and set flag to True (change happened)
+                    # print("There was exchange between None and Server with min contributing User", u_min_contribute.num)
 
-                if user_reward <= 0 and user.get_alligiance() == server:     # if there is no benefit the user goes unmatched
-                    user.get_alligiance().remove_from_coalition(user)
-                    user.change_server(None)
-                    flag = True
+            # else if the user belongs to another server and there is no space
+            elif current_server is not None and current_server.num != server.num and len(server.get_coalition()) == server.Ns_max:
+                u_min_contribute = None
+                for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
+                    if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
+                        for u1 in users:
+                            if u1.num == u.num:
+                                u_min_contribute = u1
+                                break
+
+                # if it can and user wants
+                if user_reward > rewards[u_min_contribute.num][server.num] and user_reward > rewards[user.num][user.get_alligiance().num]:        
+                    server.remove_from_coalition(u_min_contribute.num)                 # remove the other user
+                    u_min_contribute.change_server(current_server)
+                    current_server.add_to_coalition(u_min_contribute)       # and add him to the other server
+
+                    current_server.remove_from_coalition(user.num)   # and remove user from its coalition
+                    user.change_server(server)
+                    server.add_to_coalition(user)                   # and add him to the server
+                    flag = True     # and set flag to True (change happened)
+                    # print("There was exchange with min contributing User", u_min_contribute.num)
+
+            
+            if user_reward <= 0 and user.get_alligiance() is not None and user.get_alligiance().num == server.num:     # if there is no benefit the user goes unmatched
+                for s in servers:
+                    if s.num == user.get_alligiance().num:
+                        current_server = s
+                        break
+                current_server.remove_from_coalition(user.num)
+                user.change_server(None)
+                flag = True
+                # print("User", user.num, "got removed from server", current_server.num)
+
 
     users.sort(key=lambda x: x.num)     # sort users by number
     servers.sort(key=lambda x: x.num)     # sort servers by number

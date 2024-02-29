@@ -28,7 +28,7 @@ def calculate_weights(ratio):
 
 # User’s Utility function
 
-def user_utility(user, server):
+def user_utility(user, server, verbose = False):
     index = server.num
     current_coalition = server.get_coalition()
 
@@ -49,15 +49,22 @@ def user_utility(user, server):
     E_local = user.get_Elocal()
 
     w_local, w_trans = calculate_weights(user.get_energy_ratio())
-    
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
-    # print("Utility: ", utility)
-    # print("Datarate: ", datarate_list[index])
-    # print("Payment: ", payment_list[index]/(len(current_coalition)+1))
-    # print("Energy: ", E_local + E_transmit_list[index])
-    # print("Dataquality: ", avg_dataquality)
-    # print()
+    if user not in current_coalition:
+        future_coal_length = len(current_coalition) + 1
+    else:
+        future_coal_length = len(current_coalition)
+    
+    utility = alpha * datarate_list[index] + beta * payment_list[index]/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
+
+    if verbose:
+        print("Utility: ", utility)
+        print("Datarate: ", datarate_list[index])
+        print("Payment: ", payment_list[index]/future_coal_length)
+        print("Energy Local: ", E_local)
+        print("Energy Transmission: ", E_transmit_list[index])
+        print("Dataquality: ", avg_dataquality)
+        print()
 
     return utility
 
@@ -85,14 +92,17 @@ def user_utility_ext(user, server, verbose = False):
 
     w_local, w_trans = calculate_weights(user.get_energy_ratio())
 
-    # print("W_local:", w_local, "| W_Trans:", w_trans)
+    if user not in current_coalition:
+        future_coal_length = len(current_coalition) + 1
+    else:
+        future_coal_length = len(current_coalition)
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/(len(current_coalition)+1) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate_list[index] + beta * payment_list[index]/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate_list[index])
-        print("Payment: ", payment_list[index]/(len(current_coalition)+1))
+        print("Payment: ", payment_list[index]/future_coal_length)
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit_list[index])
         print("Dataquality: ", avg_dataquality)
@@ -147,39 +157,8 @@ def user_utility_diff_servers(user, server1, server2):
     return user_utility_ext(user, server1) - user_utility_ext(user, server2)
 
 
-
 # Reward Functions
 
 def server_reward(servers, user, server):
     return server_utility_externality(servers, server.get_coalition(), server) \
             - server_utility_externality(servers, server.get_coalition().difference({user}), server)     
-
- 
-def user_reward(user, server):
-
-    index = server.num
-    current_coalition = server.get_coalition()
-
-    critical_points = server.get_critical_points()
-    
-    datarate_list = user.get_datarate_ext()     # Get datarate with externality
-    payment_list = user.get_payment()
-    dataquality_list = user.get_dataquality()
-    E_transmit_list = user.get_Etransmit_ext()  # Get Etransmit with externality
-
-    # Calculate average dataquality of user depending on the Critical Points that concern this server
-    avg_dataquality = 0
-    for cp in critical_points:
-        avg_dataquality += dataquality_list[cp.num]
-
-    avg_dataquality = avg_dataquality/len(critical_points)
-
-    E_local = user.get_Elocal()
-
-    w_local, w_trans = calculate_weights(user.get_energy_ratio())
-
-    # print("W_local:", w_local, "| W_Trans:", w_trans)
-    
-    reward = alpha * datarate_list[index] + beta * payment_list[index]/len(current_coalition) - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
-
-    return reward
