@@ -9,11 +9,9 @@ import tensorflow as tf
 import numpy as np
 tf.test.gpu_device_name()
 
-from Data.Classes.Client import Client
 from Data.Classes.Data import Get_data
 from Data.Classes.Model import Model
 from Data.FL_helping_functions import *
-from tensorflow import data as tf_data
 from collections import deque
 import time
 import threading

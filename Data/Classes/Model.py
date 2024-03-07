@@ -2,14 +2,8 @@ import tensorflow as tf
 import keras
 from keras.layers import Flatten
 from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import RandomFlip
-from keras.layers import RandomRotation
-from keras.layers import GlobalMaxPooling2D
 from keras.layers import Input
-from keras.models import Sequential
-from keras.regularizers import L2
-from keras.applications import MobileNetV3Large, MobileNetV3Small
+from tensorflow.keras.applications import MobileNetV3Small
 
 class Model:
 
@@ -49,15 +43,15 @@ class Model:
   
   # ======== Data Augmentation ========= #
 
-  def data_augmentation(self, images):
-      data_augmentation_layers = [
-        RandomFlip("horizontal"),
-        RandomRotation(0.1),
-      ]
+  # def data_augmentation(self, images):
+  #     data_augmentation_layers = [
+  #       RandomFlip("horizontal"),
+  #       RandomRotation(0.1),
+  #     ]
 
-      for layer in data_augmentation_layers:
-          images = layer(images)
-      return images
+  #     for layer in data_augmentation_layers:
+  #         images = layer(images)
+  #     return images
 
   # ===================================== #
 
@@ -69,7 +63,7 @@ class Model:
     # Data Augmentation
     # input = self.data_augmentation(input)
 
-    baseModel = MobileNetV3Small(weights="imagenet", include_top=False, input_tensor=input)
+    baseModel = MobileNetV3Small(weights="./Data/weights_mobilenet_v3_small_224_1.0_float_no_top.h5", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False
