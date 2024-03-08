@@ -10,10 +10,9 @@ import numpy as np
 tf.test.gpu_device_name()
 
 from Data.Classes.Model import Model
-from Data.FL_helping_functions import *
+from Data.Classes.Client import Client
 from collections import deque
 import time
-import threading
 
 def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
 
@@ -76,17 +75,9 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
     # Feature Extraction for all
     print("Feature Extraction:")
 
-    threads = []
-
     for j in tf.range(len(coalition)):
         u = coalition[j]
-        thread = threading.Thread(target=extract_features_wrapper, args=(u.num, baseModel, X_train[u.num], user_features))
-        threads.append(thread)
-        thread.start()
-
-    for j in tf.range(len(threads)):
-      thread = threads[j]
-      thread.join()
+        user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
     
     server_features = Model().extract_features(baseModel, X_test_server)
     print(server_features.shape)
@@ -109,17 +100,19 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
       global_weights=global_model.get_weights()
       weit=[]
 
-      threads = []
-
       for j in tf.range(len(coalition)):
         u = coalition[j]
-        thread = threading.Thread(target=training_wrapper, args=(lr, epoch, u.num, user_features[u.num], y_train[u.num], global_weights, class_weights[u.num], factors[u.num], weit))
-        threads.append(thread)
-        thread.start()
+        print("User ", u.num, ":")
+        client = Client(lr, epoch, u.num)
 
-      for j in tf.range(len(threads)):
-        thread = threads[j]
-        thread.join()
+        weix = client.training(user_features,
+                              y_train,
+                              global_weights,
+                              class_weights,
+                              user_features.shape[1:]
+                              )
+        weix = client.scale_model_weights(weix, factors)
+        weit.append(weix)
 
       global_weight=server.sum_scaled_weights(weit) # fedavg
       print("Global Model:")

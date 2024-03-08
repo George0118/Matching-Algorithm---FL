@@ -27,7 +27,7 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
     Nt = [[0] * (S+1) for _ in range(N)]
     rewards = [[0] * (S) for _ in range(N)]
     
-    while(t <= 1000*N):
+    while(t <= 1000):
         random.shuffle(users)
         for u in users:     # For each user get its available actions
             actions = []
