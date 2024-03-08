@@ -43,7 +43,7 @@ class Client:
                     )
       model.set_weights(global_weights)
 
-      model.fit(features, labels, epochs=self.epoch, class_weight=class_weights)
+      model.fit(features, labels, epochs=self.epoch, class_weight=class_weights, verbose=2)
       print()
 
       weights = model.get_weights()

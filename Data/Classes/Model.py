@@ -35,7 +35,7 @@ class Model:
       ]
     )
 
-    score = model.evaluate(features, labels)
+    score = model.evaluate(features, labels, verbose=2)
     print("Test Loss:", score[0])
     print('Test Accuracy:', score[5])
     return score[0],score[5]

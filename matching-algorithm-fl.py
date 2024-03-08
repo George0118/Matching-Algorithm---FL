@@ -15,6 +15,8 @@ import random
 import math
 import datetime
 import os
+from matchingeq_functions import check_matching_equality
+from Data.Classes.Data import Get_data
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
@@ -626,13 +628,25 @@ matching_losses = []
 matching_accuracies = []
 
 # ============================== Federated Learning ============================== #
+prev_matchings = []
+
+get_data = Get_data(users, servers)
+
+X_train, y_train, X_test, y_test = get_data.pre_data()
 
 for _users, _servers in zip(user_lists, server_lists):
 
-    learning_start = time.time()
-    server_losses, server_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch)
-    learning_stop = time.time()
-    elapsed_time = learning_stop - learning_start
+    same_matching = check_matching_equality(_servers, prev_matchings)
+
+    elapsed_time = 0
+
+    if same_matching is not None:
+        server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
+    else:
+        learning_start = time.time()
+        server_losses, server_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train, y_train, X_test, y_test)
+        learning_stop = time.time()
+        elapsed_time = learning_stop - learning_start
 
     matching_losses.append(server_losses)
     matching_accuracies.append(server_accuracy)
@@ -643,6 +657,8 @@ for _users, _servers in zip(user_lists, server_lists):
         print("Accuracy: ", server_accuracy[i][-1])
         print(f"Learning took {elapsed_time/60:.2f} minutes\n")
         print()
+
+    prev_matchings.append(_servers)
 
 # ================================================================================ #
     

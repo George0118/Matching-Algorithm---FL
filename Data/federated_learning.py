@@ -9,22 +9,17 @@ import tensorflow as tf
 import numpy as np
 tf.test.gpu_device_name()
 
-from Data.Classes.Data import Get_data
 from Data.Classes.Model import Model
 from Data.FL_helping_functions import *
 from collections import deque
 import time
 import threading
 
-def Servers_FL(users, servers, R, lr, epoch):
+def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
 
   gpus = tf.config.list_physical_devices('GPU')
   print(gpus)
   print()
-
-  get_data = Get_data(users, servers)
-
-  X_train, y_train, X_test, y_test = get_data.pre_data()
 
   server_losses = []
   server_accuracy = []
