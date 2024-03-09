@@ -105,13 +105,13 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
         print("User ", u.num, ":")
         client = Client(lr, epoch, u.num)
 
-        weix = client.training(user_features,
-                              y_train,
+        weix = client.training(user_features[u.num],
+                              y_train[u.num],
                               global_weights,
-                              class_weights,
-                              user_features.shape[1:]
+                              class_weights[u.num],
+                              user_features[u.num].shape[1:]
                               )
-        weix = client.scale_model_weights(weix, factors)
+        weix = client.scale_model_weights(weix, factors[u.num])
         weit.append(weix)
 
       global_weight=server.sum_scaled_weights(weit) # fedavg

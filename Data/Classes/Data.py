@@ -1,5 +1,6 @@
 from Data.load_images import load_images
 from Data.load_images import earthquake_input_paths, fire_input_paths, flood_input_paths
+from general_parameters import N_max
 from sklearn.utils import shuffle
 import numpy as np
 import math
@@ -53,10 +54,14 @@ class Get_data:
     for i in range(len(users)):
       ratios[i] = 1/(user_min_distances[i] + 1e-6)
 
-    sum_ratios = sum(ratios)
+    def_len = len(data)/N_max
 
     # Get Sizes
-    sizes = [int(ratio * len(data)/sum_ratios) for ratio in ratios]
+    sizes = [int(ratio * def_len) for ratio in ratios]
+
+    if sum(sizes) > len(data):
+        temp_total = sum(sizes)
+        sizes = [size*len(data)/temp_total for size in sizes]
 
     s_data = []
     index = 0

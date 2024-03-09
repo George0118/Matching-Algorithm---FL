@@ -86,7 +86,7 @@ for i in range(K):
     y = random.uniform(-1,1)
     distance = math.sqrt(x**2 + y**2 +z**2)
 
-    while distance < 0.5:  # While CP too close to the servers reselect
+    while distance < 0.2:  # While CP too close to the servers reselect
         x = random.uniform(-1,1)
         y = random.uniform(-1,1)
         y = random.uniform(-1,1)
@@ -124,24 +124,17 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     ratios = [0]*N
 
     image_num = 0
-    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
 
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
         image_num = count_images(fire_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        img_per_usr = image_num/N_max
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        img_per_usr = image_num/N_max
     else:
         image_num = count_images(earthquake_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        img_per_usr = image_num/N_max
 
     # For each user calculate the minimum distance from the relevant Critical Points
     for u in users:
@@ -158,10 +151,12 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     for i in range(N):
       ratios[i] = 1/(user_min_distances[i] + 1e-6)
 
-    sum_ratios = sum(ratios)
-
     # Get Sizes
-    sizes = [int(ratio * image_num/sum_ratios) for ratio in ratios]
+    sizes = [int(ratio * img_per_usr) for ratio in ratios]
+
+    if sum(sizes) > image_num:
+        temp_total = sum(sizes)
+        sizes = [size*image_num/temp_total for size in sizes]
 
     print("Sizes:")
     print(sizes)
@@ -545,7 +540,7 @@ gt_servers = copy.deepcopy(servers)
 
 # ============================== Game Theory Matching ============================== #
 
-# ==== Approximate Matching ==== #
+# ============================== Approximate Matching ============================== #
 
 # Initializing the available servers for each user
 for i in range(N):
@@ -562,7 +557,7 @@ for u in gt_users:
 
 print()
 
-# ===== Accurate Matching ==== #
+# ============================== Accurate Matching ============================== #
     
 accurate_fedlearner_matching(gt_users, gt_servers)
 

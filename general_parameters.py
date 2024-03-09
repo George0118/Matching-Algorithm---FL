@@ -3,6 +3,8 @@ from config import *
 
 disasters = ["fire", "flood", "earthquake"]
 
+N_max = 100 # At max set 100 users
+
 # Data Rate
 B = 10**7
 I0 = 10**(-174 / 10)
