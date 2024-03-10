@@ -125,15 +125,26 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     image_num = 0
 
+    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
+
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
         image_num = count_images(fire_input_paths)
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         img_per_usr = image_num/N_max
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         img_per_usr = image_num/N_max
     else:
         image_num = count_images(earthquake_input_paths)
+        ratio = image_num/total_images
+        ratio = 1-math.sqrt(ratio)
+        image_num = int(factor*ratio*image_num)
         img_per_usr = image_num/N_max
 
     # For each user calculate the minimum distance from the relevant Critical Points
@@ -627,8 +638,12 @@ for _users, _servers in zip(user_lists, server_lists):
     if same_matching is not None:
         server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
     else:
+        X_train_copy = copy.deepcopy(X_train)
+        y_train_copy = copy.deepcopy(y_train)
+        X_test_copy = copy.deepcopy(X_test)
+        y_test_copy = copy.deepcopy(y_test)
         learning_start = time.time()
-        server_losses, server_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train, y_train, X_test, y_test)
+        server_losses, server_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
         learning_stop = time.time()
         elapsed_time = learning_stop - learning_start
 

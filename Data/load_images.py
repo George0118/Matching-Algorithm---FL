@@ -56,6 +56,10 @@ def count_images(input_paths):  # Count images in input paths
 def load_images(file_paths, disaster, test_size=0.2):
 
     total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
+    image_num = count_images(file_paths)
+    ratio = image_num/total_images
+    ratio = 1-math.sqrt(ratio)
+    image_num = int(factor*ratio*image_num)
 
     images = []
     labels = []
@@ -69,4 +73,8 @@ def load_images(file_paths, disaster, test_size=0.2):
                 images.append(image)
                 labels.append(disaster)
 
-    return train_test_split(np.array(images), np.array(labels), test_size=test_size, random_state=42)
+    selected_indices = random.sample(range(len(images)), image_num)
+    selected_images = [images[i] for i in selected_indices]
+    selected_labels = [labels[i] for i in selected_indices]
+
+    return train_test_split(np.array(selected_images), np.array(selected_labels), test_size=test_size, random_state=42)
