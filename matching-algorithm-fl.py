@@ -654,8 +654,9 @@ for _users, _servers in zip(user_lists, server_lists):
         print("Server ", i, " achieved:\n")
         print("Loss: ", server_losses[i][-1])
         print("Accuracy: ", server_accuracy[i][-1])
-        print(f"Learning took {elapsed_time/60:.2f} minutes\n")
         print()
+    print(f"Learning for all 3 Servers took {elapsed_time/60:.2f} minutes\n")
+    print()
 
     prev_matchings.append(_servers)
 

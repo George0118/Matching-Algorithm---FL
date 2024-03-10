@@ -53,13 +53,13 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
     # Specify labels for the specific server disaster
     y_test_server = server.specify_disaster(y_test_server)  
 
-    total_samples = 0
-    class_0_samples = 0
-    class_1_samples = 0  
-
     for j in tf.range(len(coalition)):
       u = coalition[j]
       y_train[u.num] = server.specify_disaster(y_train[u.num])
+
+      total_samples = 0
+      class_0_samples = 0
+      class_1_samples = 0  
 
       # Calculate class weights
       total_samples += len(y_train[u.num])
@@ -80,8 +80,6 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
         user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
     
     server_features = Model().extract_features(baseModel, X_test_server)
-    print(server_features.shape)
-    print()
 
     # Begin training
   
@@ -117,7 +115,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
       global_weight=server.sum_scaled_weights(weit) # fedavg
       print("Global Model:")
       global_model.set_weights(global_weight)
-      loss,acc=Model().evaluate_model(global_model,server_features, y_test_server)
+      loss,acc=Model().evaluate_model(global_model, server_features, y_test_server)
       losses.append(loss)
       accuracy.append(acc)
 
