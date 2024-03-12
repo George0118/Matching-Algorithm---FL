@@ -48,7 +48,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
         X_test_server = np.concatenate((X_test_server, X_test[u.num]))
         y_test_server = np.concatenate((y_test_server, y_test[u.num]))
 
-    factors = server.factors_calculation(len(users))   # Calculate factors to multiply the weigths
+    factors = server.factors_calculation()   # Calculate factors to multiply the weigths
     
     # Specify labels for the specific server disaster
     y_test_server = server.specify_disaster(y_test_server)  

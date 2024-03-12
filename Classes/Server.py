@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from Data.Classes.Model import Model
+from general_parameters import N
 
 # Server Class
 class Server:
@@ -86,14 +87,11 @@ class Server:
             wei.append(weight_final)
         return wei
 
-    def sum_scaled_weights(self,scaled_weight_list):
+    def sum_scaled_weights(self,scaled_weight_lists):
         '''Return the sum of the listed scaled weights. The is equivalent to scaled avg of the weights'''
-        avg_grad = list()
-        #get the average grad accross all client gradients
-        for grad_list_tuple in zip(*scaled_weight_list):
-            layer_mean = tf.math.reduce_sum(grad_list_tuple, axis=0)
-            avg_grad.append(layer_mean)
-        return avg_grad
+        avg_weights = [sum(weights) for weights in zip(*scaled_weight_lists)]
+        return avg_weights
+
 
     def evaluate(self,model,test_X, test_y):
         loss,acc=Model.evaluate_model(model,test_X, test_y)
@@ -115,7 +113,7 @@ class Server:
 
         return labels
     
-    def factors_calculation(self, N):
+    def factors_calculation(self):
         coalition = self.get_coalition()
         critical_points = self.get_critical_points()
 
@@ -127,7 +125,7 @@ class Server:
         for u in coalition:
             importance_list = u.get_importance()
             for cp in critical_points:
-                denominator += importance_list[cp.num] * u.get_datasize() * Ns
+                denominator += importance_list[cp.num] * u.get_datasize()
 
         for u in coalition:
             importance_list = u.get_importance()
@@ -135,6 +133,8 @@ class Server:
             for cp in critical_points:
                 numerator += importance_list[cp.num] * u.get_datasize()
             factors[u.num] = numerator/denominator
+
+        factors = [factor/Ns for factor in factors]
 
         return factors
 

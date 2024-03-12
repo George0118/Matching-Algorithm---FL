@@ -20,7 +20,7 @@ from Data.Classes.Data import Get_data
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
 from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
-from Data.rl_parameters import *
+from Data.fl_parameters import *
 from Classes.Server import Server
 from Classes.User import User
 from Classes.CriticalPoint import CP
