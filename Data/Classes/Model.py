@@ -2,8 +2,10 @@ import tensorflow as tf
 import keras
 from keras.layers import Flatten
 from keras.layers import Dense
+from keras.layers import Dropout
 from keras.layers import Input
-from tensorflow.keras.applications import MobileNetV3Small
+from tensorflow.keras.applications import EfficientNetB4
+from tensorflow.keras.regularizers import L2
 
 class Model:
 
@@ -13,9 +15,12 @@ class Model:
 
   def global_model(self, input_shape):
 
+    l2_reg_strength = 0.1
+
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(64, activation='relu')(x)
+    x = Dense(128, activation='relu', kernel_regularizer=L2(l2_reg_strength))(x)
+    x = Dropout(rate=0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
@@ -63,7 +68,7 @@ class Model:
     # Data Augmentation
     # input = self.data_augmentation(input)
 
-    baseModel = MobileNetV3Small(weights="./Data/weights_mobilenet_v3_small_224_1.0_float_no_top.h5", include_top=False, input_tensor=input)
+    baseModel = EfficientNetB4(weights="./Data/efficientnetb4_notop.h5", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False
@@ -74,6 +79,8 @@ class Model:
      
   
   def extract_features(self, baseModel, dataset):
+
+    # input = preprocess_input(dataset)
 
     extracted_features = baseModel.predict(dataset)
 
