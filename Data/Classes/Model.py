@@ -19,8 +19,7 @@ class Model:
 
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(128, activation='relu', kernel_regularizer=L2(l2_reg_strength))(x)
-    x = Dropout(rate=0.5)(x)
+    x = Dense(256, activation='relu', kernel_regularizer=L2(l2_reg_strength))(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
