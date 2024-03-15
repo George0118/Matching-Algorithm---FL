@@ -1,3 +1,6 @@
+from config import num
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = str(num)  # Use GPU device
 import tensorflow as tf
 import keras
 from keras.layers import Flatten

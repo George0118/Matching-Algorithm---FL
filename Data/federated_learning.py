@@ -5,6 +5,9 @@
 @Date : 3-08-2022
 @Reference: https://towardsdatascience.com/federated-learning-a-step-by-step-implementation-in-tensorflow-aac568283399 
 '''
+from config import num
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = str(num)  # Use GPU device
 import tensorflow as tf
 import numpy as np
 tf.test.gpu_device_name()
