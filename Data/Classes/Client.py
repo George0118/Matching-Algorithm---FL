@@ -1,4 +1,3 @@
-import tensorflow as tf
 from Data.Classes.Model import Model
 from keras.optimizers import Adam
 import keras

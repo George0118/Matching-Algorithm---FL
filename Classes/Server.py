@@ -1,4 +1,3 @@
-import tensorflow as tf
 import numpy as np
 from Data.Classes.Model import Model
 from general_parameters import N
