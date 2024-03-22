@@ -2,7 +2,8 @@ import os
 import re
 import matplotlib.pyplot as plt
 
-results_directory = "../../results"
+results_directory = "../../results/accuracy_results"
+output_directory = "./fl_performance/"
 user_server_data = {}
 
 # Function to extract a list of float values from a line
@@ -30,7 +31,7 @@ for filename in os.listdir(results_directory):
                 if users_match:
                     matching = users_match.group(1)
                     users = users_match.group(2)
-                server_match = re.match(r'(\w+) Server:', line)  # Adjusted regular expression
+                server_match = re.match(r'\s*(\w+) Server:', line)
                 if server_match:
                     server_name = server_match.group(1)
                 elif "Losses:" in line:
@@ -44,6 +45,9 @@ for filename in os.listdir(results_directory):
                     user_server_data.setdefault(key, {"Losses": {}, "Accuracies": {}})
                     user_server_data[key]["Losses"][matching] = losses
                     user_server_data[key]["Accuracies"][matching] = accuracies
+
+# Create output directory if it doesn't exist
+os.makedirs(output_directory, exist_ok=True)
 
 # Create separate plots for Losses and Accuracies for each (Users, Server) combination
 for key, data in user_server_data.items():
@@ -78,4 +82,11 @@ for key, data in user_server_data.items():
 
     plt.legend()
     plt.tight_layout()
-    plt.show()
+
+    # Save the plot
+    output_filename = f"{key.replace(':', '_')}.png"  # Replace ':' in key to avoid issues in filename
+    output_path = os.path.join(output_directory, output_filename)
+    plt.savefig(output_path)
+    plt.close()  # Close the plot to free memory
+
+print("Plots saved successfully.")
