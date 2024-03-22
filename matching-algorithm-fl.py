@@ -29,7 +29,7 @@ import math
 import datetime
 from matchingeq_functions import check_matching_equality
 from Data.Classes.Data import Get_data
-from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images, factor
+from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images
 from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
 from Data.fl_parameters import *
@@ -70,21 +70,7 @@ while True:
 
 for s in servers:
         print("Server", s.num, " Resources: ", s.p)
-    
-# Users: on a sphere (radius = 1) around the servers
-users = [] 
 
-for i in range(N):
-    theta = random.uniform(0, 2 * math.pi)
-    phi = math.acos(2 * random.uniform(0, 1) - 1)
-
-    x = math.sin(phi) * math.cos(theta)
-    y = math.sin(phi) * math.sin(theta)
-    z = math.cos(phi)
-    
-    user = User(x,y,z,i)
-    
-    users.append(user)
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
@@ -95,21 +81,20 @@ for i in range(K):
 
     x = random.uniform(-1,1)
     y = random.uniform(-1,1)
-    y = random.uniform(-1,1)
-    distance = math.sqrt(x**2 + y**2 +z**2)
+    z = random.uniform(-1,1)
+    distance = math.sqrt(x**2 + y**2 + z**2)
 
     while distance < 0.2:  # While CP too close to the servers reselect
         x = random.uniform(-1,1)
         y = random.uniform(-1,1)
         y = random.uniform(-1,1)
-        distance = math.sqrt(x**2 + y**2 +z**2)
+        distance = math.sqrt(x**2 + y**2 + z**2)
 
     disaster = disasters[i%S]
     
     cp = CP(x,y,z,i,disaster)
 
     critical_points.append(cp)
-
 
 # Associate Critical Points with their Servers
 for cp in critical_points:
@@ -119,6 +104,27 @@ for cp in critical_points:
         servers[1].add_critical_point(cp)       # All flood CPs with Server 2
     else:
         servers[2].add_critical_point(cp)       # All earthquake CPs with Server 3
+
+# Users: on a sphere (radius = 1) around the servers / users with lower i are closer to the CPs 
+users = [] 
+
+for i in range(N):
+
+    while True:
+        j = i/K
+        cp = critical_points[i%K]
+        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
+
+        x = cp_x + random.choice([-1, 1])*(j*0.05 + random.uniform(0,0.1)) 
+        y = cp_y + random.choice([-1, 1])*(j*0.05 + random.uniform(0,0.1)) 
+        z = cp_z + random.choice([-1, 1])*(j*0.05 + random.uniform(0,0.1)) 
+
+        if -1 <= x <= 1 and -1 <= y <= 1 and -1 <= z <= 1:  # if in the sphere then add the user
+            break
+        
+    user = User(x,y,z,i)
+    
+    users.append(user)
 
 # ========================================================================================== #  
         
@@ -144,19 +150,19 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         image_num = count_images(fire_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        image_num = int(1.7*ratio*image_num)
         img_per_usr = image_num/N_max
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        image_num = int(1.3*ratio*image_num)
         img_per_usr = image_num/N_max
     else:
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(factor*ratio*image_num)
+        image_num = int(1.3*ratio*image_num)
         img_per_usr = image_num/N_max
 
     # For each user calculate the minimum distance from the relevant Critical Points
@@ -172,10 +178,15 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     # Calculate the data size ratios based on the user minimum distance from the CPs
     for i in range(N):
-      ratios[i] = 1/(user_min_distances[i] + 1e-6)
+        if user_min_distances[i] <= 1:
+            ratios[i] = 1/(user_min_distances[i] + 1e-6)
+        else:
+            ratios[i] = 0
+
+    ratios = [ratio/max(ratios) for ratio in ratios]
 
     # Get Sizes
-    sizes = [int(ratio * img_per_usr) for ratio in ratios]
+    sizes = [int(math.sqrt(ratio) * img_per_usr) for ratio in ratios]
 
     if sum(sizes) > image_num:
         temp_total = sum(sizes)
@@ -190,6 +201,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
 # Set the User final datasize
 for i in range(N):
+    Dn[i] += N_neutral*3*224*224*8  # each user has another 400 neutral images
     user = users[i]
     user.set_datasize(Dn[i])
 
@@ -546,6 +558,8 @@ ran_users = copy.deepcopy(users)
 ran_servers = copy.deepcopy(servers)
 
 # ================================= Random Matching ================================= #
+
+ran_start = time.time()
     
 random_fedlearner_matching(ran_users, ran_servers)
 
@@ -556,6 +570,10 @@ for u in ran_users:
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
+
+ran_end = time.time()
+
+print("Random Matching took", ran_end-ran_start, "seconds\n")
 # =================================================================================== #
 
 gt_users = copy.deepcopy(users)
@@ -564,6 +582,8 @@ gt_servers = copy.deepcopy(servers)
 # ============================== Game Theory Matching ============================== #
 
 # ============================== Approximate Matching ============================== #
+
+gt_start = time.time()
 
 # Initializing the available servers for each user
 for i in range(N):
@@ -591,6 +611,10 @@ for u in gt_users:
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
+
+gt_end = time.time()
+
+print("Game Theory Matching took", gt_end-gt_start, "seconds\n")
 # =============================================================================== #
 
 rl1_users = copy.deepcopy(users)
@@ -598,6 +622,8 @@ rl1_servers = copy.deepcopy(servers)
 
 # =========================== RL Matching - Server Focused =========================== #
     
+rl1_start = time.time()
+
 rl_fedlearner_matching(rl1_users, rl1_servers, True)
 
 print("Reinforcement Learning FedLearner Matching:\n")
@@ -607,6 +633,10 @@ for u in rl1_users:
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
+
+rl1_end = time.time()
+
+print("Server Focused Reinforcement Learning Matching took", rl1_end-rl1_start, "seconds\n")
     
 # ==================================================================================== #
 
@@ -614,7 +644,9 @@ rl2_users = copy.deepcopy(users)
 rl2_servers = copy.deepcopy(servers)
 
 # ========================== RL Matching - User Focused ========================== #
-    
+
+rl2_start = time.time()
+
 rl_fedlearner_matching(rl2_users, rl2_servers, False)
 
 print("Reinforcement Learning FedLearner Matching:\n")
@@ -624,6 +656,10 @@ for u in rl2_users:
     print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
 print()
+
+rl2_end = time.time()
+
+print("User Focused Reinforcement Learning Matching took", rl2_end-rl2_start, "seconds\n")
     
 # ================================================================================== #
 
@@ -639,7 +675,7 @@ prev_matchings = []
 
 get_data = Get_data(users, servers)
 
-X_train, y_train, X_test, y_test = get_data.pre_data()
+X_train, y_train, X_server, y_server = get_data.pre_data()
 
 for _users, _servers in zip(user_lists, server_lists):
 
@@ -652,8 +688,8 @@ for _users, _servers in zip(user_lists, server_lists):
     else:
         X_train_copy = copy.deepcopy(X_train)
         y_train_copy = copy.deepcopy(y_train)
-        X_test_copy = copy.deepcopy(X_test)
-        y_test_copy = copy.deepcopy(y_test)
+        X_test_copy = copy.deepcopy(X_server)
+        y_test_copy = copy.deepcopy(y_server)
         learning_start = time.time()
         server_losses, server_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
         learning_stop = time.time()

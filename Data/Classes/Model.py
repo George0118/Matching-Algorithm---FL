@@ -9,6 +9,8 @@ from keras.layers import Dropout
 from keras.layers import Input
 from tensorflow.keras.applications import EfficientNetB4
 from tensorflow.keras.regularizers import L2
+from Data.fl_parameters import *
+from keras.optimizers import Adam
 
 class Model:
 
@@ -46,6 +48,21 @@ class Model:
     print("Test Loss:", score[0])
     print('Test Accuracy:', score[5])
     return score[0],score[5]
+  
+  def train_model(self, model, features, labels):
+    model.compile(optimizer=Adam(lr=lr),
+                    loss=keras.losses.BinaryCrossentropy(),
+                    metrics=[
+      keras.metrics.TruePositives(name='tp'),
+      keras.metrics.FalsePositives(name='fp'),
+      keras.metrics.TrueNegatives(name='tn'),
+      keras.metrics.FalseNegatives(name='fn'),
+      keras.metrics.BinaryAccuracy(name='accuracy'),
+      ]
+      )
+
+    model.fit(features, labels, epochs=epoch, verbose=2)
+    print()
   
   
   # ======== Data Augmentation ========= #

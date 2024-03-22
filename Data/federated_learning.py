@@ -10,14 +10,13 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = str(num)  # Use GPU device
 import tensorflow as tf
 import numpy as np
-tf.test.gpu_device_name()
-
 from Data.Classes.Model import Model
 from Data.Classes.Client import Client
 from collections import deque
+from sklearn.model_selection import train_test_split
 import time
 
-def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
+def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_server):
 
   gpus = tf.config.list_physical_devices('GPU')
   print(gpus)
@@ -36,25 +35,12 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
     user_features = [None] * len(users)
     class_weights = [None] * len(users)
 
-    X_test_server = None
-    y_test_server = None
-
     coalition = list(server.get_coalition())
-
-    # Concatenate all the testing data for the specific server
-    for j in tf.range(len(coalition)):
-      u = coalition[j]
-      if(X_test_server is None):
-        X_test_server = X_test[u.num]
-        y_test_server = y_test[u.num]
-      else:
-        X_test_server = np.concatenate((X_test_server, X_test[u.num]))
-        y_test_server = np.concatenate((y_test_server, y_test[u.num]))
 
     factors = server.factors_calculation()   # Calculate factors to multiply the weigths
     
     # Specify labels for the specific server disaster
-    y_test_server = server.specify_disaster(y_test_server)  
+    y_server[i] = server.specify_disaster(y_server[i])  
 
     for j in tf.range(len(coalition)):
       u = coalition[j]
@@ -69,8 +55,12 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
       class_0_samples += np.sum(y_train[u.num] == 0)
       class_1_samples += np.sum(y_train[u.num] == 1)
 
-      class_0_weight = total_samples / (2 * class_0_samples)
-      class_1_weight = total_samples / (2 * class_1_samples)
+      if class_0_samples == 0 or class_1_samples == 0:
+        class_0_weight = 1
+        class_1_weight = 1
+      else:
+        class_0_weight = total_samples / (2 * class_0_samples)
+        class_1_weight = total_samples / (2 * class_1_samples)
 
       class_weights[u.num] = {0: class_0_weight, 1: class_1_weight}
 
@@ -82,7 +72,11 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
         u = coalition[j]
         user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
     
-    server_features = Model().extract_features(baseModel, X_test_server)
+    server_features = Model().extract_features(baseModel, X_server[i])
+
+    print("Feature Extraction complete!\n")
+
+    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.5, random_state=42)
 
     # Begin training
   
@@ -118,7 +112,8 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_test, y_test):
       global_weight=server.sum_scaled_weights(weit) # fedavg
       print("Global Model:")
       global_model.set_weights(global_weight)
-      loss,acc=Model().evaluate_model(global_model, server_features, y_test_server)
+      Model().train_model(global_model, X_train_server, y_train_server)
+      loss,acc=Model().evaluate_model(global_model, X_test_server, y_test_server)
       losses.append(loss)
       accuracy.append(acc)
 

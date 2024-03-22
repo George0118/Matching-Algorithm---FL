@@ -33,14 +33,17 @@ flood_input_paths = [
     "../data/flooding-image-dataset/Flood Images"  
 ]
 
+neutral_images_paths = [
+    "../data/neutral_images"
+]
+
 import cv2
 import os
 import math
 import numpy as np
 import random
-from sklearn.model_selection import train_test_split
-
-factor = 1.6
+from config import N,S
+from general_parameters import N_neutral
 
 def count_images(input_paths):  # Count images in input paths
     image_num = 0
@@ -53,12 +56,18 @@ def count_images(input_paths):  # Count images in input paths
     
     return image_num
 
-def load_images(file_paths, disaster, test_size=0.2):
+def load_images(file_paths, disaster):
 
     total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
     image_num = count_images(file_paths)
     ratio = image_num/total_images
     ratio = 1-math.sqrt(ratio)
+    if disaster == "fire":
+        factor = 1.7
+    elif disaster == "flood":
+        factor = 1.3
+    elif disaster == "earthquake":
+        factor = 1.3
     image_num = int(factor*ratio*image_num)
 
     images = []
@@ -77,4 +86,39 @@ def load_images(file_paths, disaster, test_size=0.2):
     selected_images = [images[i] for i in selected_indices]
     selected_labels = [labels[i] for i in selected_indices]
 
-    return train_test_split(np.array(selected_images), np.array(selected_labels), test_size=test_size, random_state=42)
+    # Select another 250 indices for the server
+    remaining_indices = set(range(len(images))) - set(selected_indices)
+    server_indices = random.sample(remaining_indices, 250)
+    server_images = [images[i] for i in server_indices]
+    server_labels = [labels[i] for i in server_indices]
+
+    return selected_images, server_images, selected_labels, server_labels
+
+def load_neutral_images():
+    images = []
+    labels = []
+
+    for path in neutral_images_paths:
+        # path = path.replace("../data", "/kaggle/input/custom-disaster-dataset")     # Uncomment when running on kaggle
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                image_path = os.path.join(root, file)
+                image = cv2.imread(image_path)
+                images.append(image)
+                labels.append("neutral")
+
+    combined = list(zip(images, labels))
+    random.shuffle(combined)
+    images, labels = zip(*combined)
+
+    # Split the images and labels into N lists, each containing N_neutral images and labels
+    neutral_image_lists = [images[i:i+N_neutral] for i in range(0, len(images), N_neutral)]
+    neutral_label_lists = [labels[i:i+N_neutral] for i in range(0, len(labels), N_neutral)]
+
+    # Create S lists, each containing 250 images and labels, from the remaining images
+    remaining_images = images[N * N_neutral:]
+    remaining_labels = labels[N * N_neutral:]
+    server_image_lists = [remaining_images[i:i+250] for i in range(0, len(remaining_images), 250)]
+    server_label_lists = [remaining_labels[i:i+250] for i in range(0, len(remaining_labels), 250)]
+
+    return neutral_image_lists[:N], neutral_label_lists[:N], server_image_lists[:S], server_label_lists[:S]
