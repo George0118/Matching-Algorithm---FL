@@ -4,7 +4,7 @@ import math
 
 alpha = 1
 beta = 1
-gamma = 1
+gamma = 0.1
 delta = 1
 epsilon = 1
 
@@ -12,7 +12,7 @@ w_local = 0.5
 w_trans = 0.5
 
 def calculate_weights(ratio):
-    pow = 4
+    pow = 10
 
     if ratio == 1:
         w1 = 0.5
@@ -125,11 +125,11 @@ def server_utility(server, coalition):
 
 #Server's Utility function with externality
 
-def server_utility_externality(servers, coalition, server):
+def server_utility_externality(servers, coalition, server, verbose = False):
     utility = 0
     
     for u in coalition:
-        utility += user_utility_ext(u,server) 
+        utility += user_utility_ext(u,server,verbose=verbose) 
 
     utility -= epsilon * math.sqrt(server.p)
 
@@ -160,5 +160,8 @@ def user_utility_diff_servers(user, server1, server2):
 # Reward Functions
 
 def server_reward(servers, user, server):
-    return server_utility_externality(servers, server.get_coalition(), server) \
-            - server_utility_externality(servers, server.get_coalition().difference({user}), server)     
+    rew = server_utility_externality(servers, server.get_coalition(), server) \
+            - server_utility_externality(servers, server.get_coalition().difference({user}), server)
+    # if (rew < 0):
+    #     print(rew)
+    return rew    

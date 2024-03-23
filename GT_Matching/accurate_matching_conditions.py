@@ -2,12 +2,12 @@ from GT_Matching.utility_functions import server_utility_externality
 
 # Free User joins Server - TC1
 
-def check_user_joins_server(servers, user, server):
+def check_user_joins_server(servers, user, server, verbose = False):
     coalition = server.get_coalition()     # get current coalition of server 
 
     # Get difference in utility 
-    diff = server_utility_externality(servers, coalition.union({user}), server) \
-          - server_utility_externality(servers, coalition, server)
+    diff = server_utility_externality(servers, coalition.union({user}), server, verbose=verbose) \
+          - server_utility_externality(servers, coalition, server, verbose=verbose)
 
     return diff
 

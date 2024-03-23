@@ -11,23 +11,26 @@ import random
 import copy
 from itertools import product
 
+g = 0.9
 c = 2   # degree of exploration
 Nt = [[0] * (S+1) for _ in range(N)]
-rewards = [[0] * (S) for _ in range(N)]
+Qn = [[0] * (S) for _ in range(N)]
 
 def rl_fedlearner_matching(original_users: List[User], original_servers: List[Server], server_focused):
-    global Nt, rewards
+    global Nt, Qn
 
     t = 1
+
+    convergence = False
 
     users = copy.deepcopy(original_users)
     servers = copy.deepcopy(original_servers)
 
     # Set everything to 0 in case the global array its already changed from before
     Nt = [[0] * (S+1) for _ in range(N)]
-    rewards = [[0] * (S) for _ in range(N)]
+    Qn = [[0] * (S+1) for _ in range(N)]
     
-    while(t <= 1000):
+    while(not convergence):
         random.shuffle(users)
         for u in users:     # For each user get its available actions
             actions = []
@@ -57,124 +60,68 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
                 actions.append(Action(None))              # And add the option to leave the server
 
             # After finding all the possible actions find the best one
-            best_action, max_reward = choose_best_action(actions, u, servers, t, server_focused)     
+            best_action, max_reward = choose_best_action(actions, u, servers, t, server_focused)  
 
             # And execute it
             execute_action(best_action, max_reward, u)
 
+        if t != 1:
+            convergence = check_convergence(prev_Qn, Qn)
+
+        prev_Qn = copy.deepcopy(Qn)
         t += 1 
 
-    print("\nRewards:")
-    pprint(rewards)
+    print("\nQn:")
+    pprint(Qn)
     final_matching(original_users, original_servers)  
     print()    
        
                         
 def choose_best_action(actions, user: User, servers: List[Server], t, server_focused):
-    max_utility_diff = None
+    max_Qn = None
     best_action = None
     reward = None
+    max_utility = None
 
     for a in actions:
         target = a.target
-        other_user = a.exchange_user
 
-        if target is None:      # If the target is to leave calculate the utility difference
-            if user.get_alligiance() is not None:
+        if target is None:      # If the target is to leave or stay out
+            if server_focused:
+                utility = 1e-10
+            else:
+                utility = 1e-10
 
-                if server_focused:
-                    utility_diff = check_user_leaves_server(servers, user, user.get_alligiance())
-                else:
-                    utility_diff = -user_utility_ext(user, user.get_alligiance())
+            if max_utility is None or max_utility < utility:
+                max_utility = utility
 
-                utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                if max_utility_diff is None or max_utility_diff < utility_diff_UCB:
-                    best_action = a
-                    max_utility_diff = utility_diff_UCB
-                    reward = utility_diff
+            Q = Qn[user.num][S]
 
-            else:           # If the target is to stay out (utility = 0)
-                utility_diff = 0
-                utility_diff_UCB = UCB_calc(utility_diff, a, t, user)
-                if max_utility_diff is None or max_utility_diff < utility_diff:
-                    best_action = a
-                    max_utility_diff = utility_diff
-                    reward = 0
+            Q = UCB_calc(Q, a, t, user)        # calculate the new Q based on the UCB algorithm
+            if max_Qn is None or max_Qn < Q:
+                best_action = a
+                max_Qn = Q
+                reward = utility
 
-        else:       # The user heads to a server
-            if other_user is None:  # If there is no exchange
-                if user.get_alligiance() is None:   # If user was not in a server
-                        
-                    if server_focused:
-                        utility_diff = check_user_joins_server(servers, user, target)
-                    else:
-                        utility_diff = user_utility_ext(user, target)
+        else:       # The user heads to a server 
+            if server_focused:
+                new_coalition = target.get_coalition().union({user})
+                utility = server_utility_externality(servers, new_coalition, target)/len(list(new_coalition))
+            else:
+                utility = user_utility_ext(user, target)
 
-                    utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                    if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                        best_action = a
-                        max_utility_diff = utility_diff_UCB
-                        reward = utility_diff
-                
-                else:       # Else user belonged to a server and is changing (leaving from current to go to target)
+            if max_utility is None or max_utility < utility:
+                max_utility = utility
 
-                    if target != user.get_alligiance(): # if the user doesn't stay where he is
-                        if server_focused:
-                            utility_diff = check_user_changes_servers(servers, user, user.get_alligiance(), target)
-                        else:
-                            utility_diff = user_utility_diff_servers(user, target, user.get_alligiance())
+            Q = Qn[user.num][target.num]
 
-                        utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                        if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                            best_action = a
-                            max_utility_diff = utility_diff_UCB
-                            if server_focused:
-                                reward = check_user_joins_server(servers, user, target)
-                            else:
-                                reward = user_utility_ext(user, target)
+            Q = UCB_calc(Q, a, t, user)        # calculate the new Q based on the UCB algorithm
+            if max_Qn is None or max_Qn < Q:
+                best_action = a
+                max_Qn = Q
+                reward = utility
 
-                    else:       # else the user stays to the same server
-                        utility_diff = 0
-
-                        utility_diff_UCB = UCB_calc(utility_diff, a, t, user)      # calculate the utility based on the UCB algorithm
-                        if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                            best_action = a
-                            max_utility_diff = utility_diff_UCB
-                            if server_focused:
-                                reward = server_reward(servers, user, target)
-                            else:
-                                reward = user_utility_ext(user, target)
-
-            else:        # Else there is exchange happening
-                if user.get_alligiance() is None:         # If exchange between target and None
-                    if server_focused:  
-                        utility_diff = check_user_exchange(servers, other_user, user, target, None) 
-                    else:
-                        utility_diff = user_utility_diff_exchange(other_user, user, target)
-
-                    utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                    if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                        best_action = a
-                        max_utility_diff = utility_diff_UCB
-                        if server_focused:
-                            reward = check_user_joins_server(servers, user, target)
-                        else:
-                            reward = user_utility_ext(user, target)
-
-                else:       # Else exchange between servers
-                    if server_focused:
-                        utility_diff = check_user_exchange(servers, user, other_user, user.get_alligiance(), target) 
-                    else:
-                        utility_diff = user_utility_diff_exchange(user, other_user, user.get_alligiance(), target)
-
-                    utility_diff_UCB = UCB_calc(utility_diff, a, t, user)        # calculate the utility based on the UCB algorithm
-                    if max_utility_diff is None or max_utility_diff <= utility_diff_UCB:
-                        best_action = a
-                        max_utility_diff = utility_diff_UCB
-                        if server_focused:
-                            reward = check_user_joins_server(servers, user, target)
-                        else:
-                            reward = user_utility_ext(user, target)
+    reward = reward/max_utility
 
     return best_action, reward
 
@@ -198,7 +145,7 @@ def execute_action(action, reward, user: User):
         if current_server is not None:     # if user is not already out
             current_server.remove_from_coalition(user.num)
         Nt[user.num][S] += 1    # Update Nt
-        rewards[user.num][current_server.num] -= reward 
+        Qn[user.num][S] += g * (reward - Qn[user.num][S]) 
 
     else:       # The user heads to a server
         if other_user is None:  # If there is no exchange
@@ -230,8 +177,8 @@ def execute_action(action, reward, user: User):
                 other_user.change_server(current_server)
                 current_server.add_to_coalition(other_user)     # and add to our previously current server
 
-        Nt[user.num][target.num] += 1   # Update Nt
-        rewards[user.num][target.num] += reward  # and add the reward our environment gets
+        Nt[user.num][target.num] += 1    # Update Nt
+        Qn[user.num][target.num] += g * (reward - Qn[user.num][target.num]) 
         
 
 
@@ -244,7 +191,7 @@ def final_matching(users: List[User], servers: List[Server]):
         flag = False
         random.shuffle(cartesian_product)     # shuffle cartesian product each iteration to not prioritize any server, user
         for server, user in cartesian_product:
-            user_reward = rewards[user.num][server.num]
+            user_reward = Qn[user.num][server.num]
 
             # print("Server:", server.num, " | User:", user.num)
 
@@ -266,7 +213,7 @@ def final_matching(users: List[User], servers: List[Server]):
 
             # else if the user belongs to a server and there is space
             elif current_server is not None and current_server.num != server.num and len(server.get_coalition()) < server.Ns_max:
-                if user_reward > rewards[user.num][user.get_alligiance().num]:  # if this server and user benefit more
+                if user_reward > Qn[user.num][user.get_alligiance().num]:  # if this server and user benefit more
                     current_server.remove_from_coalition(user.num)   # remove from its original server and
                     user.change_server(server)      # add the user to the server
                     server.add_to_coalition(user)
@@ -277,13 +224,13 @@ def final_matching(users: List[User], servers: List[Server]):
             elif current_server is None and len(server.get_coalition()) == server.Ns_max:
                 u_min_contribute = None
                 for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
-                    if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
+                    if u_min_contribute is None or Qn[u_min_contribute.num][server.num] > Qn[u.num][server.num]:
                         for u1 in users:
                             if u1.num == u.num:
                                 u_min_contribute = u1
                                 break
 
-                if user_reward > rewards[u_min_contribute.num][server.num]:        # if it can
+                if user_reward > Qn[u_min_contribute.num][server.num]:        # if it can
                     server.remove_from_coalition(u_min_contribute.num)             # remove the other user
                     u_min_contribute.change_server(None)
 
@@ -296,14 +243,14 @@ def final_matching(users: List[User], servers: List[Server]):
             elif current_server is not None and current_server.num != server.num and len(server.get_coalition()) == server.Ns_max:
                 u_min_contribute = None
                 for u in server.get_coalition():    # check for the minimum contributing user in the current coalition if the server can benefit from exchange
-                    if u_min_contribute is None or rewards[u_min_contribute.num][server.num] > rewards[u.num][server.num]:
+                    if u_min_contribute is None or Qn[u_min_contribute.num][server.num] > Qn[u.num][server.num]:
                         for u1 in users:
                             if u1.num == u.num:
                                 u_min_contribute = u1
                                 break
 
                 # if it can and user wants
-                if user_reward > rewards[u_min_contribute.num][server.num] and user_reward > rewards[user.num][user.get_alligiance().num]:        
+                if user_reward > Qn[u_min_contribute.num][server.num] and user_reward > Qn[user.num][user.get_alligiance().num]:        
                     server.remove_from_coalition(u_min_contribute.num)                 # remove the other user
                     u_min_contribute.change_server(current_server)
                     current_server.add_to_coalition(u_min_contribute)       # and add him to the other server
@@ -330,4 +277,23 @@ def final_matching(users: List[User], servers: List[Server]):
     servers.sort(key=lambda x: x.num)     # sort servers by number
 
 
+def check_convergence(prev_Qn, Qn):
+    return are_lists_equal(prev_Qn, Qn)
 
+def are_lists_equal(list1, list2):
+    # Check if the lists have the same dimensions
+    if len(list1) != len(list2):
+        return False
+    
+    # Iterate over corresponding elements in each list
+    for i in range(len(list1)):
+        # If the elements are lists themselves, recursively call the function
+        if isinstance(list1[i], list) and isinstance(list2[i], list):
+            if not are_lists_equal(list1[i], list2[i]):
+                return False
+        # If the elements are not lists, check for equality
+        elif list1[i] != list2[i]:
+            return False
+    
+    # If all corresponding elements are equal, the lists are equal
+    return True
