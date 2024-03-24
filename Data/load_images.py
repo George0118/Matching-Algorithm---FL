@@ -63,11 +63,11 @@ def load_images(file_paths, disaster):
     ratio = image_num/total_images
     ratio = 1-math.sqrt(ratio)
     if disaster == "fire":
-        factor = 1.7
+        factor = 3
     elif disaster == "flood":
-        factor = 1.3
+        factor = 2.2
     elif disaster == "earthquake":
-        factor = 1.3
+        factor = 1.8
     image_num = int(factor*ratio*image_num)
 
     images = []
