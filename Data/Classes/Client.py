@@ -28,23 +28,25 @@ class Client:
     return scaled_weights
 
   def training(self, features, labels, global_weights, class_weights, shape):
-      model = Model().global_model(shape)
+    model = Model().global_model(shape)
 
-      model.compile(optimizer=self.optimizer,
-                    loss=self.loss,
-                    metrics=[
-      keras.metrics.TruePositives(name='tp'),
-      keras.metrics.FalsePositives(name='fp'),
-      keras.metrics.TrueNegatives(name='tn'),
-      keras.metrics.FalseNegatives(name='fn'),
-      keras.metrics.BinaryAccuracy(name='accuracy'),
-      ]
-                    )
-      model.set_weights(global_weights)
+    model.compile(optimizer=self.optimizer,
+                  loss=self.loss,
+                  metrics=[
+                      keras.metrics.TruePositives(name='tp'),
+                      keras.metrics.FalsePositives(name='fp'),
+                      keras.metrics.TrueNegatives(name='tn'),
+                      keras.metrics.FalseNegatives(name='fn'),
+                      keras.metrics.BinaryAccuracy(name='accuracy'),
+                  ]
+                  )
+    model.set_weights(global_weights)
 
-      model.fit(features, labels, epochs=self.epoch, class_weight=class_weights, verbose=2)
-      print()
+    history = model.fit(features, labels, epochs=self.epoch, class_weight=class_weights, verbose=2)
+    print()
 
-      weights = model.get_weights()
+    weights = model.get_weights()
+    loss = history.history['loss'][-1]  # Get the final training loss
+    accuracy = history.history['accuracy'][-1]  # Get the final training accuracy
 
-      return weights
+    return weights, loss, accuracy

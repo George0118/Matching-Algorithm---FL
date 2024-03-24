@@ -15,6 +15,7 @@ from Data.Classes.Client import Client
 from collections import deque
 from sklearn.model_selection import train_test_split
 import time
+from config import N
 
 def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_server):
 
@@ -24,6 +25,9 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
 
   server_losses = []
   server_accuracy = []
+
+  user_losses = [[] for i in range(N)]
+  user_accuracies = [[] for i in range(N)]
 
   for i in tf.range(len(servers)):
 
@@ -100,12 +104,16 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
         print("User ", u.num, ":")
         client = Client(lr, epoch, u.num)
 
-        weix = client.training(user_features[u.num],
+        weix, loss, acc = client.training(user_features[u.num],
                               y_train[u.num],
                               global_weights,
                               class_weights[u.num],
                               user_features[u.num].shape[1:]
                               )
+        
+        user_losses[u.num].append(loss)
+        user_accuracies[u.num].append(acc)
+
         weix = client.scale_model_weights(weix, factors[u.num])
         weit.append(weix)
 
@@ -132,5 +140,5 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
 
     print("------------------------------------------------------------------")
 
-  return server_losses, server_accuracy
+  return server_losses, server_accuracy, user_losses, user_accuracies
 
