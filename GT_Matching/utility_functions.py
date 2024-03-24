@@ -4,7 +4,7 @@ import math
 
 alpha = 1
 beta = 1
-gamma = 0.1
+gamma = 1
 delta = 1
 epsilon = 1
 
@@ -12,7 +12,7 @@ w_local = 0.5
 w_trans = 0.5
 
 def calculate_weights(ratio):
-    pow = 10
+    pow = 4
 
     if ratio == 1:
         w1 = 0.5
@@ -66,7 +66,7 @@ def user_utility(user, server, verbose = False):
         print("Dataquality: ", avg_dataquality)
         print()
 
-    return utility
+    return utility + 2    # + 2 is to have positive utilities
 
 # User Utility with Externality
 
@@ -108,19 +108,19 @@ def user_utility_ext(user, server, verbose = False):
         print("Dataquality: ", avg_dataquality)
         print()
 
-    return utility
+    return utility + 2    # + 2 is to have positive utilities
 
 #Server's Utility function
 
-def server_utility(server, coalition):
+def server_utility(server, coalition, verbose = False):
     utility = 0
     
     for u in coalition:
-        utility += user_utility(u,server) 
+        utility += user_utility(u,server,verbose=verbose) 
 
     utility -= epsilon * math.sqrt(server.p)
         
-    return utility  
+    return utility
 
 
 #Server's Utility function with externality
@@ -140,11 +140,8 @@ def server_utility_externality(servers, coalition, server, verbose = False):
             added_payment_of_rest += s.p
 
     utility = utility/added_payment_of_rest
-
-    # print("Utility: ", utility)
-    # print(server.p)
         
-    return utility  
+    return utility 
 
 def user_utility_diff_exchange(user1, user2, server1, server2 = None):
     if server2 is not None:

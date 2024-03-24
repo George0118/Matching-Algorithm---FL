@@ -11,7 +11,8 @@ import random
 import copy
 from itertools import product
 
-g = 0.9
+rew_for_out = 1e-6
+g = 1
 c = 2   # degree of exploration
 Nt = [[0] * (S+1) for _ in range(N)]
 Qn = [[0] * (S) for _ in range(N)]
@@ -88,9 +89,9 @@ def choose_best_action(actions, user: User, servers: List[Server], t, server_foc
 
         if target is None:      # If the target is to leave or stay out
             if server_focused:
-                utility = 1e-10
+                utility = rew_for_out
             else:
-                utility = 1e-10
+                utility = rew_for_out
 
             if max_utility is None or max_utility < utility:
                 max_utility = utility
@@ -280,7 +281,7 @@ def final_matching(users: List[User], servers: List[Server]):
 def check_convergence(prev_Qn, Qn):
     return are_lists_equal(prev_Qn, Qn)
 
-def are_lists_equal(list1, list2):
+def are_lists_equal(list1, list2, tolerance=rew_for_out):
     # Check if the lists have the same dimensions
     if len(list1) != len(list2):
         return False
@@ -289,11 +290,12 @@ def are_lists_equal(list1, list2):
     for i in range(len(list1)):
         # If the elements are lists themselves, recursively call the function
         if isinstance(list1[i], list) and isinstance(list2[i], list):
-            if not are_lists_equal(list1[i], list2[i]):
+            if not are_lists_equal(list1[i], list2[i], tolerance):
                 return False
-        # If the elements are not lists, check for equality
-        elif list1[i] != list2[i]:
+        # If the elements are not lists, check for equality within the tolerance
+        elif abs(list1[i] - list2[i]) > tolerance:
             return False
     
-    # If all corresponding elements are equal, the lists are equal
+    # If all corresponding elements are within the tolerance, the lists are considered equal
     return True
+
