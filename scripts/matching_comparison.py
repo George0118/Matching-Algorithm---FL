@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-results_directory = "../../results"
+results_directory = "../../results/matching_results"
 matching_data = {}
 
 # Function to extract a single float value from a line
@@ -85,3 +85,33 @@ for magnitude in magnitudes:
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
     plt.show()
+
+# Create bar plots for average magnitude values across all matchings
+for magnitude in magnitudes:
+    plt.figure(figsize=(10, 6))
+    plt.title(f"Average {magnitude} for Each Matching")
+    plt.xlabel("Matching")
+    plt.ylabel("Average " + magnitude)
+
+    avg_values = []  # List to store average values for each matching
+    bar_colors = ['blue', 'orange', 'green', 'red']  # Colors for the bars
+
+    for matching, data in plot_data.items():
+        values = data[magnitude]["Values"]
+        avg_value = np.mean(values)
+        avg_values.append(avg_value)
+
+    # Plotting the bar plot with thinner bars
+    bars = plt.bar(list(plot_data.keys()), avg_values, color=bar_colors, width=0.3)
+
+    # Adding text labels on top of each bar
+    for bar, value in zip(bars, avg_values):
+        if magnitude == "Mean Etransfer":
+            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.7f}', ha='center', va='bottom')
+        else:
+            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
+
+    # Save the plot as PNG
+    plt.savefig(os.path.join(save_directory, f"Average_{magnitude.replace(' ', '_')}.png"), bbox_inches='tight')
+    plt.show()
+
