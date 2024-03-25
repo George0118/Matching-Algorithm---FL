@@ -154,19 +154,19 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         image_num = count_images(fire_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(3*ratio*image_num)
+        image_num = int(1.7*ratio*image_num)
         img_per_usr = image_num/N_max
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(2.2*ratio*image_num)
+        image_num = int(1.3*ratio*image_num)
         img_per_usr = image_num/N_max
     else:
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(1.8*ratio*image_num)
+        image_num = int(1.3*ratio*image_num)
         img_per_usr = image_num/N_max
 
     # For each user calculate the minimum distance from the relevant Critical Points
@@ -190,7 +190,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     ratios = [ratio/max(ratios) for ratio in ratios]
 
     # Get Sizes
-    sizes = [int(math.sqrt(ratio) * img_per_usr) for ratio in ratios]
+    sizes = [int(1.8 * math.sqrt(ratio) * img_per_usr) for ratio in ratios]
 
     if sum(sizes) > image_num:
         temp_total = sum(sizes)
@@ -691,7 +691,7 @@ matching_user_accuracies = []
 
 #     if same_matching is not None:
 #         server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
-#         user_losses, user_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
+#         user_losses, user_accuracy = matching_user_losses[same_matching], matching_user_accuracies[same_matching]
 #     else:
 #         X_train_copy = copy.deepcopy(X_train)
 #         y_train_copy = copy.deepcopy(y_train)

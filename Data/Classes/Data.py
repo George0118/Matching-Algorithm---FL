@@ -64,7 +64,7 @@ class Get_data:
     def_len = len(data)/N_max
 
     # Get Sizes
-    sizes = [int(math.sqrt(ratio) * def_len) for ratio in ratios]
+    sizes = [int(1.8 * math.sqrt(ratio) * def_len) for ratio in ratios]
 
     if sum(sizes) > len(data):
         temp_total = sum(sizes)
