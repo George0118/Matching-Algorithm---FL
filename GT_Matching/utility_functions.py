@@ -5,7 +5,7 @@ import math
 alpha = 1
 beta = 1
 gamma = 1
-delta = 1
+delta = 2
 epsilon = 1
 
 constant = 1
