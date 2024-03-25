@@ -47,6 +47,8 @@ from RAND_Matching.random_matching import random_fedlearner_matching
 from config import N,S,K
 from general_parameters import *
 
+federated_learning = True
+
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
 
 start_time = time.time()
@@ -676,70 +678,73 @@ matching_accuracies = []
 matching_user_losses = []
 matching_user_accuracies = []
 
-# # ============================== Federated Learning ============================== #
-# prev_matchings = []
+# ============================== Federated Learning ============================== #
 
-# get_data = Get_data(users, servers)
+if federated_learning:
+    prev_matchings = []
 
-# X_train, y_train, X_server, y_server = get_data.pre_data()
+    get_data = Get_data(users, servers)
 
-# for _users, _servers in zip(user_lists, server_lists):
+    X_train, y_train, X_server, y_server = get_data.pre_data()
 
-#     same_matching = check_matching_equality(_servers, prev_matchings)
+    for _users, _servers in zip(user_lists, server_lists):
 
-#     elapsed_time = 0
+        same_matching = check_matching_equality(_servers, prev_matchings)
 
-#     if same_matching is not None:
-#         server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
-#         user_losses, user_accuracy = matching_user_losses[same_matching], matching_user_accuracies[same_matching]
-#     else:
-#         X_train_copy = copy.deepcopy(X_train)
-#         y_train_copy = copy.deepcopy(y_train)
-#         X_test_copy = copy.deepcopy(X_server)
-#         y_test_copy = copy.deepcopy(y_server)
-#         learning_start = time.time()
-#         server_losses, server_accuracy, user_losses, user_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
-#         learning_stop = time.time()
-#         elapsed_time = learning_stop - learning_start
+        elapsed_time = 0
 
-#     matching_losses.append(server_losses)
-#     matching_accuracies.append(server_accuracy)
-#     matching_user_losses.append(user_losses)
-#     matching_user_accuracies.append(user_accuracy)
+        if same_matching is not None:
+            server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
+            user_losses, user_accuracy = matching_user_losses[same_matching], matching_user_accuracies[same_matching]
+        else:
+            X_train_copy = copy.deepcopy(X_train)
+            y_train_copy = copy.deepcopy(y_train)
+            X_test_copy = copy.deepcopy(X_server)
+            y_test_copy = copy.deepcopy(y_server)
+            learning_start = time.time()
+            server_losses, server_accuracy, user_losses, user_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
+            learning_stop = time.time()
+            elapsed_time = learning_stop - learning_start
 
-#     for i in range(S):
-#         print("Server ", i, " achieved:\n")
-#         print("Loss: ", server_losses[i][-1])
-#         print("Accuracy: ", server_accuracy[i][-1])
-#         print()
-#     print(f"Learning for all 3 Servers took {elapsed_time/60:.2f} minutes\n")
-#     print()
+        matching_losses.append(server_losses)
+        matching_accuracies.append(server_accuracy)
+        matching_user_losses.append(user_losses)
+        matching_user_accuracies.append(user_accuracy)
 
-#     prev_matchings.append(_servers)
+        for i in range(S):
+            print("Server ", i, " achieved:\n")
+            print("Loss: ", server_losses[i][-1])
+            print("Accuracy: ", server_accuracy[i][-1])
+            print()
+        print(f"Learning for all 3 Servers took {elapsed_time/60:.2f} minutes\n")
+        print()
 
-# # ================================================================================ #
-    
-# end_time = time.time()
-# elapsed_time = end_time - start_time
+        prev_matchings.append(_servers)
 
-# print(f"\nExecution took {elapsed_time/60:.2f} minutes\n")
+    # ================================================================================ #
+        
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    print(f"\nExecution took {elapsed_time/60:.2f} minutes\n")
 
 
 # For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
 
-# # With Federated Learning
-# matchings = []
-# matchings.append((ran_users, ran_servers, matching_losses[0], matching_accuracies[0], matching_user_losses[0], matching_user_accuracies[0], "RAN"))
-# matchings.append((gt_users, gt_servers, matching_losses[1], matching_accuracies[1], matching_user_losses[1], matching_user_accuracies[1], "GT"))
-# matchings.append((rl1_users, rl1_servers, matching_losses[2], matching_accuracies[2], matching_user_losses[2], matching_user_accuracies[2], "RL1"))
-# matchings.append((rl2_users, rl2_servers, matching_losses[3], matching_accuracies[3], matching_user_losses[3], matching_user_accuracies[3], "RL2"))
-
-# Without Federated Learning
-matchings = []
-matchings.append((ran_users, ran_servers, "RAN"))
-matchings.append((gt_users, gt_servers, "GT"))
-matchings.append((rl1_users, rl1_servers, "RL1"))
-matchings.append((rl2_users, rl2_servers, "RL2"))
+if federated_learning:
+    # With Federated Learning
+    matchings = []
+    matchings.append((ran_users, ran_servers, matching_losses[0], matching_accuracies[0], matching_user_losses[0], matching_user_accuracies[0], "RAN"))
+    matchings.append((gt_users, gt_servers, matching_losses[1], matching_accuracies[1], matching_user_losses[1], matching_user_accuracies[1], "GT"))
+    matchings.append((rl1_users, rl1_servers, matching_losses[2], matching_accuracies[2], matching_user_losses[2], matching_user_accuracies[2], "RL1"))
+    matchings.append((rl2_users, rl2_servers, matching_losses[3], matching_accuracies[3], matching_user_losses[3], matching_user_accuracies[3], "RL2"))
+else:
+    # Without Federated Learning
+    matchings = []
+    matchings.append((ran_users, ran_servers, "RAN"))
+    matchings.append((gt_users, gt_servers, "GT"))
+    matchings.append((rl1_users, rl1_servers, "RL1"))
+    matchings.append((rl2_users, rl2_servers, "RL2"))
 
 timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
 
@@ -752,8 +757,10 @@ if not os.path.exists(directory_path):
 
 for matching in matchings:
 
-    # _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
-    _users, _servers, matching_label = matching     # Without Federated Learning
+    if federated_learning:
+        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+    else:
+        _users, _servers, matching_label = matching     # Without Federated Learning
 
     # Energy (J)
     mean_Energy = 0
@@ -824,27 +831,28 @@ for matching in matchings:
     Sum User Payments: {user_payments}\n\
     \n")
         
-    # with open(output_filename, 'a') as file:
-    #     file.write(f"Fire Server:\n\
-    # Losses: {_losses[0]}\n\
-    # Accuracies: {_accuracies[0]}\n")
-    #     for u in _servers[0].get_coalition():
-    #         file.write(f"User {u.num}:\n\
-    #     Losses: {user_losses[u.num]}\n\
-    #     Accuracies: {user_accuracies[u.num]}\n")
-        
-    #     file.write(f"Flood Server:\n\
-    # Losses: {_losses[1]}\n\
-    # Accuracies: {_accuracies[1]}\n")
-    #     for u in _servers[1].get_coalition():
-    #         file.write(f"User {u.num}:\n\
-    #     Losses: {user_losses[u.num]}\n\
-    #     Accuracies: {user_accuracies[u.num]}\n")
-        
-    #     file.write(f"Earthquake Server:\n\
-    # Losses: {_losses[2]}\n\
-    # Accuracies: {_accuracies[2]}\n")
-    #     for u in _servers[2].get_coalition():
-    #         file.write(f"User {u.num}:\n\
-    #     Losses: {user_losses[u.num]}\n\
-    #     Accuracies: {user_accuracies[u.num]}\n")
+    if federated_learning: 
+        with open(output_filename, 'a') as file:
+            file.write(f"Fire Server:\n\
+        Losses: {_losses[0]}\n\
+        Accuracies: {_accuracies[0]}\n")
+            for u in _servers[0].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
+            
+            file.write(f"Flood Server:\n\
+        Losses: {_losses[1]}\n\
+        Accuracies: {_accuracies[1]}\n")
+            for u in _servers[1].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
+            
+            file.write(f"Earthquake Server:\n\
+        Losses: {_losses[2]}\n\
+        Accuracies: {_accuracies[2]}\n")
+            for u in _servers[2].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
