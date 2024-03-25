@@ -8,6 +8,8 @@ gamma = 1
 delta = 1
 epsilon = 1
 
+constant = 1
+
 w_local = 0.5
 w_trans = 0.5
 
@@ -66,7 +68,7 @@ def user_utility(user, server, verbose = False):
         print("Dataquality: ", avg_dataquality)
         print()
 
-    return utility + 2    # + 2 is to have positive utilities
+    return utility + constant    # + constant is to have positive utilities
 
 # User Utility with Externality
 
@@ -108,7 +110,7 @@ def user_utility_ext(user, server, verbose = False):
         print("Dataquality: ", avg_dataquality)
         print()
 
-    return utility + 2    # + 2 is to have positive utilities
+    return utility + constant    # + constant is to have positive utilities
 
 #Server's Utility function
 

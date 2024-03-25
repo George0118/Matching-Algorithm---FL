@@ -12,7 +12,7 @@ import copy
 from itertools import product
 
 rew_for_out = 1e-6
-g = 1
+g = 0.5
 c = 2   # degree of exploration
 Nt = [[0] * (S+1) for _ in range(N)]
 Qn = [[0] * (S) for _ in range(N)]
@@ -21,6 +21,10 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
     global Nt, Qn
 
     t = 1
+
+    flag = False
+    prev_best_action = [None]*N
+    same_target_count = [0]*N
 
     convergence = False
 
@@ -31,7 +35,7 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
     Nt = [[0] * (S+1) for _ in range(N)]
     Qn = [[0] * (S+1) for _ in range(N)]
     
-    while(not convergence):
+    while(not convergence and not flag):
         random.shuffle(users)
         for u in users:     # For each user get its available actions
             actions = []
@@ -63,11 +67,26 @@ def rl_fedlearner_matching(original_users: List[User], original_servers: List[Se
             # After finding all the possible actions find the best one
             best_action, max_reward = choose_best_action(actions, u, servers, t, server_focused)  
 
+            if(t>1):
+                if prev_best_action[u.num] == best_action.target:
+                    same_target_count[u.num] += 1
+                else:
+                    same_target_count[u.num] = 0
+            
+            prev_best_action[u.num] = best_action.target
+
             # And execute it
             execute_action(best_action, max_reward, u)
 
         if t != 1:
             convergence = check_convergence(prev_Qn, Qn)
+
+        if t > 5:
+            flag = True
+            for u in users:
+                if same_target_count[u.num] < 5:
+                    flag = False
+                    break
 
         prev_Qn = copy.deepcopy(Qn)
         t += 1 
