@@ -80,7 +80,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
 
     print("Feature Extraction complete!\n")
 
-    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.5, random_state=42)
+    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.4, random_state=42)
 
     # Begin training
   

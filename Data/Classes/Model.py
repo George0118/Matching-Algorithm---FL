@@ -9,7 +9,7 @@ from keras.layers import Dropout
 from keras.layers import Input
 from tensorflow.keras.applications import EfficientNetB4
 from tensorflow.keras.regularizers import L2
-from Data.fl_parameters import *
+from Data.fl_parameters import lr, epoch
 from keras.optimizers import Adam
 
 class Model:
@@ -20,11 +20,10 @@ class Model:
 
   def global_model(self, input_shape):
 
-    l2_reg_strength = 0.1
-
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(256, activation='relu', kernel_regularizer=L2(l2_reg_strength))(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
@@ -63,29 +62,11 @@ class Model:
 
     model.fit(features, labels, epochs=epoch, verbose=2)
     print()
-  
-  
-  # ======== Data Augmentation ========= #
-
-  # def data_augmentation(self, images):
-  #     data_augmentation_layers = [
-  #       RandomFlip("horizontal"),
-  #       RandomRotation(0.1),
-  #     ]
-
-  #     for layer in data_augmentation_layers:
-  #         images = layer(images)
-  #     return images
-
-  # ===================================== #
 
   
   def base_model(self):
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
-
-    # Data Augmentation
-    # input = self.data_augmentation(input)
 
     baseModel = EfficientNetB4(weights="./Data/efficientnetb4_notop.h5", include_top=False, input_tensor=input)
 
@@ -98,8 +79,6 @@ class Model:
      
   
   def extract_features(self, baseModel, dataset):
-
-    # input = preprocess_input(dataset)
 
     extracted_features = baseModel.predict(dataset)
 
