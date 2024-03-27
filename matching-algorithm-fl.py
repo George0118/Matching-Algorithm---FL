@@ -168,7 +168,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
         ratio = 1-math.sqrt(ratio)
-        image_num = int(1.3*ratio*image_num)
+        image_num = int(0.8*ratio*image_num)
         img_per_usr = image_num/N_max
 
     # For each user calculate the minimum distance from the relevant Critical Points
