@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 import time
 from config import N
 
-def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_server):
+def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_server):
 
   gpus = tf.config.list_physical_devices('GPU')
   print(gpus)
@@ -36,19 +36,25 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
 
     baseModel = Model().base_model()
 
-    user_features = [None] * len(users)
     class_weights = [None] * len(users)
+    X_train = [None] * len(users)
+    y_train = [None] * len(users)
+    X_test = [None] * len(users)
+    y_test = [None] * len(users)
 
     coalition = list(server.get_coalition())
 
     factors = server.factors_calculation()   # Calculate factors to multiply the weigths
+
+    print(factors)
     
     # Specify labels for the specific server disaster
     y_server[i] = server.specify_disaster(y_server[i])  
 
     for j in tf.range(len(coalition)):
       u = coalition[j]
-      y_train[u.num] = server.specify_disaster(y_train[u.num])
+      y_users[u.num] = server.specify_disaster(y_users[u.num])
+      X_train[u.num], X_test[u.num], y_train[u.num], y_test[u.num] = train_test_split(X_users[u.num], y_users[u.num], test_size=0.2, random_state=42)
 
       total_samples = 0
       class_0_samples = 0
@@ -74,13 +80,14 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
 
     for j in tf.range(len(coalition)):
         u = coalition[j]
-        user_features[u.num] = Model().extract_features(baseModel, X_train[u.num])
+        X_train[u.num] = Model().extract_features(baseModel, X_train[u.num])
+        X_test[u.num] = Model().extract_features(baseModel, X_test[u.num])
     
     server_features = Model().extract_features(baseModel, X_server[i])
 
     print("Feature Extraction complete!\n")
 
-    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.4, random_state=42)
+    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.5, random_state=42)
 
     # Begin training
   
@@ -104,15 +111,17 @@ def Servers_FL(users, servers, R, lr, epoch, X_train, y_train, X_server, y_serve
         print("User ", u.num, ":")
         client = Client(lr, epoch, u.num)
 
-        weix, loss, acc = client.training(user_features[u.num],
+        weix, loss, acc = client.training(X_train[u.num],
                               y_train[u.num],
                               global_weights,
                               class_weights[u.num],
-                              user_features[u.num].shape[1:]
+                              X_train[u.num].shape[1:]
                               )
         
-        user_losses[u.num].append(loss)
-        user_accuracies[u.num].append(acc)
+        val_loss,val_acc=client.evaluate(X_test[u.num], y_test[u.num], weix, X_test[u.num].shape[1:])
+        
+        user_losses[u.num].append(val_loss)
+        user_accuracies[u.num].append(val_acc)
 
         weix = client.scale_model_weights(weix, factors[u.num])
         weit.append(weix)

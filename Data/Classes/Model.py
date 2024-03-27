@@ -7,7 +7,7 @@ from keras.layers import Flatten
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
-from tensorflow.keras.applications import EfficientNetB4
+from tensorflow.keras.applications import EfficientNetB4, MobileNetV3Large, EfficientNetB3
 from tensorflow.keras.regularizers import L2
 from Data.fl_parameters import lr, epoch
 from keras.optimizers import Adam
@@ -22,7 +22,7 @@ class Model:
 
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(512, activation='relu')(x)
+    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-2))(x)
     x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
@@ -68,7 +68,7 @@ class Model:
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
 
-    baseModel = EfficientNetB4(weights="./Data/efficientnetb4_notop.h5", include_top=False, input_tensor=input)
+    baseModel = EfficientNetB3(weights="imagenet", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False

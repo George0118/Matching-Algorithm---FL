@@ -50,3 +50,23 @@ class Client:
     accuracy = history.history['accuracy'][-1]  # Get the final training accuracy
 
     return weights, loss, accuracy
+  
+  def evaluate(self, features, labels, weights, shape):
+    model = Model().global_model(shape)
+
+    model.compile(optimizer=self.optimizer,
+                  loss=self.loss,
+                  metrics=[
+                      keras.metrics.TruePositives(name='tp'),
+                      keras.metrics.FalsePositives(name='fp'),
+                      keras.metrics.TrueNegatives(name='tn'),
+                      keras.metrics.FalseNegatives(name='fn'),
+                      keras.metrics.BinaryAccuracy(name='accuracy'),
+                  ]
+                  )
+    model.set_weights(weights)
+
+    score = model.evaluate(features, labels, verbose=2)
+    print()
+
+    return score[0],score[5]
