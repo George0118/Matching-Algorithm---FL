@@ -68,7 +68,7 @@ class Model:
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
 
-    baseModel = EfficientNetB3(weights="imagenet", include_top=False, input_tensor=input)
+    baseModel = EfficientNetB3(weights="./Data/efficientnetb3_notop.h5", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False
