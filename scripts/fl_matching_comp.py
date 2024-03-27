@@ -49,8 +49,9 @@ index = np.arange(num_matching_types)
 # Plotting accuracies
 plt.figure(figsize=(10, 5))
 for i, server_type in enumerate(server_types):
-    accuracies = [matching[matching_type][server_type]['accuracies'][-1] for matching_type in matching_types]
-    plt.bar(index + i * bar_width, accuracies, bar_width, label=server_type, color=colors[server_type])
+    accuracies = [matching[matching_type][server_type]['accuracies'] for matching_type in matching_types]
+    average_accuracies = [np.mean(acc) for acc in accuracies]
+    plt.bar(index + i * bar_width, average_accuracies, bar_width, label=server_type, color=colors[server_type])
 
 plt.xlabel('Matching Types')
 plt.ylabel('Accuracy')
@@ -64,8 +65,9 @@ plt.show()
 # Plotting losses
 plt.figure(figsize=(10, 5))
 for i, server_type in enumerate(server_types):
-    losses = [matching[matching_type][server_type]['losses'][-1] for matching_type in matching_types]
-    plt.bar(index + i * bar_width, losses, bar_width, label=server_type, color=colors[server_type])
+    losses = [matching[matching_type][server_type]['losses'] for matching_type in matching_types]
+    average_losses = [np.mean(loss) for loss in losses]
+    plt.bar(index + i * bar_width, average_losses, bar_width, label=server_type, color=colors[server_type])
 
 plt.xlabel('Matching Types')
 plt.ylabel('Loss')
