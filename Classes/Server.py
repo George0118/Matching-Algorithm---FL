@@ -135,5 +135,8 @@ class Server:
 
         factors = [factor/Ns for factor in factors]
 
+        factors_sum = sum(factors)
+        factors = [factor / factors_sum for factor in factors]
+
         return factors
 
