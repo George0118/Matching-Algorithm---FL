@@ -22,7 +22,7 @@ class Model:
 
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-3))(x)
+    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-2))(x)
     x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
@@ -68,7 +68,7 @@ class Model:
      # Define the input layer
     input = tf.keras.Input(shape=(224, 224, 3))
 
-    baseModel = EfficientNetB4(weights="./Data/efficientnetb4_notop.h5", include_top=False, input_tensor=input)
+    baseModel = MobileNetV3Large(weights="./Data/weights_mobilenet_v3_large_224_1.0_float_no_top.h5", include_top=False, input_tensor=input)
 
     for layer in baseModel.layers:
       layer.trainable = False
