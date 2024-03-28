@@ -49,18 +49,23 @@ for filename in os.listdir(directory):
         last_losses[num_users] = losses
 
 # Function to plot data for each server
-def plot_data(data, title, save_dir=None):
+def plot_averages(data, title, save_dir=None):
     plt.figure(figsize=(10, 6))
-    for server, values in data.items():
-        if 'Accuracies' in title:
-            plt.plot(values['users'], values['accuracies'], label=server, color=colors[server])
-        else:
-            plt.plot(values['users'], values['losses'], label=server, color=colors[server])
-        plt.title(title)
-        plt.xlabel('Number of Users')
-        plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss')
-        plt.legend()
-        plt.grid(True)
+    for server, server_data in data.items():
+        num_users = list(server_data.keys())
+        average_accuracies = [user_data['average_accuracy'] for user_data in server_data.values() if 'average_accuracy' in user_data]
+        average_losses = [user_data['average_loss'] for user_data in server_data.values() if 'average_loss' in user_data]
+
+        if average_accuracies:
+            plt.plot(num_users, average_accuracies, label=f"{server} (Avg Accuracy)", color=colors[server])
+        if average_losses:
+            plt.plot(num_users, average_losses, label=f"{server} (Avg Loss)", color=colors[server])
+                
+    plt.title(title)
+    plt.xlabel('Number of Users')
+    plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss')
+    plt.legend()
+    plt.grid(True)
     
     # Save plot if save_dir is provided
     if save_dir:
@@ -101,5 +106,40 @@ for filename in os.listdir(directory):
             scalability_losses[server]['losses'].append(losses[server])
             scalability_losses[server]['users'].append(num_users) 
 
-plot_data(scalability_accuracies, "Scalability of GT Accuracies", save_directory)
-plot_data(scalability_losses, "Scalability of GT Losses", save_directory)
+# Initialize dictionaries to store cumulative totals and counts for accuracies and losses
+average_accuracies = {}
+average_losses = {}
+
+# Function to calculate averages
+def calculate_averages(data, averages, str):
+    for server, server_data in data.items():
+        for value, num_users in zip(server_data[str], server_data['users']):
+            if server not in averages:
+                averages[server] = {}
+            if num_users not in averages[server]:
+                averages[server][num_users] = {'total': 0, 'count': 0}
+            averages[server][num_users]['total'] += value
+            averages[server][num_users]['count'] += 1
+
+# Calculate average accuracies
+calculate_averages(scalability_accuracies, average_accuracies, 'accuracies')
+
+# Calculate average losses
+calculate_averages(scalability_losses, average_losses, 'losses')
+
+# Calculate the average accuracies and losses for each num_users and server
+for server, server_data in average_accuracies.items():
+    for num_users, accuracy_stats in server_data.items():
+        if num_users in average_losses.get(server, {}):
+            # Avoid division by zero
+            if accuracy_stats['count'] != 0 and average_losses[server][num_users]['count'] != 0:
+                # Calculate the average accuracy and loss
+                average_accuracy = accuracy_stats['total'] / accuracy_stats['count']
+                average_loss = average_losses[server][num_users]['total'] / average_losses[server][num_users]['count']
+                # Store the averages in a new key in the averages dictionaries
+                average_accuracies[server][num_users]['average_accuracy'] = average_accuracy
+                average_losses[server][num_users]['average_loss'] = average_loss
+
+
+plot_averages(average_accuracies, "Scalability of GT Accuracies", save_directory)
+plot_averages(average_losses, "Scalability of GT Losses", save_directory)
