@@ -110,7 +110,7 @@ for cp in critical_points:
 # Users: on a sphere (radius = 1) around the servers / users with lower i are closer to the CPs 
 users = [] 
 
-limit = 0.5
+distance_diff = 0.05
 
 for i in range(N):
 
@@ -125,7 +125,7 @@ for i in range(N):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > (j+1)*limit/N and distance <= (j+2)*limit/N:  # if in the desired sphere then add the user
+        if distance > (j+1)*distance_diff and distance <= (j+2)*distance_diff:  # if in the desired sphere then add the user
             break
         
     user = User(x,y,z,i)
@@ -184,7 +184,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     # Calculate the data size ratios based on the user minimum distance from the CPs
     for i in range(N):
-        if user_min_distances[i] <= 1:
+        if user_min_distances[i] <= 0.6:
             ratios[i] = 1/(user_min_distances[i] + 1e-6)
         else:
             ratios[i] = 0

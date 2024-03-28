@@ -82,17 +82,16 @@ def load_images(file_paths, disaster):
                 images.append(image)
                 labels.append(disaster)
 
-    selected_indices = random.sample(range(len(images)), image_num)
-    selected_images = [images[i] for i in selected_indices]
-    selected_labels = [labels[i] for i in selected_indices]
+    selected_images = [images[i:i + N_neutral] for i in range(0, len(images), N_neutral)]
+    selected_labels = [labels[i:i + N_neutral] for i in range(0, len(labels), N_neutral)]
 
-    # Select another 250 indices for the server
-    remaining_indices = set(range(len(images))) - set(selected_indices)
-    server_indices = random.sample(remaining_indices, 250)
-    server_images = [images[i] for i in server_indices]
-    server_labels = [labels[i] for i in server_indices]
+    # Selecting next 250 images and labels for server set
+    remaining_images = images[N * N_neutral:]
+    remaining_labels = labels[N * N_neutral:]
+    server_images = [remaining_images[i:i + N_neutral] for i in range(0, len(remaining_images), N_neutral)]
+    server_labels = [remaining_labels[i:i + N_neutral] for i in range(0, len(remaining_labels), N_neutral)]
 
-    return selected_images, server_images, selected_labels, server_labels
+    return selected_images[:N], server_images[0], selected_labels[:N], server_labels[0], image_num
 
 def load_neutral_images():
     images = []
@@ -107,10 +106,6 @@ def load_neutral_images():
                 images.append(image)
                 labels.append("neutral")
 
-    combined = list(zip(images, labels))
-    random.shuffle(combined)
-    images, labels = zip(*combined)
-
     # Split the images and labels into N lists, each containing N_neutral images and labels
     neutral_image_lists = [images[i:i+N_neutral] for i in range(0, len(images), N_neutral)]
     neutral_label_lists = [labels[i:i+N_neutral] for i in range(0, len(labels), N_neutral)]
@@ -118,7 +113,7 @@ def load_neutral_images():
     # Create S lists, each containing 250 images and labels, from the remaining images
     remaining_images = images[N * N_neutral:]
     remaining_labels = labels[N * N_neutral:]
-    server_image_lists = [remaining_images[i:i+250] for i in range(0, len(remaining_images), 250)]
-    server_label_lists = [remaining_labels[i:i+250] for i in range(0, len(remaining_labels), 250)]
+    server_image_lists = [remaining_images[i:i+N_neutral] for i in range(0, len(remaining_images), N_neutral)]
+    server_label_lists = [remaining_labels[i:i+N_neutral] for i in range(0, len(remaining_labels), N_neutral)]
 
     return neutral_image_lists[:N], neutral_label_lists[:N], server_image_lists[:S], server_label_lists[:S]
