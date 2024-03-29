@@ -65,7 +65,6 @@ class Get_data:
 
     # Get Sizes
     sizes = [int(1.8 * math.sqrt(ratio) * def_len) for ratio in ratios]
-    print(sizes)
 
     s_data = []
     

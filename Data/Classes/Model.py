@@ -7,7 +7,7 @@ from keras.layers import Flatten
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
-from tensorflow.keras.applications import EfficientNetB4, MobileNetV3Large, EfficientNetB3
+from tensorflow.keras.applications import EfficientNetB4, MobileNetV3Large
 from tensorflow.keras.regularizers import L2
 from Data.fl_parameters import lr, epoch
 from keras.optimizers import Adam
@@ -22,7 +22,7 @@ class Model:
 
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-2))(x)
+    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-3))(x)
     x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
@@ -35,11 +35,11 @@ class Model:
     model.compile(optimizer='adam',
       loss=keras.losses.BinaryCrossentropy(),
       metrics=[
-      keras.metrics.TruePositives(name='tp'),
-      keras.metrics.FalsePositives(name='fp'),
-      keras.metrics.TrueNegatives(name='tn'),
-      keras.metrics.FalseNegatives(name='fn'),
-      keras.metrics.BinaryAccuracy(name='accuracy'),
+        keras.metrics.TruePositives(name='tp'),
+        keras.metrics.FalsePositives(name='fp'),
+        keras.metrics.TrueNegatives(name='tn'),
+        keras.metrics.FalseNegatives(name='fn'),
+        keras.metrics.BinaryAccuracy(name='accuracy'),
       ]
     )
 
@@ -50,13 +50,13 @@ class Model:
   
   def train_model(self, model, features, labels):
     model.compile(optimizer=Adam(lr=lr),
-                    loss=keras.losses.BinaryCrossentropy(),
-                    metrics=[
-      keras.metrics.TruePositives(name='tp'),
-      keras.metrics.FalsePositives(name='fp'),
-      keras.metrics.TrueNegatives(name='tn'),
-      keras.metrics.FalseNegatives(name='fn'),
-      keras.metrics.BinaryAccuracy(name='accuracy'),
+      loss=keras.losses.BinaryCrossentropy(),
+      metrics=[
+        keras.metrics.TruePositives(name='tp'),
+        keras.metrics.FalsePositives(name='fp'),
+        keras.metrics.TrueNegatives(name='tn'),
+        keras.metrics.FalseNegatives(name='fn'),
+        keras.metrics.BinaryAccuracy(name='accuracy'),
       ]
       )
 

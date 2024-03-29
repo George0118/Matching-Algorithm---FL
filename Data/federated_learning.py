@@ -96,7 +96,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
     accuracy=[]
     losses=[]
 
-    accuracy_history = deque(maxlen=3)
+    losses_history = deque(maxlen=3)
 
     for r in tf.range(R):
       print("------------------------------------------------------------------")
@@ -134,15 +134,15 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
       losses.append(loss)
       accuracy.append(acc)
 
-      accuracy_history.append(acc)
+      losses_history.append(loss)
       end_time = time.time()
       elapsed_time = end_time - start_time
 
       print(f"\nGlobal Round {r + 1} took {elapsed_time:.2f} seconds\n")
 
-      # if len(accuracy_history) == 3 and max(accuracy_history) - min(accuracy_history) <= 0.005 and r+1 >= 10:
-      #   print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
-      #   break
+      if len(losses_history) == 3 and max(losses_history) - min(losses_history) <= 0.01 and r+1 >= 40:
+        print("Stopping training. Three consecutive loss differences are within 0.01.\n")
+        break
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)
