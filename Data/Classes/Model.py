@@ -22,7 +22,7 @@ class Model:
 
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(64, activation='relu', kernel_regularizer=L2(l2=1e-3))(x)
+    x = Dense(256, activation='relu')(x)
     x = Dropout(0.5)(x)
     x_output = Dense(1, activation='sigmoid')(x)
 
