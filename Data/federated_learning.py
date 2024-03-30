@@ -97,6 +97,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
     losses=[]
 
     losses_history = deque(maxlen=3)
+    accuracies_history = deque(maxlen=3)
 
     for r in tf.range(R):
       print("------------------------------------------------------------------")
@@ -114,7 +115,6 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
         weix, loss, acc = client.training(X_train[u.num],
                               y_train[u.num],
                               global_weights,
-                              class_weights[u.num],
                               X_train[u.num].shape[1:]
                               )
         
@@ -135,6 +135,7 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
       accuracy.append(acc)
 
       losses_history.append(loss)
+      accuracies_history.append(acc)
       end_time = time.time()
       elapsed_time = end_time - start_time
 
@@ -142,6 +143,10 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
 
       if len(losses_history) == 3 and max(losses_history) - min(losses_history) <= 0.01 and r+1 >= 40:
         print("Stopping training. Three consecutive loss differences are within 0.01.\n")
+        break
+
+      if len(accuracies_history) == 3 and max(accuracies_history) - min(accuracies_history) <= 0.005 and r+1 >= 40:
+        print("Stopping training. Three consecutive accuracy differences are within 0.005.\n")
         break
 
     server_losses.append(losses)

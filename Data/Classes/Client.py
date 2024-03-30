@@ -27,7 +27,7 @@ class Client:
       
     return scaled_weights
 
-  def training(self, features, labels, global_weights, class_weights, shape):
+  def training(self, features, labels, global_weights, shape):
     model = Model().global_model(shape)
 
     model.compile(optimizer=self.optimizer,
@@ -42,7 +42,7 @@ class Client:
                   )
     model.set_weights(global_weights)
 
-    history = model.fit(features, labels, epochs=self.epoch, class_weight=class_weights, verbose=2)
+    history = model.fit(features, labels, epochs=self.epoch, verbose=2)
     print()
 
     weights = model.get_weights()
