@@ -22,16 +22,16 @@ def parse_log_file(file_path):
             if flag:
                 if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
                     current_server = re.search(r'Fire Server|Flood Server|Earthquake Server', line).group()
-                    losses[current_server] = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
-                    accuracies[current_server] = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
+                    losses[current_server] = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')][:40]
+                    accuracies[current_server] = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')][:40]
 
                 match_user = re.search(r'User \d+', line)
                 if match_user:
                     user = match_user.group()
                     user_losses = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
                     user_accuracies = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
-                    accuracies[user] = user_accuracies
-                    losses[user] = user_losses
+                    accuracies[user] = user_accuracies[:40]
+                    losses[user] = user_losses[:40]
                     matching[user] = current_server
 
     return accuracies, losses, matching
