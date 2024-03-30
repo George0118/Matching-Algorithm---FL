@@ -54,7 +54,7 @@ class Get_data:
 
     # Calculate the data size ratios based on the user minimum distance from the CPs
     for i in range(len(users)):
-        if user_min_distances[i] <= 0.6:
+        if user_min_distances[i] <= 0.4:
             ratios[i] = 1/(user_min_distances[i] + 1e-6)
         else:
             ratios[i] = 0

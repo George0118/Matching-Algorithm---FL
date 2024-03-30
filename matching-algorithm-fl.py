@@ -77,25 +77,22 @@ for s in servers:
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
 
-i = 0
-
 for i in range(K):
-
-    x = random.uniform(-1,1)
-    y = random.uniform(-1,1)
-    z = random.uniform(-1,1)
+    x = random.uniform(-1, 1)
+    y = random.uniform(-1, 1)
+    z = random.uniform(-1, 1)
     distance = math.sqrt(x**2 + y**2 + z**2)
 
-    while distance < 0.5:  # While CP too close to the servers reselect
-        x = random.uniform(-1,1)
-        y = random.uniform(-1,1)
-        y = random.uniform(-1,1)
+    # Ensure that the distance between two critical points is at least 0.3
+    while any(math.sqrt((x - cp.x)**2 + (y - cp.y)**2 + (z - cp.z)**2) < 0.3 for cp in critical_points) or distance < 0.3:
+        x = random.uniform(-1, 1)
+        y = random.uniform(-1, 1)
+        z = random.uniform(-1, 1)
         distance = math.sqrt(x**2 + y**2 + z**2)
 
-    disaster = disasters[i%S]
-    
-    cp = CP(x,y,z,i,disaster)
+    disaster = disasters[i % S]
 
+    cp = CP(x, y, z, i, disaster)
     critical_points.append(cp)
 
 # Associate Critical Points with their Servers
@@ -110,7 +107,7 @@ for cp in critical_points:
 # Users: on a sphere (radius = 1) around the servers / users with lower i are closer to the CPs 
 users = [] 
 
-distance_diff = 0.05
+distance_diff = 0.025
 
 for i in range(N):
 
@@ -184,7 +181,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
     # Calculate the data size ratios based on the user minimum distance from the CPs
     for i in range(N):
-        if user_min_distances[i] <= 0.6:
+        if user_min_distances[i] <= 0.4:
             ratios[i] = 1/(user_min_distances[i] + 1e-6)
         else:
             ratios[i] = 0

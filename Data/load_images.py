@@ -5,7 +5,6 @@ earthquake_input_paths = [
     "../data/disasters-dataset-final/disasters/earthquake",
     "../data/disasters-intensity/Disasters/Disasters/Train/earthquake",
     "../data/disasters-intensity/Disasters/Disasters/Test/earthquake",
-    "../data/turkiye-earthquake-2023-damaged-buildings/damaged"
 ]
 
 fire_input_paths = [
@@ -17,11 +16,8 @@ fire_input_paths = [
     "../data/disasters-intensity/Disasters/Disasters/Train/fire",
     "../data/forest-fire-image-dataset/FOREST_FIRE_DATASET/FIRE",
     "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/test/fire/Both_smoke_and_fire",
-    "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/test/fire/Smoke_from_fires",
     "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/train/fire/Both_smoke_and_fire",
-    "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/train/fire/Smoke_from_fires",
     "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/val/fire/Both_smoke_and_fire",
-    "../data/the-wildfire-dataset/the_wildfire_dataset/the_wildfire_dataset/val/fire/Smoke_from_fires"
 ]
 
 flood_input_paths = [
@@ -82,6 +78,12 @@ def load_images(file_paths, disaster):
                 images.append(image)
                 labels.append(disaster)
 
+    # Shuffle images and labels in parallel
+    random.seed(42)
+    combined = list(zip(images, labels))
+    random.shuffle(combined)
+    images[:], labels[:] = zip(*combined)
+
     selected_images = [images[i:i + N_neutral] for i in range(0, len(images), N_neutral)]
     selected_labels = [labels[i:i + N_neutral] for i in range(0, len(labels), N_neutral)]
 
@@ -105,6 +107,12 @@ def load_neutral_images():
                 image = cv2.imread(image_path)
                 images.append(image)
                 labels.append("neutral")
+
+    # Shuffle images and labels in parallel
+    random.seed(42)
+    combined = list(zip(images, labels))
+    random.shuffle(combined)
+    images[:], labels[:] = zip(*combined)
 
     # Split the images and labels into N lists, each containing N_neutral images and labels
     neutral_image_lists = [images[i:i+N_neutral] for i in range(0, len(images), N_neutral)]
