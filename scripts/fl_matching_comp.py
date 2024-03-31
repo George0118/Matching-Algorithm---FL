@@ -52,6 +52,9 @@ for i, server_type in enumerate(server_types):
     accuracies = [matching[matching_type][server_type]['accuracies'] for matching_type in matching_types]
     average_accuracies = [np.mean(acc) for acc in accuracies]
     plt.bar(index + i * bar_width, average_accuracies, bar_width, label=server_type, color=colors[server_type])
+    # Adding value annotations on top of bars
+    for j, acc in enumerate(average_accuracies):
+        plt.text(index[j] + i * bar_width, acc, f'{acc:.2f}', ha='center', va='bottom')
 
 plt.xlabel('Matching Types')
 plt.ylabel('Accuracy')
@@ -68,6 +71,9 @@ for i, server_type in enumerate(server_types):
     losses = [matching[matching_type][server_type]['losses'] for matching_type in matching_types]
     average_losses = [np.mean(loss) for loss in losses]
     plt.bar(index + i * bar_width, average_losses, bar_width, label=server_type, color=colors[server_type])
+    # Adding value annotations on top of bars
+    for j, loss in enumerate(average_losses):
+        plt.text(index[j] + i * bar_width, loss, f'{loss:.2f}', ha='center', va='bottom')
 
 plt.xlabel('Matching Types')
 plt.ylabel('Loss')
