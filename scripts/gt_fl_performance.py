@@ -28,7 +28,7 @@ def parse_log_file(file_path):
                 match_user = re.search(r'User \d+', line)
                 if match_user:
                     user = match_user.group()
-                    user_losses = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
+                    user_losses = [float(x) for x in re.findall(r'Losses: \[([\d.e,+,\-\s]+)\]', next(file))[0].split(', ')]
                     user_accuracies = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
                     accuracies[user] = user_accuracies[:40]
                     losses[user] = user_losses[:40]
