@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-results_directory = "../../results/matching_results"
+results_directory = "../../results"
 matching_data = {}
 
 # Function to extract a single float value from a line
@@ -65,6 +65,7 @@ for matching, data in matching_data.items():
 
 user_values = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
 save_directory = "./matching_comparison/"
+magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility"]
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
