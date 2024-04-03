@@ -27,27 +27,6 @@ def parse_log_file(file_path):
 
     return accuracies, losses
 
-# Directory containing log files
-directory = '../../results/GT_FL_scalability_results'
-save_directory = './gt_fl_scalability'
-
-# Initialize dictionaries to store data
-last_losses = {}
-last_accuracies = {}
-
-# Iterate over files in directory
-for filename in os.listdir(directory):
-    if filename.endswith('.txt'):
-        file_path = os.path.join(directory, filename)
-        accuracies, losses = parse_log_file(file_path)
-
-        pattern = r'u(\d+)_'
-        match = re.search(pattern, filename)
-        num_users = match.group(1)
-
-        last_accuracies[num_users] = accuracies
-        last_losses[num_users] = losses
-
 # Function to plot data for each server
 def plot_averages(data, title, save_dir=None):
     plt.figure(figsize=(10, 6))
@@ -140,6 +119,9 @@ for server, server_data in average_accuracies.items():
                 average_accuracies[server][num_users]['average_accuracy'] = average_accuracy
                 average_losses[server][num_users]['average_loss'] = average_loss
 
+
+print(average_accuracies)
+print(average_losses)
 
 plot_averages(average_accuracies, "Scalability of GT Accuracies", save_directory)
 plot_averages(average_losses, "Scalability of GT Losses", save_directory)

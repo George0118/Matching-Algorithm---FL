@@ -54,12 +54,12 @@ for i, server_type in enumerate(server_types):
     plt.bar(index + i * bar_width, average_accuracies, bar_width, label=server_type, color=colors[server_type])
     # Adding value annotations on top of bars
     for j, acc in enumerate(average_accuracies):
-        plt.text(index[j] + i * bar_width, acc, f'{acc:.2f}', ha='center', va='bottom')
+        plt.text(index[j] + i * bar_width, acc, f'{acc:.4f}', ha='center', va='bottom')
 
 plt.xlabel('Matching Types')
 plt.ylabel('Accuracy')
 plt.title('Accuracy by Matching Types')
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, matching_types)
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"])
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'accuracy_plot.png'))  # Save the plot
@@ -73,12 +73,12 @@ for i, server_type in enumerate(server_types):
     plt.bar(index + i * bar_width, average_losses, bar_width, label=server_type, color=colors[server_type])
     # Adding value annotations on top of bars
     for j, loss in enumerate(average_losses):
-        plt.text(index[j] + i * bar_width, loss, f'{loss:.2f}', ha='center', va='bottom')
+        plt.text(index[j] + i * bar_width, loss, f'{loss:.4f}', ha='center', va='bottom')
 
 plt.xlabel('Matching Types')
 plt.ylabel('Loss')
 plt.title('Loss by Matching Types')
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, matching_types)
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"])
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'loss_plot.png'))  # Save the plot

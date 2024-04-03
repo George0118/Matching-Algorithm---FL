@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-results_directory = "../../results"
+results_directory = "../../results/matching_results"
 matching_data = {}
 
 # Function to extract a single float value from a line
@@ -77,15 +77,26 @@ for magnitude in magnitudes:
 
         users = data[magnitude]["Users"]
         values = data[magnitude]["Values"]
+        if magnitude == "Mean Server Utility" and matching == "RL1":
+            print(values)
 
-        plt.plot(users, values, marker='o', label=f"Matching: {matching}")
+        if matching == "RAN":
+            m = "Random"
+        elif matching == "GT":
+            m = "Game Theory"
+        elif matching == "RL1":
+            m = "Server Focused RL"
+        else:
+            m = "User Focused RL"
+
+        plt.plot(users, values, marker='o', label=f"Matching: {m}")
 
     plt.xticks(user_values)  # Set x ticks to predefined user values
     plt.legend()
     
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
 # Create bar plots for average magnitude values across all matchings
 for magnitude in magnitudes:
@@ -103,7 +114,7 @@ for magnitude in magnitudes:
         avg_values.append(avg_value)
 
     # Plotting the bar plot with thinner bars
-    bars = plt.bar(list(plot_data.keys()), avg_values, color=bar_colors, width=0.3)
+    bars = plt.bar(["Random", "Game Theory", "Server Focused RL", "User Focused RL"], avg_values, color=bar_colors, width=0.3)
 
     # Adding text labels on top of each bar
     for bar, value in zip(bars, avg_values):
@@ -114,5 +125,5 @@ for magnitude in magnitudes:
 
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"Average_{magnitude.replace(' ', '_')}.png"), bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
