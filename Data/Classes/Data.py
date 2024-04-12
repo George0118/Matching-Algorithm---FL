@@ -64,7 +64,7 @@ class Get_data:
     def_len = img_num/N_max
 
     # Get Sizes
-    sizes = [int(1.8 * math.sqrt(ratio) * def_len) for ratio in ratios]
+    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * def_len) for ratio in ratios]
 
     s_data = []
     

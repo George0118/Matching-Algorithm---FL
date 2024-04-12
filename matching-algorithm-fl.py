@@ -189,7 +189,7 @@ for s in servers:   # For each server(disaster) calculate number of images each 
     ratios = [ratio/max(ratios) for ratio in ratios]
 
     # Get Sizes
-    sizes = [int(1.8 * math.sqrt(ratio) * img_per_usr) for ratio in ratios]
+    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * img_per_usr) for ratio in ratios]
 
     if sum(sizes) > image_num:
         temp_total = sum(sizes)

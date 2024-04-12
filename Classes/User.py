@@ -1,4 +1,5 @@
 import random
+random.seed(42)
 
 a = 2 * 10**(-28)
 fn = 1 * 10**9

@@ -120,8 +120,55 @@ for server, server_data in average_accuracies.items():
                 average_losses[server][num_users]['average_loss'] = average_loss
 
 
-print(average_accuracies)
-print(average_losses)
+# print(average_accuracies)
+# print(average_losses)
 
 plot_averages(average_accuracies, "Scalability of GT Accuracies", save_directory)
 plot_averages(average_losses, "Scalability of GT Losses", save_directory)
+
+users = ["10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"]
+
+# Summing average accuracy for each server
+sum_accuracy = [0] * len(users)
+sum_loss = [0] * len(users)
+
+for server, user_data in average_accuracies.items():
+    for user_count, metrics in user_data.items():
+        sum_accuracy[int((int(user_count)-10)/2)] += metrics['average_accuracy']
+
+for server, user_data in average_losses.items():
+    for user_count, metrics in user_data.items():
+        sum_loss[int((int(user_count)-10)/2)] += metrics['average_loss']
+
+# Plotting
+plt.figure(figsize=(10, 6))
+plt.plot(users, sum_accuracy)
+
+plt.title('Sum of Average Accuracy vs Users')
+plt.xlabel('Number of Users')
+plt.ylabel('Sum of Average Accuracy')
+plt.grid(True)
+# Save plot if save_dir is provided
+if save_directory:
+    filename = 'Sum_of_Average_Accuracy.png'
+    save_path = os.path.join(save_directory, filename)
+    plt.savefig(save_path)
+    print(f"Plot saved to: {save_path}")
+else:
+    plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(users, sum_loss)
+
+plt.title('Sum of Average Loss vs Users')
+plt.xlabel('Number of Users')
+plt.ylabel('Sum of Average Loss')
+plt.grid(True)
+# Save plot if save_dir is provided
+if save_directory:
+    filename = 'Sum_of_Average_Loss.png'
+    save_path = os.path.join(save_directory, filename)
+    plt.savefig(save_path)
+    print(f"Plot saved to: {save_path}")
+else:
+    plt.show()

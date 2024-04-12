@@ -77,8 +77,6 @@ for magnitude in magnitudes:
 
         users = data[magnitude]["Users"]
         values = data[magnitude]["Values"]
-        if magnitude == "Mean Server Utility" and matching == "RL1":
-            print(values)
 
         if matching == "RAN":
             m = "Random"
