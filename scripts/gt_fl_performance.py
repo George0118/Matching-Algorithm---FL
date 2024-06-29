@@ -40,18 +40,22 @@ colors = {'Fire Server': 'r', 'Flood Server': 'b', 'Earthquake Server': 'g'}
 
 # Function to plot data
 def plot_data(data, title, save_dir=None):
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 8))
     for key, value in data.items():
         if 'average_accuracies' in value:
-            plt.plot(value['average_accuracies'], label=f'{key} (Average)', color=colors[key])
+            plt.plot(value['average_accuracies'], label=f'{key} (Average)', linewidth=2.5, color=colors[key])
         elif 'average_losses' in value:
-            plt.plot(value['average_losses'], label=f'{key} (Average)', color=colors[key])
+            plt.plot(value['average_losses'], label=f'{key} (Average)', linewidth=2.5, color=colors[key])
         else:
-            plt.plot(value, label=key, color=colors[key])
-    plt.title(title)
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss')
-    plt.legend()
+            plt.plot(value, label=key, color=colors[key], linewidth=2.5)
+    plt.xlabel('Epoch', fontsize=18)
+    plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss', fontsize=18)
+    plt.xticks(fontsize=16) 
+    plt.yticks(fontsize=16)
+    if 'Accuracies' in title:
+        plt.legend(fontsize=16)
+    else:
+        plt.legend(loc='upper left', fontsize = 16)
     plt.grid(True)
     
     # Save plot if save_dir is provided

@@ -137,12 +137,13 @@ print(sum_accuracy)
 # Plotting
 plt.figure(figsize=(10, 6))
 for area, values in sum_accuracy.items():
-    plt.plot(users, values, label=area)
+    plt.plot(users, values, label=area, linewidth=2.5)
 
-plt.title('Sum of Average Accuracy vs Users for Different Areas')
-plt.xlabel('Number of Users')
-plt.ylabel('Sum of Average Accuracy')
-plt.legend()
+plt.xlabel('Number of Users', fontsize = 18)
+plt.ylabel('Sum of Server Accuracies', fontsize = 18)
+plt.legend(fontsize = 16)
+plt.xticks(fontsize=16) 
+plt.yticks(fontsize=16)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:

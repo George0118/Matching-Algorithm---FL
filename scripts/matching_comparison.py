@@ -69,9 +69,8 @@ magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Serv
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.title(f"{magnitude} vs Users for Each Matching")
-    plt.xlabel("Users")
-    plt.ylabel(magnitude)
+    plt.xlabel("Users", fontsize = 18)
+    plt.ylabel(magnitude, fontsize = 18)
 
     for matching, data in plot_data.items():
 
@@ -89,8 +88,9 @@ for magnitude in magnitudes:
 
         plt.plot(users, values, marker='o', label=f"Matching: {m}")
 
-    plt.xticks(user_values)  # Set x ticks to predefined user values
-    plt.legend()
+    plt.xticks(user_values, fontsize = 16)  # Set x ticks to predefined user values
+    plt.yticks(fontsize = 16)
+    plt.legend(fontsize = 16)
     
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
