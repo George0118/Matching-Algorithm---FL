@@ -11,9 +11,9 @@ q = 20
 fn_max = 2 * 10**9  # Cycles per Sec
 Ptrans_max = 2  # Watt
 ds_max = 500 * 3*224*224*8  # bits
-E_local_max = a*1.05 * q*1.05 * ds_max * (fn_max)**2
-datarate_max = B
-E_transmit_max = Z*Ptrans_max*10/B
+E_local_max = a*1.05 * q*1.05 * ds_max * (fn_max)**2 # J
+datarate_max = B    # bits/sec
+E_transmit_max = Z*Ptrans_max*10/B  # J
 
 quantized_datasize = [0.5, 0.6667, 0.8333, 1]
 quantized_fn = [i * fn_max for i in [0.5, 0.6667, 0.8333, 1]]
@@ -74,6 +74,7 @@ class User:
         self.current_ptrans = ptrans
         self.used_datasize = datasize * self.datasize
 
+    # Update magnitudes for all servers or for only the target server depending on need
     def set_magnitudes(self, servers, change_all=True, server_num = None, external_denominator = None):
         if change_all:
             self.set_E_local(self.E_local()/E_local_max)
@@ -119,6 +120,7 @@ class User:
     def num(self):
         return self._num
     
+    # Calculate external influence of other users for each server
     def get_external_denominators(self, servers):
         external_denominators = []
         for server in servers:
