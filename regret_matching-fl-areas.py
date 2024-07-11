@@ -37,6 +37,7 @@ from Classes.Server import Server
 from Classes.User import User
 from Classes.CriticalPoint import CP
 from Regret_Matching.regret_matching import regret_matching
+from Regret_Matching.regret_matching_II import regret_matching_II
 from GT_Matching.utility_functions import user_utility_ext, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
@@ -340,15 +341,45 @@ all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': ru
 
 # ============================== Regret Learning Matching - Complete Information ============================== #
 
+# regret_start = time.time()
+
+# for area, regret_users in all_users.items(): 
+
+#     if area != 'Urban':
+#         continue
+
+#     regret_servers = all_servers[area]
+
+#     regret_matching(regret_users, regret_servers)
+
+#     print("REMORSE Matching:\n")
+
+#     for u in regret_users:
+#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+#         print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
+
+#     print()
+
+#     regret_end = time.time()
+
+#     print("REMORSE Matching took", regret_end-regret_start, "seconds\n")
+
+# =============================================================================== #
+
+# ============================== Regret Learning Matching - Incomplete Information ============================== #
+
 regret_start = time.time()
 
 for area, regret_users in all_users.items(): 
 
+    if area != 'Urban':
+        continue
+
     regret_servers = all_servers[area]
 
-    regret_matching(regret_users, regret_servers)
+    regret_matching_II(regret_users, regret_servers)
 
-    print("REMORSE Matching:\n")
+    print("REMORSE Matching II:\n")
 
     for u in regret_users:
         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
@@ -358,5 +389,6 @@ for area, regret_users in all_users.items():
 
     regret_end = time.time()
 
-    print("REMORSE Matching took", regret_end-regret_start, "seconds\n")
-    # =============================================================================== #
+    print("REMORSE Matching II took", regret_end-regret_start, "seconds\n")
+    
+# =============================================================================== #
