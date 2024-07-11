@@ -1,4 +1,6 @@
-from Classes import Server
+from Classes.Server import Server
+from Classes.User import User
+from typing import List
 import math
 from Data.load_images import fire_input_paths, earthquake_input_paths, flood_input_paths, count_images
 from general_parameters import *
@@ -58,3 +60,10 @@ def dataset_sizes(s: Server, area, users, cps, total_images):
     print(sizes)
 
     return sizes
+
+
+def create_zero_list_like(L):
+    if isinstance(L, list):
+        return [create_zero_list_like(sublist) for sublist in L]
+    else:
+        return 0
