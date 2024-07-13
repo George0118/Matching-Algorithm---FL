@@ -18,13 +18,13 @@ def white_noise():
 
 # Learning rate functions
 def l(t):
-    return 1 / t
+    return 1 / ((t) ** 0.5)
 
 def g(t):
-    return 1 / (t * np.log(t+1))
+    return 1 / ((t) ** 0.55)
 
 def m(t):
-    return 1 / (t * (np.log(t+1))**2)
+    return 1 / ((t) ** 0.6)
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):
@@ -56,6 +56,7 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
         utilities_vector.append([0]*len(user_probabilities))
 
     actions_taken = [None] * len(users)
+    actions_taken_indices = [None] * len(users)
     while(not convergence(probabilities) and t < 5000):
         print("t =",t)
         for u in users:     # For each user get its most likely action
@@ -63,6 +64,7 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
             if not repeat:
                 execute_action(u, servers, actions[action_index])
                 actions_taken[u.num] = actions[action_index]
+                actions_taken_indices[u.num] = action_index
 
         # Calculate magnitudes based on the actions taken from each user to use in updating regret
         for u in users:
@@ -73,17 +75,17 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
         for u in users:
             current_utilities[u.num] = user_utility_ext(u, u.get_alligiance()) + white_noise()
 
-        update_utilities_vector(utilities_vector, users, actions, current_utilities, t) # Update utilities vector
-        update_regret_vector(regret_vector, utilities_vector, users, actions, current_utilities, t)  # Update regret vector
-        update_probabilities(probabilities, regret_vector, users, actions, t)   # Update probabilities
+        update_utilities_vector(utilities_vector, actions_taken_indices, users, current_utilities, t) # Update utilities vector
+        update_regret_vector(regret_vector, utilities_vector, users, len(actions), current_utilities, t)  # Update regret vector
+        update_probabilities(probabilities, regret_vector, users, len(actions), t)   # Update probabilities
 
         for u in users:
             if not all(p == 0.0 for p in probabilities[u.num]):
                 max_value = max(regret_vector[u.num])
                 max_index = regret_vector[u.num].index(max_value)
-                print("User", u.num, ", best server:", actions[max_index].target.num, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
+                print("User", u.num, ", best server:", actions[max_index].target, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
             else:
-                print("User", u.num, ", best server:", actions_taken[u.num].target.num, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
+                print("User", u.num, ", best server:", actions_taken[u.num].target, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
 
         t += 1 
 
@@ -156,23 +158,26 @@ def execute_action(user: User, servers: List[Server], action: Action, update_mag
 
 
 # Update Utilities Vector
-def update_utilities_vector(utilities_vector: List[List], users: List[User], actions: List[Action], current_utilities: List, t):
+def update_utilities_vector(utilities_vector: List[List], actions_taken_indices: List, users: List[User], current_utilities: List, t):
     for user in users:
         # For each user get its current utility 
         current_utility = current_utilities[user.num]
-        for action_index, action in enumerate(actions):
-            new_utility_term = l(t) * (current_utility - utilities_vector[user.num][action_index])
-            utilities_vector[user.num][action_index] += new_utility_term
+        current_action_index = actions_taken_indices[user.num]
+        new_utility_term = l(t) * (current_utility - utilities_vector[user.num][current_action_index])
+        utilities_vector[user.num][current_action_index] += new_utility_term
+        # print("New Util:", utilities_vector[user.num][current_action_index])
 
 
 # Update Regret Vector
-def update_regret_vector(regret_vector: List[List], utilities_vector: List[List], users: List[User], actions: List[Action], current_utilities: List, t):
+def update_regret_vector(regret_vector: List[List], utilities_vector: List[List], users: List[User], num_of_actions, current_utilities: List, t):
     for user in users:
         # For each user get its current utility
         current_utility = current_utilities[user.num]
-        for action_index, action in enumerate(actions):
+        for action_index in range(num_of_actions):
             new_regret_term = g(t) * (utilities_vector[user.num][action_index] - current_utility - regret_vector[user.num][action_index])
+            # print("Prev Util:", utilities_vector[user.num][action_index], "Curr Util:", current_utility, "Prev Regret:", regret_vector[user.num][action_index])
             regret_vector[user.num][action_index] += new_regret_term
+            # print("Curr Regret:", regret_vector[user.num][action_index])
 
 
 k_m = 1
@@ -182,6 +187,8 @@ def boltzmann_gibbs(user_regret_vector: List):
     for regret in user_regret_vector:
         sum_value += np.exp(max(0,regret)/k_m)
 
+    print(sum_value)
+
     bg_vector = []
     for regret in user_regret_vector:
         bg_vector.append(np.exp(max(0,regret)/k_m)/sum_value)
@@ -189,11 +196,11 @@ def boltzmann_gibbs(user_regret_vector: List):
     return bg_vector
 
 # Update Probabilities
-def update_probabilities(probabilities: List[List], regret_vector: List[List], users: List[User], actions: List[Action], t):
+def update_probabilities(probabilities: List[List], regret_vector: List[List], users: List[User], num_of_actions, t):
     for user in users:
         # For each user get its boltzmann_gibbs vector
         bg_vector = boltzmann_gibbs(regret_vector[user.num]) 
-        for action_index, action in enumerate(actions):
+        for action_index in range(num_of_actions):
             new_probability_term = m(t) * (bg_vector[action_index] - probabilities[user.num][action_index])
-            print(new_probability_term)
+            # print("m:", m(t), "bg:", bg_vector[action_index], "Old prob:", probabilities[user.num][action_index])
             probabilities[user.num][action_index] += new_probability_term
