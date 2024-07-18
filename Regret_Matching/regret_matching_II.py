@@ -52,8 +52,14 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
 
     # Utilities Initialization
     utilities_vector = []
-    for _ in range(N):
-        utilities_vector.append([0]*len(user_probabilities))
+    for user in users:
+        servers_copy = copy.deepcopy(servers)
+        user_utilities = []
+        for action in actions:
+            execute_action(user, servers_copy, action)
+            user.set_magnitudes(servers_copy)
+            user_utilities.append(user_utility_ext(user, user.get_alligiance()) + white_noise())
+        utilities_vector.append(user_utilities)
 
     actions_taken = [None] * len(users)
     actions_taken_indices = [None] * len(users)
@@ -77,12 +83,13 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
 
         update_utilities_vector(utilities_vector, actions_taken_indices, users, current_utilities, t) # Update utilities vector
         update_regret_vector(regret_vector, utilities_vector, users, len(actions), current_utilities, t)  # Update regret vector
+        # print(regret_vector[0])
         update_probabilities(probabilities, regret_vector, users, len(actions), t)   # Update probabilities
 
         for u in users:
             if not all(p == 0.0 for p in probabilities[u.num]):
-                max_value = max(regret_vector[u.num])
-                max_index = regret_vector[u.num].index(max_value)
+                max_value = max(probabilities[u.num])
+                max_index = probabilities[u.num].index(max_value)
                 print("User", u.num, ", best server:", actions[max_index].target, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
             else:
                 print("User", u.num, ", best server:", actions_taken[u.num].target, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
@@ -112,6 +119,7 @@ def convergence(probabilities: List[List]):
             percentage = prob/prob_sum
             if percentage > convergence_limit:    # Else if you find dominant value the user has converged
                 found_converging_value = True
+                break
 
         if found_converging_value == False: # If not then we haven't converged
             return False
@@ -163,7 +171,7 @@ def update_utilities_vector(utilities_vector: List[List], actions_taken_indices:
         # For each user get its current utility 
         current_utility = current_utilities[user.num]
         current_action_index = actions_taken_indices[user.num]
-        new_utility_term = l(t) * (current_utility - utilities_vector[user.num][current_action_index])
+        new_utility_term = 0.5 * (current_utility - utilities_vector[user.num][current_action_index])
         utilities_vector[user.num][current_action_index] += new_utility_term
         # print("New Util:", utilities_vector[user.num][current_action_index])
 
@@ -174,8 +182,9 @@ def update_regret_vector(regret_vector: List[List], utilities_vector: List[List]
         # For each user get its current utility
         current_utility = current_utilities[user.num]
         for action_index in range(num_of_actions):
-            new_regret_term = g(t) * (utilities_vector[user.num][action_index] - current_utility - regret_vector[user.num][action_index])
+            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - g(t) * regret_vector[user.num][action_index]
             # print("Prev Util:", utilities_vector[user.num][action_index], "Curr Util:", current_utility, "Prev Regret:", regret_vector[user.num][action_index])
+            # print(new_regret_term)
             regret_vector[user.num][action_index] += new_regret_term
             # print("Curr Regret:", regret_vector[user.num][action_index])
 
@@ -185,13 +194,11 @@ k_m = 1
 def boltzmann_gibbs(user_regret_vector: List):
     sum_value = 0
     for regret in user_regret_vector:
-        sum_value += np.exp(max(0,regret)/k_m)
-
-    print(sum_value)
+        sum_value += np.exp(regret/k_m)
 
     bg_vector = []
     for regret in user_regret_vector:
-        bg_vector.append(np.exp(max(0,regret)/k_m)/sum_value)
+        bg_vector.append(np.exp(regret/k_m)/sum_value)
 
     return bg_vector
 
