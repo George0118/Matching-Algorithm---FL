@@ -34,6 +34,16 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
     for _ in range(N):
         regret_vector.append([0]*len(user_probabilities))
 
+    # Utilities Initialization
+    utilities_vector = []
+    servers_copy = copy.deepcopy(servers)
+    for action in actions:
+        execute_action(users[0], servers_copy, action)
+        users[0].set_magnitudes(servers_copy)
+        utilities_vector.append(user_utility_ext(users[0], users[0].get_alligiance(),True))
+
+    print(max(utilities_vector) - min([x for x in utilities_vector if x!=0]))
+
     actions_taken = [None] * len(users)
     while(not convergence(probabilities) and t < 5000):
         print("t =",t)
@@ -50,13 +60,13 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
         update_regret_vector(regret_vector, users, servers, actions, t, actions_taken)  # Update regret vector
         update_probabilities(probabilities, regret_vector, users)   # Update probabilities
 
-        # for u in users:
-        #     if not all(p == 0.0 for p in probabilities[u.num]):
-        #         max_value = max(regret_vector[u.num])
-        #         max_index = regret_vector[u.num].index(max_value)
-        #         print("User", u.num, ", best server:", actions[max_index].target.num, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
-        #     else:
-        #         print("User", u.num, ", best server:", actions_taken[u.num].target.num, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
+        for u in users:
+            if not all(p == 0.0 for p in probabilities[u.num]):
+                max_value = max(probabilities[u.num])
+                max_index = probabilities[u.num].index(max_value)
+                print("User", u.num, ", best server:", actions[max_index].target.num, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
+            else:
+                print("User", u.num, ", best server:", actions_taken[u.num].target.num, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
 
         t += 1 
 

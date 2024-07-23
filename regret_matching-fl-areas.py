@@ -27,7 +27,7 @@ import random
 import math
 import datetime
 from matchingeq_functions import check_matching_equality
-from helping_functions import dataset_sizes
+from helping_functions import dataset_sizes, h
 from Data.Classes.Data import Get_data
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images
 from Data.federated_learning import Servers_FL
@@ -332,6 +332,30 @@ for area, users in all_users.items():
 
             user.add_importance(importance)
 
+# ======================================================================================== #
+
+# ========== Calculating parameters for utility functions =========== #
+
+for area, users in all_users.items():
+    for user in users:
+        b_const = random.uniform(0.5,2)
+        d_const = random.uniform(1,10)
+        for server in servers:
+            user.util_fun[server.num][0] = h(2,b_const,d_const)   # Pns
+
+            imp = user.get_importance()[server.num]
+
+            # Fn
+            b = random.uniform(0.5, 0.5 + (1-imp)*2)
+            d = random.uniform(1, 1 + (1-imp)*10)
+            user.util_fun[server.num][1] = h(2*imp,b,d)   # Fn
+
+            # Dn
+            b = random.uniform(0.5, 0.5 + (1-imp)*2)
+            d = random.uniform(1, 1 + (1-imp)*10)
+            user.util_fun[server.num][2] = h(2*imp,b,d)   # Dn
+
+# =================================================================== #
 
 urban_servers = copy.deepcopy(servers)
 subruban_servers = copy.deepcopy(servers)
@@ -341,28 +365,28 @@ all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': ru
 
 # ============================== Regret Learning Matching - Complete Information ============================== #
 
-# regret_start = time.time()
+regret_start = time.time()
 
-# for area, regret_users in all_users.items(): 
+for area, regret_users in all_users.items(): 
 
-#     if area != 'Urban':
-#         continue
+    if area != 'Urban':
+        continue
 
-#     regret_servers = all_servers[area]
+    regret_servers = all_servers[area]
 
-#     regret_matching(regret_users, regret_servers)
+    regret_matching(regret_users, regret_servers)
 
-#     print("REMORSE Matching:\n")
+    print("REMORSE Matching:\n")
 
-#     for u in regret_users:
-#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-#         print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
+    for u in regret_users:
+        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
 
-#     print()
+    print()
 
-#     regret_end = time.time()
+    regret_end = time.time()
 
-#     print("REMORSE Matching took", regret_end-regret_start, "seconds\n")
+    print("REMORSE Matching took", regret_end-regret_start, "seconds\n")
 
 # =============================================================================== #
 

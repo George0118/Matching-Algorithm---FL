@@ -1,5 +1,5 @@
 from Classes.Server import Server
-from Classes.User import User, E_local_max, E_transmit_max
+from Classes.User import User, E_local_max, E_transmit_max, fn_max, ds_max
 
 # Parameters
 
@@ -8,8 +8,6 @@ beta = 1
 gamma = 1
 delta = 1
 epsilon = 1
-
-constant = 1
 
 w_local = 0.5
 w_trans = 0.5
@@ -61,9 +59,13 @@ def user_utility_ext(user: User, server: Server, verbose = False):
         total_payment += u.get_payments()[index]
 
     w_local, w_trans = calculate_weights(E_local*E_local_max/(E_transmit_list[index]*E_transmit_max))
-    
-    utility = alpha * datarate_list[index] + beta * payment/total_payment - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
 
+    utility_functions = user.util_fun[index]
+    
+    utility =   utility_functions[0](datarate_list[index], E_transmit_list[index]) + \
+                utility_functions[1](payment, E_local*(ds_max/user.used_datasize)) + \
+                utility_functions[2](avg_dataquality, E_local*(fn_max/user.current_fn)**2)
+    
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate_list[index])
@@ -71,7 +73,12 @@ def user_utility_ext(user: User, server: Server, verbose = False):
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit_list[index])
         print("Dataquality: ", avg_dataquality)
+        print("test: ", E_local*(ds_max/user.used_datasize))
+        print("test1: ", E_local*(fn_max/user.current_fn)**2)
+        print("Util1: " , utility_functions[0](datarate_list[index], E_transmit_list[index]))
+        print("Util2: " , utility_functions[1](payment, E_local*(ds_max/user.used_datasize)))
+        print("Util3: " , utility_functions[2](avg_dataquality, E_local*(fn_max/user.current_fn)**2))
         print()
 
-    return utility + constant    # + constant is to have positive utilities
+    return utility
 

@@ -1,9 +1,8 @@
 from Classes.Server import Server
-from Classes.User import User
-from typing import List
 import math
 from Data.load_images import fire_input_paths, earthquake_input_paths, flood_input_paths, count_images
 from general_parameters import *
+import numpy as np
 
 def dataset_sizes(s: Server, area, users, cps, total_images):
     # For each server count the images and select appropriate number of images to distribute
@@ -67,3 +66,30 @@ def create_zero_list_like(L):
         return [create_zero_list_like(sublist) for sublist in L]
     else:
         return 0
+    
+
+def channel_gain(distance, num_user, num_server):   # Channel gain calculation
+    g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[num_server][num_user]
+
+    g = 10**(-g / 10)
+
+    return g
+
+
+# Bell Shaped Utility Functions
+
+# Define the function g(x)
+def g(x, a, b, d):
+    return a - (1/b) * np.exp(-d*x)
+
+# Define the function f(x)
+def f(x, d):
+    return (1 / (1 + np.exp(-d*x + 3)))
+
+# Define the function h that returns a function for h(x)
+def h(a, b, d):
+    def h_x(p,n):
+        return g(p, a, b, d) - f(n, d)
+    h_x.b = b  # Store parameter b in the function
+    h_x.d = d  # Store parameter d in the function
+    return h_x

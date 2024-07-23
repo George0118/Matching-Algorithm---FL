@@ -5,6 +5,7 @@ import math
 import numpy as np
 import copy
 from general_parameters import *
+from helping_functions import channel_gain
 
 a = 2 * 10**(-28)
 q = 20
@@ -25,6 +26,12 @@ class User:
         # Randomize each user's device
         self.an = a * random.uniform(0.95, 1.05)
         self.qn = q * random.uniform(0.95, 1.05)
+
+        # Utility function Parameters
+
+        self.util_fun = [[None, None, None] for _ in range(S)] # One for each server
+
+        # ========================= #
 
         self._x = x
         self._y = y
@@ -211,10 +218,3 @@ class User:
         self.E_transmit_ext_list[server_num] = (Z*self.current_ptrans/(self.datarate_ext_list[server_num]*datarate_max))/E_transmit_max 
 
 
-
-def channel_gain(distance, num_user, num_server):   # Channel gain calculation
-    g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[num_server][num_user]
-
-    g = 10**(-g / 10)
-
-    return g
