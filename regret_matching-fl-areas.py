@@ -34,24 +34,21 @@ from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
 from Data.fl_parameters import *
 from Classes.Server import Server
-from Classes.User import User
+from Classes.User import User, Ptrans_max, fn_max, E_local_max
 from Classes.CriticalPoint import CP
 from Regret_Matching.regret_matching import regret_matching
 from Regret_Matching.regret_matching_II import regret_matching_II
-from GT_Matching.utility_functions import user_utility_ext, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
-from RL_Matching.rl_matching import rl_fedlearner_matching
-from RAND_Matching.random_matching import random_fedlearner_matching
 
 # General Parameters
 
 from config import N,S,K
 from general_parameters import *
 
-rural_threshold = 30
-suburban_threshold = 21
-urban_threshold = 12
+urban_threshold = 30    # In an Urban Area, after 30 users the users start to be further in proximity to the CPs
+suburban_threshold = 21 # In an Suburban Area, after 21 users the users start to be further in proximity to the CPs
+rural_threshold = 12    # In an Rural Area, after 12 users the users start to be further in proximity to the CPs
 federated_learning = True
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
@@ -117,7 +114,7 @@ urban_users = []
 suburban_users = [] 
 rural_users = [] 
 
-distance_diff = 0.025
+distance_diff = 0.005
 
 for i in range(min(urban_threshold, N)):
 
@@ -132,9 +129,7 @@ for i in range(min(urban_threshold, N)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if j == 0 and distance >= 0.02 and distance < 0.025:
-            break
-        if j != 0 and distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(j+1)*distance_diff and distance >= 0.02+j*distance_diff:  # if in the desired sphere and good user then add the user
             break
 
     user = User(x,y,z,i)
@@ -143,7 +138,7 @@ for i in range(min(urban_threshold, N)):
     suburban_users.append(copy.deepcopy(user))
     rural_users.append(copy.deepcopy(user))
 
-for i in range(min(suburban_threshold - urban_threshold, N - urban_threshold)):
+for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
 
     while True:
         j = i/K
@@ -156,7 +151,7 @@ for i in range(min(suburban_threshold - urban_threshold, N - urban_threshold)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(rural_threshold+j+1)*distance_diff and distance >= 0.02+(rural_threshold+j)*distance_diff:  # if in the desired sphere and good user then add the user
             break
         
     user = User(x,y,z,i+urban_threshold)
@@ -175,7 +170,7 @@ for i in range(min(suburban_threshold - urban_threshold, N - urban_threshold)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.3 and distance <= 0.4:     # if in the desired sphere and bad user then add the user
+        if distance < 0.3+(j+1)*distance_diff and distance >= 0.3+j*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+urban_threshold)
@@ -196,7 +191,7 @@ for i in range(min(rural_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(suburban_threshold+j+1)*distance_diff and distance >= 0.02+(suburban_threshold+j)*distance_diff:  # if in the desired sphere and good user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
@@ -214,7 +209,7 @@ for i in range(min(rural_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.2 and distance <= 0.3:     # if in the desired sphere and bad user then add the user
+        if distance < 0.2+(j+1)*distance_diff and distance >= 0.2+j*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
@@ -232,7 +227,7 @@ for i in range(min(rural_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.3 and distance <= 0.4:     # if in the desired sphere and bad user then add the user
+        if distance < 0.3+(suburban_threshold-rural_threshold+j+1)*distance_diff and distance >= 0.3+(suburban_threshold-rural_threshold+j)*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
@@ -338,22 +333,19 @@ for area, users in all_users.items():
 
 for area, users in all_users.items():
     for user in users:
-        b_const = random.uniform(0.5,2)
-        d_const = random.uniform(1,10)
+        a_const = random.uniform(1,10)
         for server in servers:
-            user.util_fun[server.num][0] = h(2,b_const,d_const)   # Pns
+            user.util_fun[server.num][0] = h(0,a_const)   # Pns
 
             imp = user.get_importance()[server.num]
 
             # Fn
-            b = random.uniform(0.5, 0.5 + (1-imp)*2)
-            d = random.uniform(1, 1 + (1-imp)*10)
-            user.util_fun[server.num][1] = h(2*imp,b,d)   # Fn
+            a = random.uniform(1, 1 + (1-imp)*10)
+            user.util_fun[server.num][1] = h(imp,a)   # Fn
 
             # Dn
-            b = random.uniform(0.5, 0.5 + (1-imp)*2)
-            d = random.uniform(1, 1 + (1-imp)*10)
-            user.util_fun[server.num][2] = h(2*imp,b,d)   # Dn
+            a = random.uniform(1, 1 + (1-imp)*10)
+            user.util_fun[server.num][2] = h(imp,a)   # Dn
 
 # =================================================================== #
 
@@ -363,16 +355,77 @@ rural_servers = copy.deepcopy(servers)
 
 all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': rural_servers}
 
+# # ============================== Game Theory Matching ============================== #
+
+# # ============================== Approximate Matching ============================== #
+
+# gt_start = time.time()
+
+# gt_all_users = copy.deepcopy(all_users)
+# gt_all_servers = copy.deepcopy(all_servers)
+
+# for area, gt_users in gt_all_users.items(): 
+#     for user in gt_users:
+#         # For each user in the GT version, initialize its utility values
+#         user.current_ptrans = Ptrans_max
+#         user.current_fn = fn_max
+#         user.used_datasize = user.datasize
+
+#     for user in gt_users:
+#         # Now that the values are set, calculate the external magnitudes for all users
+#         user.set_magnitudes(gt_all_servers[area])
+        
+
+# for area, gt_users in gt_all_users.items(): 
+
+#     gt_servers = gt_all_servers[area]
+
+#     # Initializing the available servers for each user
+#     for i in range(N):
+#         u = gt_users[i]
+#         u.set_available_servers(gt_servers)
+        
+#     approximate_fedlearner_matching(gt_users, gt_servers)
+
+#     print("Approximate FedLearner Matching:\n")
+
+#     for u in gt_users:
+#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+#         print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+#     print()
+
+#     # ============================== Accurate Matching ============================== #
+        
+#     accurate_fedlearner_matching(gt_users, gt_servers)
+
+#     print("Accurate FedLearner Matching:\n")
+
+#     for u in gt_users:
+#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+#         print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+
+#     print()
+
+#     gt_end = time.time()
+
+#     print("Game Theory Matching took", gt_end-gt_start, "seconds\n")
+#     # =============================================================================== #
+
+
 # ============================== Regret Learning Matching - Complete Information ============================== #
 
 regret_start = time.time()
 
-for area, regret_users in all_users.items(): 
+regret_all_users = copy.deepcopy(all_users)
+regret_all_servers = copy.deepcopy(all_servers)
+
+for area, regret_users in regret_all_users.items(): 
 
     if area != 'Urban':
         continue
 
-    regret_servers = all_servers[area]
+    regret_servers = regret_all_servers[area]
 
     regret_matching(regret_users, regret_servers)
 
@@ -394,12 +447,15 @@ for area, regret_users in all_users.items():
 
 regret_start = time.time()
 
-for area, regret_users in all_users.items(): 
+regret_all_users = copy.deepcopy(all_users)
+regret_all_servers = copy.deepcopy(all_servers)
+
+for area, regret_users in regret_all_users.items(): 
 
     if area != 'Urban':
         continue
 
-    regret_servers = all_servers[area]
+    regret_servers = regret_all_servers[area]
 
     regret_matching_II(regret_users, regret_servers)
 

@@ -1,8 +1,12 @@
-from GT_Matching.utility_functions import user_utility, server_utility
+from Regret_Matching.utility_function import user_utility
+from GT_Matching.gt_utilities import server_utility
+from typing import List
+from Classes.User import User
+from Classes.Server import Server
 
 #Approximate Matching Function
 
-def approximate_fedlearner_matching(unmatched_users, servers):
+def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[Server]):
     
     server_availability = [True] * len(unmatched_users)         # Initialize users' server availability
     flag = True      # flag that shows at least one user has available servers
@@ -32,11 +36,13 @@ def approximate_fedlearner_matching(unmatched_users, servers):
                 max_utility = server_utility(server, coalition.union({favorite_User}))
 
                 for u in invitations:
-                    utility = server_utility(server, coalition.union({u}))
+                    utility = server_utility(server, coalition.union({u}), True)
+                    print("User:", u.num, "Utility:", utility)
                     if(utility > max_utility):
                         max_utility = utility
                         favorite_User = u
 
+                print("User:", favorite_User.num, "Favorite:", server.num)
                 server.add_to_coalition(favorite_User)      # server adds favorite User to its Coalition 
                 # print("Favorite User = ", favorite_User.num)
                 favorite_User.change_server(server)     # favorite User now belongs to server

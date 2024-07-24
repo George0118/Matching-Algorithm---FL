@@ -1,4 +1,4 @@
-from GT_Matching.utility_functions import server_utility_externality
+from GT_Matching.gt_utilities import server_utility_externality
 
 # Free User joins Server - TC1
 

@@ -87,8 +87,8 @@ class User:
             self.set_E_local(self.E_local()/E_local_max)
             self.set_dataqualities([self.used_datasize * imp / ds_max for imp in self.importance])
             self.set_payments([self.current_fn * imp / fn_max for imp in self.importance])
-            self.set_datarate([i/datarate_max for i in self.datarate_ext(servers)])
-            self.set_E_transmit([i/E_transmit_max for i in self.E_transmit_ext()])
+            self.set_datarates([i/datarate_max for i in self.datarate_ext(servers)])
+            self.set_E_transmits([i/E_transmit_max for i in self.E_transmit_ext()])
         else:
             self.set_E_local(self.E_local()/E_local_max)
             self.update_dataquality(server_num)
@@ -105,10 +105,10 @@ class User:
     def set_dataqualities(self, list):
         self.dataquality = copy.deepcopy(list)
 
-    def set_E_transmit(self, list):
+    def set_E_transmits(self, list):
         self.E_transmit_ext_list = copy.deepcopy(list)
         
-    def set_datarate(self, list):
+    def set_datarates(self, list):
         self.datarate_ext_list = copy.deepcopy(list)
 
     @property
@@ -156,7 +156,7 @@ class User:
     def get_payments(self):
         return self.payments
     
-    def get_dataquality(self):
+    def get_dataqualities(self):
         return self.dataquality
     
     def get_alligiance(self):
@@ -168,9 +168,16 @@ class User:
     def get_E_transmit_ext(self):
         return self.E_transmit_ext_list
     
+    def get_E_transmit(self):
+        return [(Z*self.current_ptrans/(dr*datarate_max))/E_transmit_max for dr in self.datarate_list]
+    
     def get_datarate_ext(self):
         return self.datarate_ext_list
     
+    def get_datarate(self):
+        self.datarate_list = [B*math.log2(1 + channel_gain(self.distances[i], self.num, i)*self.current_ptrans/(channel_gain(self.distances[i], self.num, i)*self.current_ptrans+I0))/datarate_max for i in range(S)]
+        return self.datarate_list
+
     # Magnitude Functions
 
     def E_local(self):      # E_local calculation
@@ -218,3 +225,8 @@ class User:
         self.E_transmit_ext_list[server_num] = (Z*self.current_ptrans/(self.datarate_ext_list[server_num]*datarate_max))/E_transmit_max 
 
 
+    def set_available_servers(self, list):  # Available server list for this user
+        self.available_servers = list[:] 
+
+    def get_available_servers(self):
+        return self.available_servers
