@@ -1,6 +1,5 @@
 from Classes.Server import Server
 from Classes.User import User, E_local_max, E_transmit_max, fn_max, ds_max
-import copy
 
 # Parameters
 
@@ -32,7 +31,7 @@ def calculate_weights(ratio):
 
 def user_utility(user: User, server: Server, verbose = False):
     index = server.num
-    current_coalition = copy.deepcopy(server.get_coalition())
+    current_coalition = server.get_coalition()
 
     critical_points = server.get_critical_points()
     
@@ -51,8 +50,7 @@ def user_utility(user: User, server: Server, verbose = False):
 
     # Normalize payment for users in server
     total_payment = 0
-    current_coalition.add(user)
-    for u in current_coalition:
+    for u in current_coalition.union({user}):
         total_payment += u.get_payments()[index]
 
     # w_local, w_trans = calculate_weights(E_local*E_local_max/(E_transmit_list[index]*E_transmit_max))
@@ -80,7 +78,7 @@ def user_utility_ext(user: User, server: Server, verbose = False):
         return 0
     
     index = server.num
-    current_coalition = copy.deepcopy(server.get_coalition())
+    current_coalition = server.get_coalition()
 
     critical_points = server.get_critical_points()
     
@@ -99,8 +97,7 @@ def user_utility_ext(user: User, server: Server, verbose = False):
 
     # Normalize payment for users in server
     total_payment = 0
-    current_coalition.add(user)
-    for u in current_coalition:
+    for u in current_coalition.union({user}):
         total_payment += u.get_payments()[index]
 
     # w_local, w_trans = calculate_weights(E_local*E_local_max/(E_transmit_list[index]*E_transmit_max))

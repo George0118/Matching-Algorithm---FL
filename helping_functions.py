@@ -80,11 +80,11 @@ def channel_gain(distance, num_user, num_server):   # Channel gain calculation
 
 # Define the function g(x)
 def g(x, imp, a):
-    return (2*imp+1) - np.exp(-a*x)
+    return (2*imp+1) - np.exp(-x/a)
 
 # Define the function f(x)
 def f(x, a):
-    return (1 / (1 + np.exp(-a*x + 3)))
+    return (1 / (1 + np.exp(-x/a + 3)))
 
 # Define the function h that returns a function for h(x)
 def h(imp, a):

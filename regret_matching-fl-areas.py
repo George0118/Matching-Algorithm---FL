@@ -116,7 +116,7 @@ rural_users = []
 
 distance_diff = 0.005
 
-for i in range(min(urban_threshold, N)):
+for i in range(min(rural_threshold, N)):
 
     while True:
         j = i//K
@@ -154,7 +154,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
         if distance < 0.02+(rural_threshold+j+1)*distance_diff and distance >= 0.02+(rural_threshold+j)*distance_diff:  # if in the desired sphere and good user then add the user
             break
         
-    user = User(x,y,z,i+urban_threshold)
+    user = User(x,y,z,i+rural_threshold)
     
     urban_users.append(copy.deepcopy(user))
     suburban_users.append(copy.deepcopy(user))
@@ -173,7 +173,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
         if distance < 0.3+(j+1)*distance_diff and distance >= 0.3+j*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
-    user = User(x,y,z,i+urban_threshold)
+    user = User(x,y,z,i+rural_threshold)
     
     rural_users.append(copy.deepcopy(user))
 
@@ -302,7 +302,7 @@ for area, users in all_users.items():
 for area, users in all_users.items():
     min_dist = [None]*K
     for i in range(K):
-        for j in range(N):          # Finding Max Distance for each user
+        for j in range(N):          # Finding Min Distance for each CP
             user = users[j]
             user_x, user_y, user_z = user.x, user.y, user.z
 
@@ -327,24 +327,30 @@ for area, users in all_users.items():
 
             user.add_importance(importance)
 
+        print(user.get_importance())
+
 # ======================================================================================== #
 
 # ========== Calculating parameters for utility functions =========== #
 
 for area, users in all_users.items():
     for user in users:
-        a_const = random.uniform(1,10)
+        # print(user.get_importance())
+        a_const = random.uniform(0.05,0.57)
+        # print("Pns:", a_const)
         for server in servers:
-            user.util_fun[server.num][0] = h(0,a_const)   # Pns
+            user.util_fun[server.num][0] = h(0.5,a_const)   # Pns
 
             imp = user.get_importance()[server.num]
 
             # Fn
-            a = random.uniform(1, 1 + (1-imp)*10)
+            a = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
+            # print("Fn:", a)
             user.util_fun[server.num][1] = h(imp,a)   # Fn
 
             # Dn
-            a = random.uniform(1, 1 + (1-imp)*10)
+            a = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
+            # print("Dn:", a)
             user.util_fun[server.num][2] = h(imp,a)   # Dn
 
 # =================================================================== #
@@ -355,62 +361,65 @@ rural_servers = copy.deepcopy(servers)
 
 all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': rural_servers}
 
-# # ============================== Game Theory Matching ============================== #
+# ============================== Game Theory Matching ============================== #
 
-# # ============================== Approximate Matching ============================== #
+# ============================== Approximate Matching ============================== #
 
-# gt_start = time.time()
+gt_start = time.time()
 
-# gt_all_users = copy.deepcopy(all_users)
-# gt_all_servers = copy.deepcopy(all_servers)
+gt_all_users = copy.deepcopy(all_users)
+gt_all_servers = copy.deepcopy(all_servers)
 
-# for area, gt_users in gt_all_users.items(): 
-#     for user in gt_users:
-#         # For each user in the GT version, initialize its utility values
-#         user.current_ptrans = Ptrans_max
-#         user.current_fn = fn_max
-#         user.used_datasize = user.datasize
+for area, gt_users in gt_all_users.items(): 
+    for user in gt_users:
+        # For each user in the GT version, initialize its utility values
+        user.current_ptrans = Ptrans_max
+        user.current_fn = fn_max
+        user.used_datasize = user.datasize
 
-#     for user in gt_users:
-#         # Now that the values are set, calculate the external magnitudes for all users
-#         user.set_magnitudes(gt_all_servers[area])
+    for user in gt_users:
+        # Now that the values are set, calculate the external magnitudes for all users
+        user.set_magnitudes(gt_all_servers[area])
         
 
-# for area, gt_users in gt_all_users.items(): 
+for area, gt_users in gt_all_users.items(): 
 
-#     gt_servers = gt_all_servers[area]
+    if area != 'Urban':
+        continue
 
-#     # Initializing the available servers for each user
-#     for i in range(N):
-#         u = gt_users[i]
-#         u.set_available_servers(gt_servers)
+    gt_servers = gt_all_servers[area]
+
+    # Initializing the available servers for each user
+    for i in range(N):
+        u = gt_users[i]
+        u.set_available_servers(gt_servers)
         
-#     approximate_fedlearner_matching(gt_users, gt_servers)
+    approximate_fedlearner_matching(gt_users, gt_servers)
 
-#     print("Approximate FedLearner Matching:\n")
+    print("Approximate FedLearner Matching:\n")
 
-#     for u in gt_users:
-#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-#         print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+    for u in gt_users:
+        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+        print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
-#     print()
+    print()
 
-#     # ============================== Accurate Matching ============================== #
+    # ============================== Accurate Matching ============================== #
         
-#     accurate_fedlearner_matching(gt_users, gt_servers)
+    accurate_fedlearner_matching(gt_users, gt_servers)
 
-#     print("Accurate FedLearner Matching:\n")
+    print("Accurate FedLearner Matching:\n")
 
-#     for u in gt_users:
-#         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-#         print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
+    for u in gt_users:
+        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+        print("I am User ", u.num, " and I am part of the coalition of Server ", allegiance_num)
 
-#     print()
+    print()
 
-#     gt_end = time.time()
+    gt_end = time.time()
 
-#     print("Game Theory Matching took", gt_end-gt_start, "seconds\n")
-#     # =============================================================================== #
+    print("Game Theory Matching took", gt_end-gt_start, "seconds\n")
+    # =============================================================================== #
 
 
 # ============================== Regret Learning Matching - Complete Information ============================== #
