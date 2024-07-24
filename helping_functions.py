@@ -79,17 +79,17 @@ def channel_gain(distance, num_user, num_server):   # Channel gain calculation
 # Bell Shaped Utility Functions
 
 # Define the function g(x)
-def g(x, a, b, d):
-    return a - (1/b) * np.exp(-d*x)
+def g(x, imp, a):
+    return (2*imp+1) - np.exp(-a*x)
 
 # Define the function f(x)
-def f(x, d):
-    return (1 / (1 + np.exp(-d*x + 3)))
+def f(x, a):
+    return (1 / (1 + np.exp(-a*x + 3)))
 
 # Define the function h that returns a function for h(x)
-def h(a, b, d):
+def h(imp, a):
     def h_x(p,n):
-        return g(p, a, b, d) - f(n, d)
-    h_x.b = b  # Store parameter b in the function
-    h_x.d = d  # Store parameter d in the function
+        return g(p, imp, a) - f(n, a)
+    h_x.imp = imp  # Store parameter b in the function
+    h_x.a = a  # Store parameter d in the function
     return h_x

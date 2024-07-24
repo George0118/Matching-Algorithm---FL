@@ -86,13 +86,13 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
         # print(regret_vector[0])
         update_probabilities(probabilities, regret_vector, users, len(actions), t)   # Update probabilities
 
-        for u in users:
-            if not all(p == 0.0 for p in probabilities[u.num]):
-                max_value = max(probabilities[u.num])
-                max_index = probabilities[u.num].index(max_value)
-                print("User", u.num, ", best server:", actions[max_index].target, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
-            else:
-                print("User", u.num, ", best server:", actions_taken[u.num].target, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
+        # for u in users:
+        #     if not all(p == 0.0 for p in probabilities[u.num]):
+        #         max_value = max(probabilities[u.num])
+        #         max_index = probabilities[u.num].index(max_value)
+        #         print("User", u.num, ", best server:", actions[max_index].target, ", Fn:", actions[max_index].fn, ", Dn:", actions[max_index].ds, ", PTrans:", actions[max_index].ptrans,", max prob:", probabilities[u.num][max_index])
+        #     else:
+        #         print("User", u.num, ", best server:", actions_taken[u.num].target, ", current server:", u.get_alligiance().num if u.get_alligiance() is not None else None)
 
         t += 1 
 
