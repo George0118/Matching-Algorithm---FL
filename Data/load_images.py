@@ -79,7 +79,6 @@ def load_images(file_paths, disaster):
                 labels.append(disaster)
 
     # Shuffle images and labels in parallel
-    random.seed(42)
     combined = list(zip(images, labels))
     random.shuffle(combined)
     images[:], labels[:] = zip(*combined)
@@ -109,7 +108,6 @@ def load_neutral_images():
                 labels.append("neutral")
 
     # Shuffle images and labels in parallel
-    random.seed(42)
     combined = list(zip(images, labels))
     random.shuffle(combined)
     images[:], labels[:] = zip(*combined)

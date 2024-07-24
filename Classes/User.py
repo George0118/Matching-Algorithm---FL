@@ -187,9 +187,7 @@ class User:
         datarate_ext_list = []
         for server in servers:
             denominator_sum = 0
-            user_group = set(server.get_coalition())
-            user_group.add(self)
-            for u in user_group:
+            for u in server.get_coalition().union({self}):
                 g_ext = channel_gain(u.distances[server.num], u.num, server.num)
                 denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
                 

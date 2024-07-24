@@ -36,13 +36,11 @@ def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[S
                 max_utility = server_utility(server, coalition.union({favorite_User}))
 
                 for u in invitations:
-                    utility = server_utility(server, coalition.union({u}), True)
-                    print("User:", u.num, "Utility:", utility)
+                    utility = server_utility(server, coalition.union({u}))
                     if(utility > max_utility):
                         max_utility = utility
                         favorite_User = u
 
-                print("User:", favorite_User.num, "Favorite:", server.num)
                 server.add_to_coalition(favorite_User)      # server adds favorite User to its Coalition 
                 # print("Favorite User = ", favorite_User.num)
                 favorite_User.change_server(server)     # favorite User now belongs to server
