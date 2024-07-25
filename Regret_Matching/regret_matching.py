@@ -36,7 +36,7 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
 
     actions_taken = [None] * len(users)
     while(not convergence(probabilities) and t < 5000):
-        print("t =",t)
+        # print("t =",t)
         for u in users:     # For each user get its most likely action
             action_index, repeat = select_action(probabilities[u.num])
             if not repeat:
@@ -171,7 +171,6 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
         execute_action(user, servers_copy, actions_taken[user.num])
         
     time2 = time.time()
-    print("Time:", time2-time1)
 
 # Update Probabilities
 def update_probabilities(probabilities: List[List], regret_vector: List[List], users: List[User]):

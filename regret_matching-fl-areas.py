@@ -1,5 +1,10 @@
 # Project description
 
+
+# ========================================= #
+
+import random
+
 # Argument Parsing
 
 from config import parse_arguments
@@ -23,7 +28,6 @@ print(p.cpu_affinity())
 import numpy as np
 import time
 import copy
-import random
 import math
 import datetime
 from matchingeq_functions import check_matching_equality
@@ -325,25 +329,77 @@ for area, users in all_users.items():
 
 # ========== Calculating parameters for utility functions =========== #
 
-for area, users in all_users.items():
-    for user in users:
-        # print(user.get_importance())
-        a_const = random.uniform(0.05,0.57)
-        # print("Pns:", a_const)
+for i in range(N):
+    _users = [all_users["Urban"][i], all_users["Suburban"][i], all_users["Rural"][i]]
+    if i < rural_threshold:
+        a_const = random.uniform(0.05, 0.57)
         for server in servers:
-            user.util_fun[server.num][0] = h(1,a_const)   # Pns
-
-            imp = user.get_importance()[server.num]
+            imp = _users[0].get_importance()[server.num]
 
             # Fn
-            a = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
-            # print("Fn:", a)
-            user.util_fun[server.num][1] = h(imp,a)   # Fn
-
+            a_fn = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
             # Dn
-            a = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
-            # print("Dn:", a)
-            user.util_fun[server.num][2] = h(imp,a)   # Dn
+            a_dn = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
+
+            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[0].util_fun[server.num][1] = h(imp,a_fn)   # Fn
+            _users[0].util_fun[server.num][2] = h(imp,a_dn)   # Dn
+            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[1].util_fun[server.num][1] = h(imp,a_fn)   # Fn
+            _users[1].util_fun[server.num][2] = h(imp,a_dn)   # Dn
+            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[2].util_fun[server.num][1] = h(imp,a_fn)   # Fn
+            _users[2].util_fun[server.num][2] = h(imp,a_dn)   # Dn
+
+    elif i < suburban_threshold:
+        a_const = random.uniform(0.05, 0.57)
+        for server in servers:
+            imp1 = _users[0].get_importance()[server.num]
+            imp2 = _users[2].get_importance()[server.num]
+
+            # Fn
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+            # Dn
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+
+            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
+            _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
+            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[1].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
+            _users[1].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
+            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[2].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
+            _users[2].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
+
+    else:
+        a_const = random.uniform(0.05, 0.57)
+        for server in servers:
+            imp1 = _users[0].get_importance()[server.num]
+            imp2 = _users[1].get_importance()[server.num]
+            imp3 = _users[2].get_importance()[server.num]
+
+            # Fn
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+            a_fn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.1, 0.05), 0.57*math.sqrt(imp3))
+            # Dn
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+            a_dn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.1, 0.05), 0.57*math.sqrt(imp3))
+
+            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
+            _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
+            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[1].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
+            _users[1].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
+            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
+            _users[2].util_fun[server.num][1] = h(imp3,a_fn_3)   # Fn
+            _users[2].util_fun[server.num][2] = h(imp3,a_dn_3)   # Dn
+        
 
 # =================================================================== #
 
@@ -356,8 +412,6 @@ all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': ru
 # ============================== Game Theory Matching ============================== #
 
 # ============================== Approximate Matching ============================== #
-
-gt_start = time.time()
 
 gt_all_users = copy.deepcopy(all_users)
 gt_all_servers = copy.deepcopy(all_servers)
@@ -372,8 +426,7 @@ for area, gt_users in gt_all_users.items():
 
 for area, gt_users in gt_all_users.items(): 
 
-    # if area != 'Urban':
-    #     continue
+    gt_start = time.time()
 
     gt_servers = gt_all_servers[area]
 
@@ -412,15 +465,12 @@ for area, gt_users in gt_all_users.items():
 
 # ============================== Regret Learning Matching - Complete Information ============================== #
 
-regret_start = time.time()
-
 regret_all_users = copy.deepcopy(all_users)
 regret_all_servers = copy.deepcopy(all_servers)
 
 for area, regret_users in regret_all_users.items(): 
 
-    # if area != 'Urban':
-    #     continue
+    regret_start = time.time()
 
     regret_servers = regret_all_servers[area]
 
@@ -442,15 +492,12 @@ for area, regret_users in regret_all_users.items():
 
 # ============================== Regret Learning Matching - Incomplete Information ============================== #
 
-regret_start = time.time()
-
 regretII_all_users = copy.deepcopy(all_users)
 regretII_all_servers = copy.deepcopy(all_servers)
 
 for area, regretII_users in regretII_all_users.items(): 
 
-    # if area != 'Urban':
-    #     continue
+    regret_start = time.time()
 
     regretII_servers = regretII_all_servers[area]
 
