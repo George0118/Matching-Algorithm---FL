@@ -182,7 +182,7 @@ def update_regret_vector(regret_vector: List[List], utilities_vector: List[List]
         # For each user get its current utility
         current_utility = current_utilities[user.num]
         for action_index in range(num_of_actions):
-            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - g(t) * regret_vector[user.num][action_index]
+            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - 0.01 * regret_vector[user.num][action_index]
             # print("Prev Util:", utilities_vector[user.num][action_index], "Curr Util:", current_utility, "Prev Regret:", regret_vector[user.num][action_index])
             # print(new_regret_term)
             regret_vector[user.num][action_index] += new_regret_term
@@ -208,6 +208,6 @@ def update_probabilities(probabilities: List[List], regret_vector: List[List], u
         # For each user get its boltzmann_gibbs vector
         bg_vector = boltzmann_gibbs(regret_vector[user.num]) 
         for action_index in range(num_of_actions):
-            new_probability_term = m(t) * (bg_vector[action_index] - probabilities[user.num][action_index])
+            new_probability_term = 0.5 * (bg_vector[action_index] - probabilities[user.num][action_index])
             # print("m:", m(t), "bg:", bg_vector[action_index], "Old prob:", probabilities[user.num][action_index])
             probabilities[user.num][action_index] += new_probability_term

@@ -134,7 +134,7 @@ def update_regret(t, user: User, servers: List[Server], current_utility, other_a
     execute_action(user, servers, other_action, True, external_denominators=external_denominators) # Execute action
     term1 = user_utility_ext(user, user.get_alligiance())   # And get new utility
 
-    result = (term1 - term2)/t
+    result = (term1 - term2)
 
     return result
 
@@ -172,7 +172,7 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
         current_external_denominators = user.get_external_denominators(servers_copy)
         for action_index, action in enumerate(actions):
             new_regret_term = update_regret(t, user, servers_copy, current_utility, action, current_external_denominators)
-            regret_vector[user.num][action_index] = (t-1) * regret_vector[user.num][action_index] / t + new_regret_term
+            regret_vector[user.num][action_index] = 0.99 * regret_vector[user.num][action_index] + 0.01 * new_regret_term
 
         # Reset User
         execute_action(user, servers_copy, actions_taken[user.num])

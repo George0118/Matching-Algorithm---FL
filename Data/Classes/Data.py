@@ -35,36 +35,11 @@ class Get_data:
            (X_train_earthquake, X_server_earthquake, y_train_earthquake, y_server_earthquake, earthquake_img_num)
 
 
-  def split_data(self, data, server, img_num): 
+  def split_data(self, data): 
     users = self.users
-    critical_points = server.get_critical_points()
-    user_min_distances = [-1]*len(users)
-
-    for u in users:
-      for cp in critical_points:
-        user_x, user_y, user_z = u.x, u.y, u.z
-        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
-
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
-
-        if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
-          user_min_distances[u.num] = distance
-
-    ratios = [None]*len(users)
-
-    # Calculate the data size ratios based on the user minimum distance from the CPs
-    for i in range(len(users)):
-        if user_min_distances[i] <= 0.4:
-            ratios[i] = 1/(user_min_distances[i] + 1e-6)
-        else:
-            ratios[i] = 0
-
-    ratios = [ratio/max(ratios) for ratio in ratios]
-
-    def_len = img_num/N_max
 
     # Get Sizes
-    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * def_len) for ratio in ratios]
+    sizes = [user.used_datasize//(3*224*224*8) for user in users]
 
     s_data = []
     
@@ -80,16 +55,16 @@ class Get_data:
     (X_train_earthquake, X_server_earthquake, y_train_earthquake, y_server_earthquake, earthquake_img_num) = self.load_data()
 
     # Split fire data to each user
-    X_train_fire=self.split_data(X_train_fire, self.servers[0], fire_img_num) 
-    y_train_fire=self.split_data(y_train_fire, self.servers[0], fire_img_num)
+    X_train_fire=self.split_data(X_train_fire) 
+    y_train_fire=self.split_data(y_train_fire)
 
     # Split flood data to each user
-    X_train_flood=self.split_data(X_train_flood, self.servers[1], flood_img_num) 
-    y_train_flood=self.split_data(y_train_flood, self.servers[1], flood_img_num)
+    X_train_flood=self.split_data(X_train_flood) 
+    y_train_flood=self.split_data(y_train_flood)
 
     # Split earthquake data to each user
-    X_train_earthquake=self.split_data(X_train_earthquake, self.servers[2], earthquake_img_num) 
-    y_train_earthquake=self.split_data(y_train_earthquake, self.servers[2], earthquake_img_num)
+    X_train_earthquake=self.split_data(X_train_earthquake) 
+    y_train_earthquake=self.split_data(y_train_earthquake)
 
     print("Splited Successfully\n")
 

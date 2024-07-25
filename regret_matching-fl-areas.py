@@ -34,12 +34,14 @@ from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
 from Data.fl_parameters import *
 from Classes.Server import Server
-from Classes.User import User, Ptrans_max, fn_max, E_local_max
+from Classes.User import User, Ptrans_max, fn_max, E_local_max, E_transmit_max, datarate_max
 from Classes.CriticalPoint import CP
 from Regret_Matching.regret_matching import regret_matching
 from Regret_Matching.regret_matching_II import regret_matching_II
+from Regret_Matching.utility_function import user_utility_ext
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
+from GT_Matching.gt_utilities import server_utility_externality
 
 # General Parameters
 
@@ -49,7 +51,7 @@ from general_parameters import *
 urban_threshold = 30    # In an Urban Area, after 30 users the users start to be further in proximity to the CPs
 suburban_threshold = 21 # In an Suburban Area, after 21 users the users start to be further in proximity to the CPs
 rural_threshold = 12    # In an Rural Area, after 12 users the users start to be further in proximity to the CPs
-federated_learning = True
+federated_learning = False
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
 
@@ -384,8 +386,8 @@ for area, gt_users in gt_all_users.items():
 
 for area, gt_users in gt_all_users.items(): 
 
-    if area != 'Urban':
-        continue
+    # if area != 'Urban':
+    #     continue
 
     gt_servers = gt_all_servers[area]
 
@@ -431,8 +433,8 @@ regret_all_servers = copy.deepcopy(all_servers)
 
 for area, regret_users in regret_all_users.items(): 
 
-    if area != 'Urban':
-        continue
+    # if area != 'Urban':
+    #     continue
 
     regret_servers = regret_all_servers[area]
 
@@ -456,21 +458,21 @@ for area, regret_users in regret_all_users.items():
 
 regret_start = time.time()
 
-regret_all_users = copy.deepcopy(all_users)
-regret_all_servers = copy.deepcopy(all_servers)
+regretII_all_users = copy.deepcopy(all_users)
+regretII_all_servers = copy.deepcopy(all_servers)
 
-for area, regret_users in regret_all_users.items(): 
+for area, regretII_users in regretII_all_users.items(): 
 
-    if area != 'Urban':
-        continue
+    # if area != 'Urban':
+    #     continue
 
-    regret_servers = regret_all_servers[area]
+    regretII_servers = regretII_all_servers[area]
 
-    regret_matching_II(regret_users, regret_servers)
+    regret_matching_II(regretII_users, regretII_servers)
 
     print("REMORSE Matching II:\n")
 
-    for u in regret_users:
+    for u in regretII_users:
         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
         print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
 
@@ -481,3 +483,207 @@ for area, regret_users in regret_all_users.items():
     print("REMORSE Matching II took", regret_end-regret_start, "seconds\n")
     
 # =============================================================================== #
+
+# Prepare for the Trainings
+user_lists = []
+server_lists = []
+
+for area, gt_users in gt_all_users.items():
+    gt_servers = gt_all_servers[area]
+    user_lists.append(gt_users)
+    server_lists.append(gt_servers)
+
+for area, regret_users in regret_all_users.items():
+    regret_servers = regret_all_servers[area]
+    user_lists.append(regret_users)
+    server_lists.append(regret_servers)
+
+for area, regret_users in regretII_all_users.items():
+    regret_servers = regretII_all_servers[area]
+    user_lists.append(regret_users)
+    server_lists.append(regret_servers)
+
+matching_losses = []
+matching_accuracies = []
+matching_user_losses = []
+matching_user_accuracies = []
+
+# ============================== Federated Learning ============================== #
+
+if federated_learning:
+    prev_matchings = []
+
+    get_data = Get_data(users, servers)
+
+    X_train, y_train, X_server, y_server = get_data.pre_data()
+
+    for _users, _servers in zip(user_lists, server_lists):
+
+        same_matching = check_matching_equality(_servers, prev_matchings)
+
+        elapsed_time = 0
+
+        if same_matching is not None:
+            server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
+            user_losses, user_accuracy = matching_user_losses[same_matching], matching_user_accuracies[same_matching]
+        else:
+            X_train_copy = copy.deepcopy(X_train)
+            y_train_copy = copy.deepcopy(y_train)
+            X_test_copy = copy.deepcopy(X_server)
+            y_test_copy = copy.deepcopy(y_server)
+            learning_start = time.time()
+            server_losses, server_accuracy, user_losses, user_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
+            learning_stop = time.time()
+            elapsed_time = learning_stop - learning_start
+
+        matching_losses.append(server_losses)
+        matching_accuracies.append(server_accuracy)
+        matching_user_losses.append(user_losses)
+        matching_user_accuracies.append(user_accuracy)
+
+        for i in range(S):
+            print("Server ", i, " achieved:\n")
+            print("Loss: ", server_losses[i][-1])
+            print("Accuracy: ", server_accuracy[i][-1])
+            print()
+        print(f"Learning for all 3 Servers took {elapsed_time/60:.2f} minutes\n")
+        print()
+
+        prev_matchings.append(_servers)
+
+    # ================================================================================ #
+        
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+
+    print(f"\nExecution took {elapsed_time/60:.2f} minutes\n")
+
+
+# For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
+
+if federated_learning:
+    # With Federated Learning
+    matchings = []
+    labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
+    for i in range(9):
+        matchings.append((user_lists[i], server_lists[i], matching_losses[i], matching_accuracies[i], matching_user_losses[i], matching_user_accuracies[i], labels[i]))
+else:
+    # Without Federated Learning
+    matchings = []
+    labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
+    for i in range(9):
+        matchings.append((user_lists[i], server_lists[i], labels[i]))
+
+
+    
+
+timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
+
+directory_path = "../results"       # Results Directory
+
+# Check if the directory exists
+if not os.path.exists(directory_path):
+    # If it doesn't exist, create the directory
+    os.makedirs(directory_path)
+
+for matching in matchings:
+
+    if federated_learning:
+        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+    else:
+        _users, _servers, matching_label = matching     # Without Federated Learning
+
+    # Energy (J)
+    mean_Energy = 0
+    matched_users = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            matched_users += 1
+            mean_Energy += u.get_E_local() * E_local_max
+            mean_Energy += u.get_E_transmit_ext()[u.get_alligiance().num] * E_transmit_max
+
+    mean_Energy /= matched_users
+
+    # Local Energy (J)
+    mean_Elocal = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Elocal += u.get_E_local() * E_local_max
+
+    mean_Elocal /= matched_users
+
+    # Transfer Energy (J)
+    mean_Etransfer = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Etransfer += u.get_E_transmit_ext()[u.get_alligiance().num] * E_transmit_max
+
+    mean_Etransfer /= matched_users
+
+    # Datarate (bps)
+    mean_Datarate = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_Datarate += u.get_datarate_ext()[u.get_alligiance().num] * datarate_max
+
+    mean_Datarate /= matched_users
+
+    # User Utility
+    mean_User_Utility = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            mean_User_Utility += user_utility_ext(u, u.get_alligiance())
+
+    mean_User_Utility /= matched_users
+
+    # Server Utility
+    mean_Server_Utility = 0
+    for s in _servers:
+        mean_Server_Utility += server_utility_externality(_servers, s.get_coalition(), s)
+
+    mean_Server_Utility /= S
+
+    # User Payments
+    user_payments = 0
+    for u in _users:
+        if u.get_alligiance() is not None:
+            user_payments += u.get_payments()[u.get_alligiance().num]*u.get_alligiance().p
+
+    output_filename = f"../results/Areas-u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
+
+    with open(output_filename, 'a') as file:
+        file.write(f"Matching: {matching_label}, Users: {N}, Critical Points: {K}\n\
+    Mean Energy: {mean_Energy} J\n\
+    Mean Elocal: {mean_Elocal} J\n\
+    Mean Etransfer: {mean_Etransfer} J\n\
+    Mean Datarate: {mean_Datarate} bps\n\
+    Mean User Utility: {mean_User_Utility}\n\
+    Mean Server Utility: {mean_Server_Utility}\n\
+    Sum User Payments: {user_payments}\n\
+    \n")
+        
+    if federated_learning: 
+        with open(output_filename, 'a') as file:
+            file.write(f"Fire Server:\n\
+        Losses: {_losses[0]}\n\
+        Accuracies: {_accuracies[0]}\n")
+            for u in _servers[0].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
+            
+            file.write(f"Flood Server:\n\
+        Losses: {_losses[1]}\n\
+        Accuracies: {_accuracies[1]}\n")
+            for u in _servers[1].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
+            
+            file.write(f"Earthquake Server:\n\
+        Losses: {_losses[2]}\n\
+        Accuracies: {_accuracies[2]}\n")
+            for u in _servers[2].get_coalition():
+                file.write(f"User {u.num}:\n\
+            Losses: {user_losses[u.num]}\n\
+            Accuracies: {user_accuracies[u.num]}\n")
