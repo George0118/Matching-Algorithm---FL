@@ -1,5 +1,5 @@
 from Classes.Server import Server
-from Classes.User import User, E_local_max, E_transmit_max, fn_max, ds_max
+from Classes.User import User, fn_max, ds_max
 
 # Parameters
 
@@ -30,94 +30,62 @@ def calculate_weights(ratio):
 # User’s Utility function
 
 def user_utility(user: User, server: Server, verbose = False):
-    index = server.num
-    current_coalition = server.get_coalition()
-
-    critical_points = server.get_critical_points()
+    if server is None:
+        return 0
     
-    datarate_list = user.get_datarate()
-    payment = user.get_payments()[index]
-    dataquality_list = user.get_dataqualities()
-    E_transmit_list = user.get_E_transmit()
+    index = server.num
+    
+    datarate = user.get_datarate(server)
+    payment = user.get_payment(server)
+    dataquality = user.get_dataquality(server)
+    E_transmit = user.get_E_transmit(datarate)
     E_local = user.get_E_local()
-
-    # Calculate average dataquality of user depending on the Critical Points that concern this server
-    avg_dataquality = 0
-    for cp in critical_points:
-        avg_dataquality += dataquality_list[cp.num]
-
-    avg_dataquality = avg_dataquality/len(critical_points)
-
-    # Normalize payment for users in server
-    total_payment = 0
-    for u in current_coalition.union({user}):
-        total_payment += u.get_payments()[index]
-
-    # w_local, w_trans = calculate_weights(E_local*E_local_max/(E_transmit_list[index]*E_transmit_max))
 
     utility_functions = user.util_fun[index]
     
-    utility =   utility_functions[0](datarate_list[index], E_transmit_list[index]) + \
+    utility =   utility_functions[0](datarate, E_transmit) + \
                 utility_functions[1](payment, E_local*(ds_max/user.used_datasize)) + \
-                utility_functions[2](avg_dataquality, E_local*(fn_max/user.current_fn)**2)
+                utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2)
     if verbose:
         print("Utility: ", utility)
-        print("Datarate: ", datarate_list[index])
-        print("Payment: ", payment/total_payment)
+        print("Datarate: ", datarate)
+        print("Payment: ", payment)
         print("Energy Local: ", E_local)
-        print("Energy Transmission: ", E_transmit_list[index])
-        print("Dataquality: ", avg_dataquality)
+        print("Energy Transmission: ", E_transmit)
+        print("Dataquality: ", dataquality)
         print()
 
     return utility
 
 # User Utility with Externality
 
-def user_utility_ext(user: User, server: Server, verbose = False):
+def user_utility_ext(user: User, server: Server, external_denominator = None, verbose = False):
     if server is None:
         return 0
     
     index = server.num
-    current_coalition = server.get_coalition()
-
-    critical_points = server.get_critical_points()
     
-    datarate_list = user.get_datarate_ext()     # Get datarate with externality
-    payment = user.get_payments()[index]
-    dataquality_list = user.get_dataqualities()
-    E_transmit_list = user.get_E_transmit_ext()  # Get Etransmit with externality
-    E_local = user.get_E_local()
-
-    # Calculate average dataquality of user depending on the Critical Points that concern this server
-    avg_dataquality = 0
-    for cp in critical_points:
-        avg_dataquality += dataquality_list[cp.num]
-
-    avg_dataquality = avg_dataquality/len(critical_points)
-
-    # Normalize payment for users in server
-    total_payment = 0
-    for u in current_coalition.union({user}):
-        total_payment += u.get_payments()[index]
-
-    # w_local, w_trans = calculate_weights(E_local*E_local_max/(E_transmit_list[index]*E_transmit_max))
+    if external_denominator is None:
+        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server)
+    else:
+        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator)
 
     utility_functions = user.util_fun[index]
     
-    utility =   utility_functions[0](datarate_list[index], E_transmit_list[index]) + \
+    utility =   utility_functions[0](datarate, E_transmit) + \
                 utility_functions[1](payment, E_local*(ds_max/user.used_datasize)) + \
-                utility_functions[2](avg_dataquality, E_local*(fn_max/user.current_fn)**2)
+                utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2)
     
     if verbose:
         print("Utility: ", utility)
-        print("Datarate: ", datarate_list[index])
-        print("Payment: ", payment/total_payment)
+        print("Datarate: ", datarate)
+        print("Payment: ", payment)
         print("Energy Local: ", E_local)
-        print("Energy Transmission: ", E_transmit_list[index])
-        print("Dataquality: ", avg_dataquality)
-        print("Util1: " , utility_functions[0](datarate_list[index], E_transmit_list[index]))
+        print("Energy Transmission: ", E_transmit)
+        print("Dataquality: ", dataquality)
+        print("Util1: " , utility_functions[0](datarate, E_transmit))
         print("Util2: " , utility_functions[1](payment, E_local*(ds_max/user.used_datasize)))
-        print("Util3: " , utility_functions[2](avg_dataquality, E_local*(fn_max/user.current_fn)**2))
+        print("Util3: " , utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2))
         print()
 
     return utility

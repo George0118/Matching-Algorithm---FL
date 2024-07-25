@@ -43,10 +43,6 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
                 execute_action(u, servers, actions[action_index])
                 actions_taken[u.num] = actions[action_index]
 
-        # Calculate magnitudes based on the actions taken from each user to use in updating regret
-        for u in users:
-            u.set_magnitudes(servers)
-
         update_regret_vector(regret_vector, users, servers, actions, t, actions_taken)  # Update regret vector
         update_probabilities(probabilities, regret_vector, users)   # Update probabilities
 
@@ -66,8 +62,6 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
             max_value = max(probabilities[user.num])
             max_index = probabilities[user.num].index(max_value)
             execute_action(user, servers, actions[max_index])
-    for user in users:
-            user.set_magnitudes(servers)
 
 
 # Convergence Check
@@ -101,7 +95,7 @@ def select_action(probabilities):
 
 
 # Execute selected Action
-def execute_action(user: User, servers: List[Server], action: Action, update_magnitudes = False, external_denominators = None):
+def execute_action(user: User, servers: List[Server], action: Action):
     # Matching the server_target of the action to the one of the copied servers
     if action.target is not None:
         actual_target = servers[action.target.num]
@@ -121,18 +115,17 @@ def execute_action(user: User, servers: List[Server], action: Action, update_mag
         if actual_target is not None:
             actual_target.add_to_coalition(user)
 
-    # Update the user's parameters and update the changes in magnitudes only for the target server
+    # Update the user's parameters based on the action taken
     user.set_parameters(action.fn, action.ptrans, action.ds)
-    if update_magnitudes:
-        if action.target is not None:
-            user.set_magnitudes(servers, change_all=False, server_num=action.target.num, external_denominator=external_denominators[action.target.num])
-
 
 # Regret Update Rule
 def update_regret(t, user: User, servers: List[Server], current_utility, other_action: Action, external_denominators: List):
     term2 = current_utility
-    execute_action(user, servers, other_action, True, external_denominators=external_denominators) # Execute action
-    term1 = user_utility_ext(user, user.get_alligiance())   # And get new utility
+    execute_action(user, servers, other_action) # Execute action
+    if other_action.target is None:
+        term1 = 0
+    else:
+        term1 = user_utility_ext(user, user.get_alligiance(), external_denominator=external_denominators[other_action.target.num])   # And get new utility
 
     result = (term1 - term2)
 
@@ -176,7 +169,6 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
 
         # Reset User
         execute_action(user, servers_copy, actions_taken[user.num])
-        user.set_magnitudes(servers_copy)
         
     time2 = time.time()
     print("Time:", time2-time1)

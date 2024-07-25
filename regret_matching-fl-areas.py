@@ -242,18 +242,8 @@ all_users = {'Urban': urban_users, 'Suburban': suburban_users, 'Rural': rural_us
 print()
 
 # ===================== Initialization of Users' Utility Values ===================== #
-
-# Set Max Payments
-
-for area, users in all_users.items(): 
-    for i in range(N):
-        user = users[i]
-        for j in range(S):
-            user.max_payment.append(servers[j].p)
         
 # Data size for each user
-        
-
 
 total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
 
@@ -341,7 +331,7 @@ for area, users in all_users.items():
         a_const = random.uniform(0.05,0.57)
         # print("Pns:", a_const)
         for server in servers:
-            user.util_fun[server.num][0] = h(0.5,a_const)   # Pns
+            user.util_fun[server.num][0] = h(1,a_const)   # Pns
 
             imp = user.get_importance()[server.num]
 
@@ -378,10 +368,6 @@ for area, gt_users in gt_all_users.items():
         user.current_ptrans = Ptrans_max
         user.current_fn = fn_max
         user.used_datasize = user.datasize
-
-    for user in gt_users:
-        # Now that the values are set, calculate the external magnitudes for all users
-        user.set_magnitudes(gt_all_servers[area])
         
 
 for area, gt_users in gt_all_users.items(): 
@@ -575,8 +561,6 @@ else:
         matchings.append((user_lists[i], server_lists[i], labels[i]))
 
 
-    
-
 timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
 
 directory_path = "../results"       # Results Directory
@@ -596,44 +580,41 @@ for matching in matchings:
     # Energy (J)
     mean_Energy = 0
     matched_users = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            matched_users += 1
-            mean_Energy += u.get_E_local() * E_local_max
-            mean_Energy += u.get_E_transmit_ext()[u.get_alligiance().num] * E_transmit_max
-
-    mean_Energy /= matched_users
-
-    # Local Energy (J)
+    # Local Energy
     mean_Elocal = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Elocal += u.get_E_local() * E_local_max
-
-    mean_Elocal /= matched_users
-
-    # Transfer Energy (J)
+    # Transfer Energy
     mean_Etransfer = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Etransfer += u.get_E_transmit_ext()[u.get_alligiance().num] * E_transmit_max
-
-    mean_Etransfer /= matched_users
-
-    # Datarate (bps)
+    # Datarate
     mean_Datarate = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Datarate += u.get_datarate_ext()[u.get_alligiance().num] * datarate_max
-
-    mean_Datarate /= matched_users
-
     # User Utility
     mean_User_Utility = 0
+    # User Payments
+    user_payments = 0
+
     for u in _users:
         if u.get_alligiance() is not None:
+            E_local, _, payment, datarate, E_transmit = user.get_magnitudes(u.get_alligiance())
+            # Matched Users
+            matched_users += 1
+            # Energy
+            mean_Energy += E_local * E_local_max
+            mean_Energy += E_transmit * E_transmit_max
+            # Local Energy
+            mean_Elocal += E_local * E_local_max
+            # Energy to Transmit
+            mean_Etransfer += E_transmit * E_transmit_max
+            # Datarate
+            mean_Datarate += datarate * datarate_max
+            # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
+            # User Payments
+            user_payments += payment*u.get_alligiance().p
+            
 
+    mean_Energy /= matched_users
+    mean_Elocal /= matched_users
+    mean_Etransfer /= matched_users
+    mean_Datarate /= matched_users
     mean_User_Utility /= matched_users
 
     # Server Utility
@@ -643,12 +624,7 @@ for matching in matchings:
 
     mean_Server_Utility /= S
 
-    # User Payments
-    user_payments = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            user_payments += u.get_payments()[u.get_alligiance().num]*u.get_alligiance().p
-
+            
     output_filename = f"../results/Areas-u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
 
     with open(output_filename, 'a') as file:

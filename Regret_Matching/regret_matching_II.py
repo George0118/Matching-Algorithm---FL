@@ -57,7 +57,6 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
         user_utilities = []
         for action in actions:
             execute_action(user, servers_copy, action)
-            user.set_magnitudes(servers_copy)
             user_utilities.append(user_utility_ext(user, user.get_alligiance()) + white_noise())
         utilities_vector.append(user_utilities)
 
@@ -72,10 +71,6 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
                 actions_taken[u.num] = actions[action_index]
                 actions_taken_indices[u.num] = action_index
 
-        # Calculate magnitudes based on the actions taken from each user to use in updating regret
-        for u in users:
-            u.set_magnitudes(servers)
-
         # Calculate current utilities
         current_utilities = [0] * len(users)
         for u in users:
@@ -83,7 +78,6 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
 
         update_utilities_vector(utilities_vector, actions_taken_indices, users, current_utilities, t) # Update utilities vector
         update_regret_vector(regret_vector, utilities_vector, users, len(actions), current_utilities, t)  # Update regret vector
-        # print(regret_vector[0])
         update_probabilities(probabilities, regret_vector, users, len(actions), t)   # Update probabilities
 
         # for u in users:
@@ -102,8 +96,6 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
             max_value = max(probabilities[user.num])
             max_index = probabilities[user.num].index(max_value)
             execute_action(user, servers, actions[max_index])
-    for user in users:
-            user.set_magnitudes(servers)
 
 
 # Convergence Check
@@ -138,7 +130,7 @@ def select_action(probabilities):
 
 
 # Execute selected Action
-def execute_action(user: User, servers: List[Server], action: Action, update_magnitudes = False, external_denominators = None):
+def execute_action(user: User, servers: List[Server], action: Action):
     # Matching the server_target of the action to the one of the copied servers
     if action.target is not None:
         actual_target = servers[action.target.num]
@@ -158,12 +150,8 @@ def execute_action(user: User, servers: List[Server], action: Action, update_mag
         if actual_target is not None:
             actual_target.add_to_coalition(user)
 
-    # Update the user's parameters and update the changes in magnitudes only for the target server
+    # Update the user's parameters based on the action taken
     user.set_parameters(action.fn, action.ptrans, action.ds)
-    if update_magnitudes:
-        if action.target is not None:
-            user.set_magnitudes(servers, change_all=False, server_num=action.target.num, external_denominator=external_denominators[action.target.num])
-
 
 # Update Utilities Vector
 def update_utilities_vector(utilities_vector: List[List], actions_taken_indices: List, users: List[User], current_utilities: List, t):
