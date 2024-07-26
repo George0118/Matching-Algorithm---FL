@@ -34,8 +34,9 @@ from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
 from Data.fl_parameters import *
 from Classes.Server import Server
-from Classes.User import User
+from Classes.User import User, Ptrans_max, fn_max, E_local_max, E_transmit_max, datarate_max
 from Classes.CriticalPoint import CP
+from helping_functions import dataset_sizes
 from GT_Matching.utility_functions import user_utility_ext, server_utility_externality
 from GT_Matching.approximate_matching import approximate_fedlearner_matching
 from GT_Matching.accurate_matching import accurate_fedlearner_matching
@@ -136,67 +137,14 @@ print()
 # ===================== Initialization of Users' Utility Values ===================== #
         
 # Data size for each user
-        
+
+total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
+
 Dn = [0]*N
-        
+
 for s in servers:   # For each server(disaster) calculate number of images each user will receive
     cps = s.get_critical_points()   # Get the relevant Critical Points
-    user_min_distances = [-1]*N
-    ratios = [0]*N
-
-    image_num = 0
-
-    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
-
-    # For each server count the images and select appropriate number of images to distribute
-    if(s.num == 0): 
-        image_num = count_images(fire_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(1.7*ratio*image_num)
-        img_per_usr = image_num/N_max
-    elif(s.num == 1):
-        image_num = count_images(flood_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(1.3*ratio*image_num)
-        img_per_usr = image_num/N_max
-    else:
-        image_num = count_images(earthquake_input_paths)
-        ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
-        image_num = int(0.8*ratio*image_num)
-        img_per_usr = image_num/N_max
-
-    # For each user calculate the minimum distance from the relevant Critical Points
-    for u in users:
-      for cp in cps:
-        user_x, user_y, user_z = u.x, u.y, u.z
-        cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
-
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
-
-        if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
-            user_min_distances[u.num] = distance
-
-    # Calculate the data size ratios based on the user minimum distance from the CPs
-    for i in range(N):
-        if user_min_distances[i] <= 0.4:
-            ratios[i] = 1/(user_min_distances[i] + 1e-6)
-        else:
-            ratios[i] = 0
-
-    ratios = [ratio/max(ratios) for ratio in ratios]
-
-    # Get Sizes
-    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * img_per_usr) for ratio in ratios]
-
-    if sum(sizes) > image_num:
-        temp_total = sum(sizes)
-        sizes = [size*image_num/temp_total for size in sizes]
-
-    print("Sizes:")
-    print(sizes)
+    sizes = dataset_sizes(s, users, cps, total_images)
 
     # And add to the Dn of each user
     for i in range(N):
@@ -204,18 +152,38 @@ for s in servers:   # For each server(disaster) calculate number of images each 
 
 # Set the User final datasize
 for i in range(N):
-    Dn[i] += N_neutral*3*224*224*8  # each user has another 400 neutral images
+    Dn[i] += N_neutral*3*224*224*8  # each user has another 250 neutral images
     user = users[i]
     user.set_datasize(Dn[i])
 
 print()
+
+# =================================================== #
+
+# Set distances
+
+for i in range(N):
+    distances = []
+    for j in range(S):          # Finding Max Distance for each user
+        user = users[i]
+        user_x, user_y, user_z = user.x, user.y, user.z
+
+        s = servers[j]
+        server_x, server_y, server_z = s.x, s.y, s.z
+
+        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+
+        distances.append(distance)
+    user.set_distances(distances)
+
+# ===================================================== #
 # =================================================================================== #
     
 # Normalized Data Importance
 
 min_dist = [None]*K
 for i in range(K):
-    for j in range(N):          # Finding Max Distance for each user
+    for j in range(N):          # Finding Min Distance for each CP
         user = users[j]
         user_x, user_y, user_z = user.x, user.y, user.z
 
@@ -239,323 +207,16 @@ for i in range(K):
         importance = min_dist[i] / distance
 
         user.add_importance(importance)
-        
-# ==================================================================  
 
-# Normalized Data Rate
+# ======================================================================================== #
 
-# Finding Max Data Rate
-max_dr = 0
-for i in range(N):
-    for j in range(S):
-        user = users[i]
-        user_x, user_y, user_z = user.x, user.y, user.z
+for user in users:
+    # For each user in the GT version, initialize its utility values
+    user.current_ptrans = Ptrans_max
+    user.current_fn = fn_max
+    user.used_datasize = user.datasize
 
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        dr = B*math.log2(1 + g*power/I0)
-        
-        if(dr > max_dr):
-            max_dr = dr
-
-# Calculating Normalized Data Rates
-for i in range(N):
-    for j in range(S):
-        user = users[i]
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        dr = B*math.log2(1 + g*power/I0)
-        
-        user.add_datarate(dr/max_dr)
-
-
-# Normalized Data Rate with Externality
-
-# Finding Max Data Rate
-max_dr = 0
-for i in range(N):
-    for j in range(S):
-        user = users[i]
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-
-        denominator_sum = 0
-        for k in range(N):
-            u = users[k]
-            user_x, user_y, user_z = u.x, u.y, u.z
-            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
-            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
-            denominator_sum += g_ext * P[j][k] * distance
-
-        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
-        
-        if(dr > max_dr):
-            max_dr = dr
-
-# Calculating Normalized Data Rates
-for i in range(N):
-    for j in range(S):
-        user = users[i]
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-
-        power = P[j][i] * distance
-        
-        denominator_sum = 0
-        for k in range(N):
-            u = users[k]
-            user_x, user_y, user_z = u.x, u.y, u.z
-            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
-            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
-            denominator_sum += g_ext * P[j][k] * distance
-
-        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
-        
-        user.add_datarate_ext(dr/max_dr)
-        
-# ==================================================================
-
-# Normalized User Payment
-
-# Finding Max Payment
-max_payment = 0
-for i in range(S):
-    server = servers[i]
-    payment = server.p
-    
-    if(payment > max_payment):
-        max_payment = payment
-        
-# Calculating Normalized Payments       
-for i in range(N):
-    user = users[i]
-    for j in range(S):
-        server = servers[j]
-        payment = server.p
-        
-        user.add_payment(payment/max_payment)
-
-# Normalize Payments for servers
-for i in range(S):
-    server = servers[i]
-    server.set_p(server.p/max_payment)
-        
-# ==================================================================
-
-# Normalized Energy Consumption
-
-# Finding Max Local Energy Consumption
-max_Elocal = 0
-for i in range(N):
-    user = users[i]
-    E_local = user.get_Elocal()
-    user.set_energy_ratio(E_local)
-    if(E_local > max_Elocal):
-        max_Elocal = E_local
-
-# Calculating Normalized Local Energy Consumption
-for i in range(N):
-    user = users[i]
-    E_local = user.get_Elocal()
-    user.set_Elocal(E_local/max_Elocal)
-
-
-# Normalized Energy Consumption to transmit the local model parameters to the server
-
-# Find Max Transmission Energy
-max_E_transmit = 0
-for i in range(N):
-    user = users[i]
-    for j in range(S):
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        dr = B*math.log2(1 + g*power/I0)
-
-        E_transmit = Z[i]*power/dr
-
-        if(E_transmit > max_E_transmit):
-            max_E_transmit = E_transmit
-
-# Calculate Normalized Energy Transmission
-for i in range(N):
-    user = users[i]
-    for j in range(S):
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        dr = B*math.log2(1 + g*power/I0)
-
-        E_transmit = Z[i]*power/dr
-
-        user.add_Etransmit(E_transmit/max_E_transmit)
-
-
-# Normalized Energy Consumption to transmit the local model parameters to the server with Externality
-
-# Find Max Transmission Energy
-max_E_transmit = 0
-for i in range(N):
-    user = users[i]
-    for j in range(S):
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        denominator_sum = 0
-        for k in range(N):
-            u = users[k]
-            user_x, user_y, user_z = u.x, u.y, u.z
-            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
-            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
-            denominator_sum += g_ext * P[j][k] * distance
-
-        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
-
-        E_transmit = Z[i]*power/dr
-
-        # Configure Energy Ratio for each user
-        energy_ratio = user.get_energy_ratio()
-        energy_ratio = energy_ratio/E_transmit
-        user.set_energy_ratio(energy_ratio)
-
-        if(E_transmit > max_E_transmit):
-            max_E_transmit = E_transmit
-
-# Calculate Normalized Energy Transmission
-for i in range(N):
-    user = users[i]
-    for j in range(S):
-        user_x, user_y, user_z = user.x, user.y, user.z
-
-        server = servers[j]
-        server_x, server_y, server_z = server.x, server.y, server.z
-
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-        
-        g = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][i]
-
-        g = 10**(-g / 10)       # path loss --> channel gain from db to power
-        
-        power = P[j][i] * distance
-        
-        denominator_sum = 0
-        for k in range(N):
-            u = users[k]
-            user_x, user_y, user_z = u.x, u.y, u.z
-            distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
-            g_ext = 128.1 + 37.6 * np.log10(distance) + 8 * random_matrix[j][k]
-            g_ext = 10**(-g_ext / 10)       # path loss --> channel gain from db to power
-            denominator_sum += g_ext * P[j][k] * distance
-
-        dr = B*math.log2(1 + g*power/(denominator_sum + I0))
-
-        E_transmit = Z[i]*power/dr
-
-        user.add_Etransmit_ext(E_transmit/max_E_transmit)
-
-
-# ==================================================================
-
-# Normalized Data Quality
-
-for i in range(K):
-
-    # Finding Max Data Quality
-    max_dq = 0
-    for j in range(N):
-        user = users[j]
-        data_importance = user.get_importance()
-        dq = data_importance[i] * user.get_datasize()
-        if (dq > max_dq):
-            max_dq = dq
-
-    # Calculating Normalized Data Quality
-    for j in range(N):
-        user = users[j]
-        data_importance = user.get_importance()
-        dq = data_importance[i] * user.get_datasize()
-        user.add_dataquality(dq/max_dq)        
-
-# =================================================================================== #
-        
-for u in users:
-    l=[]
-    for s in servers:
-        l.append(user_utility_ext(u,s,False))
-    print(l) 
-        
-print()
+# ================================================================================== #
 
 ran_users = copy.deepcopy(users)
 ran_servers = copy.deepcopy(servers)
@@ -762,44 +423,41 @@ for matching in matchings:
     # Energy (J)
     mean_Energy = 0
     matched_users = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            matched_users += 1
-            mean_Energy += u.get_Elocal() * max_Elocal
-            mean_Energy += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
-
-    mean_Energy /= matched_users
-
-    # Local Energy (J)
+    # Local Energy
     mean_Elocal = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Elocal += u.get_Elocal() * max_Elocal
-
-    mean_Elocal /= matched_users
-
-    # Transfer Energy (J)
+    # Transfer Energy
     mean_Etransfer = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Etransfer += u.get_Etransmit_ext()[u.get_alligiance().num] * max_E_transmit
-
-    mean_Etransfer /= matched_users
-
-    # Datarate (bps)
+    # Datarate
     mean_Datarate = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            mean_Datarate += u.get_datarate_ext()[u.get_alligiance().num] * max_dr
-
-    mean_Datarate /= matched_users
-
     # User Utility
     mean_User_Utility = 0
+    # User Payments
+    user_payments = 0
+
     for u in _users:
         if u.get_alligiance() is not None:
+            E_local, _, payment, datarate, E_transmit = user.get_magnitudes(u.get_alligiance())
+            # Matched Users
+            matched_users += 1
+            # Energy
+            mean_Energy += E_local * E_local_max
+            mean_Energy += E_transmit * E_transmit_max
+            # Local Energy
+            mean_Elocal += E_local * E_local_max
+            # Energy to Transmit
+            mean_Etransfer += E_transmit * E_transmit_max
+            # Datarate
+            mean_Datarate += datarate * datarate_max
+            # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
+            # User Payments
+            user_payments += payment*u.get_alligiance().p
+            
 
+    mean_Energy /= matched_users
+    mean_Elocal /= matched_users
+    mean_Etransfer /= matched_users
+    mean_Datarate /= matched_users
     mean_User_Utility /= matched_users
 
     # Server Utility
@@ -809,13 +467,8 @@ for matching in matchings:
 
     mean_Server_Utility /= S
 
-    # User Payments
-    user_payments = 0
-    for u in _users:
-        if u.get_alligiance() is not None:
-            user_payments += u.get_payment()[u.get_alligiance().num]*max_payment/len(list(u.get_alligiance().get_coalition()))
-
-    output_filename = f"../results/u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
+            
+    output_filename = f"../results/Areas-u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
 
     with open(output_filename, 'a') as file:
         file.write(f"Matching: {matching_label}, Users: {N}, Critical Points: {K}\n\

@@ -20,6 +20,26 @@ def accurate_fedlearner_matching(original_apprx_matched_users: List[User], origi
     apprx_matched_users = copy.deepcopy(original_apprx_matched_users)
     servers = copy.deepcopy(original_servers)
 
+    # Set correct pointers from copied users to copied servers and back
+    # Empty copied coalitions
+    for server in servers:
+        users_to_remove = []
+        for u in server.get_coalition():
+            users_to_remove.append(u.num)
+        for u_num in users_to_remove:
+            server.remove_from_coalition(u_num)
+
+    # Repopulate coalitions with copied users
+    for user in apprx_matched_users:
+        if user.get_alligiance() is not None:
+            servers[user.get_alligiance().num].add_to_coalition(user)
+
+    # Set copied servers as users' alligiances
+    for user in apprx_matched_users:
+        if user.get_alligiance() is not None:
+            server_num = user.get_alligiance().num
+            user.change_server(servers[server_num])
+
     # Set everything to 0 in case the global array its already changed from before
     rewards = [[0] * (S) for _ in range(N)]
 

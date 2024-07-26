@@ -1,8 +1,11 @@
 from GT_Matching.utility_functions import user_utility, server_utility
+from Classes.User import User
+from Classes.Server import Server
+from typing import List 
 
 #Approximate Matching Function
 
-def approximate_fedlearner_matching(unmatched_users, servers):
+def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[Server]):
     
     server_availability = [True] * len(unmatched_users)         # Initialize users' server availability
     flag = True      # flag that shows at least one user has available servers

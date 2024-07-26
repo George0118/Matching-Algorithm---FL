@@ -1,3 +1,5 @@
+from Classes.User import User
+from Classes.Server import Server
 import math
 
 # Parameters
@@ -30,84 +32,69 @@ def calculate_weights(ratio):
 
 # User’s Utility function
 
-def user_utility(user, server, verbose = False):
+def user_utility(user: User, server: Server, verbose = False):
+    if server is None:
+        return 0
+    
     index = server.num
     current_coalition = server.get_coalition()
-
-    critical_points = server.get_critical_points()
     
-    datarate_list = user.get_datarate()
-    payment_list = user.get_payment()
-    dataquality_list = user.get_dataquality()
-    E_transmit_list = user.get_Etransmit()
+    datarate = user.get_datarate(server)
+    payment = user.get_payment(server)
+    dataquality = user.get_dataquality(server)
+    E_transmit = user.get_E_transmit(datarate)
+    E_local = user.get_E_local()
 
-    # Calculate average dataquality of user depending on the Critical Points that concern this server
-    avg_dataquality = 0
-    for cp in critical_points:
-        avg_dataquality += dataquality_list[cp.num]
-
-    avg_dataquality = avg_dataquality/len(critical_points)
-
-    E_local = user.get_Elocal()
-
-    w_local, w_trans = calculate_weights(user.get_energy_ratio())
+    w_local, w_trans = calculate_weights(user.get_energy_ratio(server))
 
     if user not in current_coalition:
         future_coal_length = len(current_coalition) + 1
     else:
         future_coal_length = len(current_coalition)
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate + beta * payment*server.p/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
 
     if verbose:
         print("Utility: ", utility)
-        print("Datarate: ", datarate_list[index])
-        print("Payment: ", payment_list[index]/future_coal_length)
+        print("Datarate: ", datarate)
+        print("Payment: ", payment*server.p/future_coal_length)
         print("Energy Local: ", E_local)
-        print("Energy Transmission: ", E_transmit_list[index])
-        print("Dataquality: ", avg_dataquality)
+        print("Energy Transmission: ", E_transmit)
+        print("Dataquality: ", dataquality)
         print()
 
     return utility + constant    # + constant is to have positive utilities
 
 # User Utility with Externality
 
-def user_utility_ext(user, server, verbose = False):
+def user_utility_ext(user: User, server: Server, external_denominator = None, verbose = False):
+    if server is None:
+        return 0
+    
     index = server.num
     current_coalition = server.get_coalition()
 
-    critical_points = server.get_critical_points()
-    
-    datarate_list = user.get_datarate_ext()     # Get datarate with externality
-    payment_list = user.get_payment()
-    dataquality_list = user.get_dataquality()
-    E_transmit_list = user.get_Etransmit_ext()  # Get Etransmit with externality
+    if external_denominator is None:
+        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server)
+    else:
+        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator)
 
-    # Calculate average dataquality of user depending on the Critical Points that concern this server
-    avg_dataquality = 0
-    for cp in critical_points:
-        avg_dataquality += dataquality_list[cp.num]
-
-    avg_dataquality = avg_dataquality/len(critical_points)
-
-    E_local = user.get_Elocal()
-
-    w_local, w_trans = calculate_weights(user.get_energy_ratio())
+    w_local, w_trans = calculate_weights(user.get_energy_ratio(server))
 
     if user not in current_coalition:
         future_coal_length = len(current_coalition) + 1
     else:
         future_coal_length = len(current_coalition)
     
-    utility = alpha * datarate_list[index] + beta * payment_list[index]/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit_list[index]) + delta * avg_dataquality
+    utility = alpha * datarate + beta * payment*server.p/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
 
     if verbose:
         print("Utility: ", utility)
-        print("Datarate: ", datarate_list[index])
-        print("Payment: ", payment_list[index]/future_coal_length)
+        print("Datarate: ", datarate)
+        print("Payment: ", payment*server.p/future_coal_length)
         print("Energy Local: ", E_local)
-        print("Energy Transmission: ", E_transmit_list[index])
-        print("Dataquality: ", avg_dataquality)
+        print("Energy Transmission: ", E_transmit)
+        print("Dataquality: ", dataquality)
         print()
 
     return utility + constant    # + constant is to have positive utilities
