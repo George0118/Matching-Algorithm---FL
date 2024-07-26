@@ -9,6 +9,7 @@ import random
 import copy
 
 convergence_limit = 0.5
+history_preservation = 1
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):
@@ -165,7 +166,7 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
         current_external_denominators = user.get_external_denominators(servers_copy)
         for action_index, action in enumerate(actions):
             new_regret_term = update_regret(t, user, servers_copy, current_utility, action, current_external_denominators)
-            regret_vector[user.num][action_index] = 0.99 * regret_vector[user.num][action_index] + 0.01 * new_regret_term
+            regret_vector[user.num][action_index] = history_preservation * regret_vector[user.num][action_index] + new_regret_term
 
         # Reset User
         execute_action(user, servers_copy, actions_taken[user.num])

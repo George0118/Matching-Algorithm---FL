@@ -10,21 +10,12 @@ import random
 import copy
 
 convergence_limit = 0.5
+history_preservation = 1
 
 # White Noise
 def white_noise():
     wn = np.random.normal(loc=0.0, scale=0.2, size=None)
     return wn
-
-# Learning rate functions
-def l(t):
-    return 1 / ((t) ** 0.5)
-
-def g(t):
-    return 1 / ((t) ** 0.55)
-
-def m(t):
-    return 1 / ((t) ** 0.6)
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):
@@ -170,12 +161,8 @@ def update_regret_vector(regret_vector: List[List], utilities_vector: List[List]
         # For each user get its current utility
         current_utility = current_utilities[user.num]
         for action_index in range(num_of_actions):
-            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - 0.01 * regret_vector[user.num][action_index]
-            # print("Prev Util:", utilities_vector[user.num][action_index], "Curr Util:", current_utility, "Prev Regret:", regret_vector[user.num][action_index])
-            # print(new_regret_term)
+            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - (1-history_preservation) * regret_vector[user.num][action_index]
             regret_vector[user.num][action_index] += new_regret_term
-            # print("Curr Regret:", regret_vector[user.num][action_index])
-
 
 k_m = 1
 # Boltzmann-Gibbs
@@ -196,6 +183,5 @@ def update_probabilities(probabilities: List[List], regret_vector: List[List], u
         # For each user get its boltzmann_gibbs vector
         bg_vector = boltzmann_gibbs(regret_vector[user.num]) 
         for action_index in range(num_of_actions):
-            new_probability_term = 0.5 * (bg_vector[action_index] - probabilities[user.num][action_index])
-            # print("m:", m(t), "bg:", bg_vector[action_index], "Old prob:", probabilities[user.num][action_index])
+            new_probability_term = (bg_vector[action_index] - probabilities[user.num][action_index])
             probabilities[user.num][action_index] += new_probability_term
