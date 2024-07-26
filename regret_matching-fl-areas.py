@@ -291,6 +291,7 @@ for area, users in all_users.items():
         user.set_distances(distances)
 
 # ===================================================== #
+
 # =================================================================================== #
     
 # Normalized Data Importance
@@ -480,7 +481,7 @@ for area, regret_users in regret_all_users.items():
 
     for u in regret_users:
         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
+        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
     print()
 
@@ -507,7 +508,7 @@ for area, regretII_users in regretII_all_users.items():
 
     for u in regretII_users:
         allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/2, "Fn:", u.current_fn/(2 * 10**9), "Dn:", u.used_datasize/(u.datasize))
+        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
     print()
 
@@ -546,13 +547,13 @@ matching_user_accuracies = []
 if federated_learning:
     prev_matchings = []
 
-    get_data = Get_data(users, servers)
-
-    X_train, y_train, X_server, y_server = get_data.pre_data()
-
     for _users, _servers in zip(user_lists, server_lists):
 
         same_matching = check_matching_equality(_servers, prev_matchings)
+
+        get_data = Get_data(_users, _servers)
+
+        X_train, y_train, X_server, y_server = get_data.pre_data()
 
         elapsed_time = 0
 

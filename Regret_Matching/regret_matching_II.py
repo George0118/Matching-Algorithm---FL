@@ -10,7 +10,10 @@ import random
 import copy
 
 convergence_limit = 0.5
-history_preservation = 1
+
+# Learning rate
+def l(t):
+    return 1 / ((t) ** 0.5)
 
 # White Noise
 def white_noise():
@@ -152,7 +155,6 @@ def update_utilities_vector(utilities_vector: List[List], actions_taken_indices:
         current_action_index = actions_taken_indices[user.num]
         new_utility_term = 0.5 * (current_utility - utilities_vector[user.num][current_action_index])
         utilities_vector[user.num][current_action_index] += new_utility_term
-        # print("New Util:", utilities_vector[user.num][current_action_index])
 
 
 # Update Regret Vector
@@ -161,10 +163,10 @@ def update_regret_vector(regret_vector: List[List], utilities_vector: List[List]
         # For each user get its current utility
         current_utility = current_utilities[user.num]
         for action_index in range(num_of_actions):
-            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - (1-history_preservation) * regret_vector[user.num][action_index]
+            new_regret_term = (utilities_vector[user.num][action_index] - current_utility) - l(t) * regret_vector[user.num][action_index]
             regret_vector[user.num][action_index] += new_regret_term
 
-k_m = 1
+k_m = 5
 # Boltzmann-Gibbs
 def boltzmann_gibbs(user_regret_vector: List):
     sum_value = 0
