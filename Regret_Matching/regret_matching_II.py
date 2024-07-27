@@ -13,7 +13,7 @@ convergence_limit = 0.5
 
 # Learning rate
 def l(t):
-    return 1 / ((t) ** 0.5)
+    return 1 / ((t) ** 1)
 
 # White Noise
 def white_noise():
@@ -91,6 +91,7 @@ def regret_matching_II(users: List[User], servers: List[Server], epsilon = 0):
             max_index = probabilities[user.num].index(max_value)
             execute_action(user, servers, actions[max_index])
 
+    return t
 
 # Convergence Check
 def convergence(probabilities: List[List]):

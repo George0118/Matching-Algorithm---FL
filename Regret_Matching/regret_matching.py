@@ -67,6 +67,7 @@ def regret_matching(users: List[User], servers: List[Server], epsilon = 0):
             max_index = probabilities[user.num].index(max_value)
             execute_action(user, servers, actions[max_index])
 
+    return t
 
 # Convergence Check
 def convergence(probabilities: List[List]):

@@ -324,60 +324,43 @@ for area, users in all_users.items():
 
             user.add_importance(importance)
 
-        print(user.get_importance())
-
 # ======================================================================================== #
 
 # ========== Calculating parameters for utility functions =========== #
 
 for i in range(N):
     _users = [all_users["Urban"][i], all_users["Suburban"][i], all_users["Rural"][i]]
-    if i < rural_threshold:
-        a_const = random.uniform(0.05, 0.57)
-        for server in servers:
-            imp = _users[0].get_importance()[server.num]
+    a_const = random.uniform(0.2, 0.4)
+    for server in servers:
+        if i < rural_threshold:
+            imp1 = _users[0].get_importance()[server.num]
+            imp2 = _users[1].get_importance()[server.num]
+            imp3 = _users[2].get_importance()[server.num]
 
             # Fn
-            a_fn = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_2 = a_fn_1
+            a_fn_3 = a_fn_1
             # Dn
-            a_dn = random.uniform(max(0.57*(math.sqrt(imp))-0.1, 0.05), 0.57*math.sqrt(imp))
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_2 = a_dn_1
+            a_dn_3 = a_dn_1
 
-            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[0].util_fun[server.num][1] = h(imp,a_fn)   # Fn
-            _users[0].util_fun[server.num][2] = h(imp,a_dn)   # Dn
-            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[1].util_fun[server.num][1] = h(imp,a_fn)   # Fn
-            _users[1].util_fun[server.num][2] = h(imp,a_dn)   # Dn
-            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[2].util_fun[server.num][1] = h(imp,a_fn)   # Fn
-            _users[2].util_fun[server.num][2] = h(imp,a_dn)   # Dn
-
-    elif i < suburban_threshold:
-        a_const = random.uniform(0.05, 0.57)
-        for server in servers:
+        elif i < suburban_threshold:
             imp1 = _users[0].get_importance()[server.num]
-            imp2 = _users[2].get_importance()[server.num]
+            imp2 = _users[1].get_importance()[server.num]
+            imp3 = _users[2].get_importance()[server.num]
 
             # Fn
             a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
             a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+            a_fn_3 = a_fn_1
             # Dn
             a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
             a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
+            a_dn_3 = a_dn_1
 
-            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
-            _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
-            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[1].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
-            _users[1].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
-            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[2].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
-            _users[2].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
-
-    else:
-        a_const = random.uniform(0.05, 0.57)
-        for server in servers:
+        else:
             imp1 = _users[0].get_importance()[server.num]
             imp2 = _users[1].get_importance()[server.num]
             imp3 = _users[2].get_importance()[server.num]
@@ -391,15 +374,15 @@ for i in range(N):
             a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
             a_dn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.1, 0.05), 0.57*math.sqrt(imp3))
 
-            _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
-            _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
-            _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[1].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
-            _users[1].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
-            _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
-            _users[2].util_fun[server.num][1] = h(imp3,a_fn_3)   # Fn
-            _users[2].util_fun[server.num][2] = h(imp3,a_dn_3)   # Dn
+        _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
+        _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
+        _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[1].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
+        _users[1].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
+        _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[2].util_fun[server.num][1] = h(imp3,a_fn_3)   # Fn
+        _users[2].util_fun[server.num][2] = h(imp3,a_dn_3)   # Dn
         
 
 # =================================================================== #
@@ -424,6 +407,9 @@ for area, gt_users in gt_all_users.items():
         user.current_fn = fn_max
         user.used_datasize = user.datasize
         
+
+gt_times = []
+gt_iterations = [None, None, None]
 
 for area, gt_users in gt_all_users.items(): 
 
@@ -460,6 +446,8 @@ for area, gt_users in gt_all_users.items():
 
     gt_end = time.time()
 
+    gt_times.append(gt_end-gt_start)
+
     print("Game Theory Matching took", gt_end-gt_start, "seconds\n")
     # =============================================================================== #
 
@@ -469,13 +457,16 @@ for area, gt_users in gt_all_users.items():
 regret_all_users = copy.deepcopy(all_users)
 regret_all_servers = copy.deepcopy(all_servers)
 
+regret_times = []
+regret_iterations = []
+
 for area, regret_users in regret_all_users.items(): 
 
     regret_start = time.time()
 
     regret_servers = regret_all_servers[area]
 
-    regret_matching(regret_users, regret_servers)
+    iter = regret_matching(regret_users, regret_servers)
 
     print("REMORSE Matching:\n")
 
@@ -487,6 +478,9 @@ for area, regret_users in regret_all_users.items():
 
     regret_end = time.time()
 
+    regret_times.append(regret_end-regret_start)
+    regret_iterations.append(iter)
+
     print("REMORSE Matching took", regret_end-regret_start, "seconds\n")
 
 # =============================================================================== #
@@ -496,13 +490,16 @@ for area, regret_users in regret_all_users.items():
 regretII_all_users = copy.deepcopy(all_users)
 regretII_all_servers = copy.deepcopy(all_servers)
 
+regretII_times = []
+regretII_iterations = []
+
 for area, regretII_users in regretII_all_users.items(): 
 
     regret_start = time.time()
 
     regretII_servers = regretII_all_servers[area]
 
-    regret_matching_II(regretII_users, regretII_servers)
+    iter = regret_matching_II(regretII_users, regretII_servers)
 
     print("REMORSE Matching II:\n")
 
@@ -513,6 +510,9 @@ for area, regretII_users in regretII_all_users.items():
     print()
 
     regret_end = time.time()
+
+    regretII_times.append(regret_end-regret_start)
+    regretII_iterations.append(iter)
 
     print("REMORSE Matching II took", regret_end-regret_start, "seconds\n")
     
@@ -537,12 +537,13 @@ for area, regret_users in regretII_all_users.items():
     user_lists.append(regret_users)
     server_lists.append(regret_servers)
 
+# ============================== Federated Learning ============================== #
+
 matching_losses = []
 matching_accuracies = []
 matching_user_losses = []
 matching_user_accuracies = []
-
-# ============================== Federated Learning ============================== #
+matching_FL_times = []
 
 if federated_learning:
     prev_matchings = []
@@ -555,11 +556,12 @@ if federated_learning:
 
         X_train, y_train, X_server, y_server = get_data.pre_data()
 
-        elapsed_time = 0
+        fl_time = 0
 
         if same_matching is not None:
             server_losses, server_accuracy = matching_losses[same_matching], matching_accuracies[same_matching]
             user_losses, user_accuracy = matching_user_losses[same_matching], matching_user_accuracies[same_matching]
+            fl_time = matching_FL_times[same_matching]
         else:
             X_train_copy = copy.deepcopy(X_train)
             y_train_copy = copy.deepcopy(y_train)
@@ -568,19 +570,20 @@ if federated_learning:
             learning_start = time.time()
             server_losses, server_accuracy, user_losses, user_accuracy = Servers_FL(_users, _servers, rounds, lr, epoch, X_train_copy, y_train_copy, X_test_copy, y_test_copy)
             learning_stop = time.time()
-            elapsed_time = learning_stop - learning_start
+            fl_time = learning_stop - learning_start
 
         matching_losses.append(server_losses)
         matching_accuracies.append(server_accuracy)
         matching_user_losses.append(user_losses)
         matching_user_accuracies.append(user_accuracy)
+        matching_FL_times.append(fl_time)
 
         for i in range(S):
             print("Server ", i, " achieved:\n")
             print("Loss: ", server_losses[i][-1])
             print("Accuracy: ", server_accuracy[i][-1])
             print()
-        print(f"Learning for all 3 Servers took {elapsed_time/60:.2f} minutes\n")
+        print(f"Learning for all 3 Servers took {fl_time/60:.2f} minutes\n")
         print()
 
         prev_matchings.append(_servers)
@@ -595,18 +598,19 @@ if federated_learning:
 
 # For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
 
+matchings = []
+labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
+times = gt_times + regret_times + regretII_times
+iterations = gt_iterations + regret_iterations + regretII_iterations
+
 if federated_learning:
     # With Federated Learning
-    matchings = []
-    labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
     for i in range(9):
-        matchings.append((user_lists[i], server_lists[i], matching_losses[i], matching_accuracies[i], matching_user_losses[i], matching_user_accuracies[i], labels[i]))
+        matchings.append((user_lists[i], server_lists[i], times[i], iterations[i], matching_losses[i], matching_accuracies[i], matching_user_losses[i], matching_user_accuracies[i], matching_FL_times[i], labels[i]))
 else:
     # Without Federated Learning
-    matchings = []
-    labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
     for i in range(9):
-        matchings.append((user_lists[i], server_lists[i], labels[i]))
+        matchings.append((user_lists[i], server_lists[i], times[i], iterations[i], labels[i]))
 
 
 timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
@@ -621,9 +625,9 @@ if not os.path.exists(directory_path):
 for matching in matchings:
 
     if federated_learning:
-        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+        _users, _servers, duration, iterations, _losses, _accuracies, user_losses, user_accuracies, FL_duration, matching_label = matching     # With Federated Learning
     else:
-        _users, _servers, matching_label = matching     # Without Federated Learning
+        _users, _servers, duration, iterations, matching_label = matching     # Without Federated Learning
 
     # Energy (J)
     mean_Energy = 0
@@ -684,6 +688,8 @@ for matching in matchings:
     Mean User Utility: {mean_User_Utility}\n\
     Mean Server Utility: {mean_Server_Utility}\n\
     Sum User Payments: {user_payments}\n\
+    Time: {duration}\n\
+    Iterations: {iterations}\n\
     \n")
         
     if federated_learning: 
@@ -711,3 +717,5 @@ for matching in matchings:
                 file.write(f"User {u.num}:\n\
             Losses: {user_losses[u.num]}\n\
             Accuracies: {user_accuracies[u.num]}\n")
+                
+            file.write(f"FL Duration: {FL_duration/60:.2f}\n\n")
