@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-results_directory = "../../results/matching_results"
+results_directory = "../../results/regret_matching"
 matching_data = {}
 
 # Function to extract a single float value from a line
@@ -24,9 +24,10 @@ for filename in os.listdir(results_directory):
             matching = users = None
             # Extract relevant data from each line
             for line in lines:
-                match = re.match(r'Matching: (\w+), Users: (\d+), Critical Points: (\d+)', line)
+                match = re.match(r'Matching: (\w+_\w+), Users: (\d+), Critical Points: (\d+)', line)
                 if match:
                     matching, users = match.groups()[0], int(match.groups()[1])  # Store Matching and Users
+                    matching = re.sub(r'(_URBAN|_SUBURBAN|_RURAL)$', '', matching)  # Normalize matching name
                     matching_data.setdefault(matching, {"Data": {}})
                 elif "Mean Energy" in line or "Mean Elocal" in line or "Mean Etransfer" in line \
                         or "Mean Datarate" in line or "Mean User Utility" in line or "Mean Server Utility" in line \
@@ -63,34 +64,32 @@ for matching, data in matching_data.items():
             plot_data[matching][magnitude]["Users"].append(users)
             plot_data[matching][magnitude]["Values"].append(averaged_value)
 
-user_values = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+user_values = [12, 15, 18, 21, 24, 27, 30]
 save_directory = "./matching_comparison/"
-magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility"]
+magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility"]
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.xlabel("Users", fontsize = 18)
-    plt.ylabel(magnitude, fontsize = 18)
+    plt.xlabel("Users", fontsize=18)
+    plt.ylabel(magnitude, fontsize=18)
 
     for matching, data in plot_data.items():
 
         users = data[magnitude]["Users"]
         values = data[magnitude]["Values"]
 
-        if matching == "RAN":
-            m = "Random"
-        elif matching == "GT":
+        if matching == "GT":
             m = "Game Theory"
-        elif matching == "RL1":
-            m = "Server Focused RL"
+        elif matching == "RCI":
+            m = "Regret Complete Information"
         else:
-            m = "User Focused RL"
+            m = "Regret Incomplete Information"
 
         plt.plot(users, values, marker='o', label=f"Matching: {m}")
 
-    plt.xticks(user_values, fontsize = 16)  # Set x ticks to predefined user values
-    plt.yticks(fontsize = 16)
-    plt.legend(fontsize = 16)
+    plt.xticks(user_values, fontsize=16)  # Set x ticks to predefined user values
+    plt.yticks(fontsize=16)
+    plt.legend(fontsize=16)
     
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
@@ -104,7 +103,7 @@ for magnitude in magnitudes:
     plt.ylabel("Average " + magnitude)
 
     avg_values = []  # List to store average values for each matching
-    bar_colors = ['blue', 'orange', 'green', 'red']  # Colors for the bars
+    bar_colors = ['blue', 'green', 'red']  # Colors for the bars
 
     for matching, data in plot_data.items():
         values = data[magnitude]["Values"]
@@ -112,7 +111,7 @@ for magnitude in magnitudes:
         avg_values.append(avg_value)
 
     # Plotting the bar plot with thinner bars
-    bars = plt.bar(["Random", "Game Theory", "Server Focused RL", "User Focused RL"], avg_values, color=bar_colors, width=0.3)
+    bars = plt.bar(["Game Theory", "Regret Complete Information", "Regret Incomplete Information"], avg_values, color=bar_colors, width=0.3)
 
     # Adding text labels on top of each bar
     for bar, value in zip(bars, avg_values):
@@ -124,4 +123,3 @@ for magnitude in magnitudes:
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"Average_{magnitude.replace(' ', '_')}.png"), bbox_inches='tight')
     # plt.show()
-
