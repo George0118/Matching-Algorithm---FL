@@ -8,12 +8,12 @@
 from config import num
 import os
 os.environ["CUDA_VISIBLE_DEVICES"] = str(num)  # Use GPU device
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import numpy as np
 from Data.Classes.Model import Model
 from Data.Classes.Client import Client
 from collections import deque
-from sklearn.model_selection import train_test_split
 import time
 from config import N
 
