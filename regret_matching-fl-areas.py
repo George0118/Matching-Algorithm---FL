@@ -31,7 +31,6 @@ import copy
 import math
 import datetime
 from matchingeq_functions import check_matching_equality
-from helping_functions import dataset_sizes, h
 from Data.Classes.Data import Get_data
 from Data.load_images import fire_input_paths, flood_input_paths, earthquake_input_paths, count_images
 from Data.federated_learning import Servers_FL
@@ -40,6 +39,7 @@ from Data.fl_parameters import *
 from Classes.Server import Server
 from Classes.User import User, Ptrans_max, fn_max, E_local_max, E_transmit_max, datarate_max
 from Classes.CriticalPoint import CP
+from helping_functions import dataset_sizes, h
 from Regret_Matching.regret_matching import regret_matching
 from Regret_Matching.regret_matching_II import regret_matching_II
 from Regret_Matching.utility_function import user_utility_ext
@@ -184,7 +184,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
     rural_users.append(copy.deepcopy(user))
 
 
-for i in range(min(rural_threshold - suburban_threshold, N - suburban_threshold)):
+for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)):
 
     while True:
         j = i/K
@@ -645,7 +645,7 @@ for matching in matchings:
 
     for u in _users:
         if u.get_alligiance() is not None:
-            E_local, _, payment, datarate, E_transmit = user.get_magnitudes(u.get_alligiance())
+            E_local, _, payment, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
             # Matched Users
             matched_users += 1
             # Energy
