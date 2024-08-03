@@ -37,9 +37,9 @@ from Data.federated_learning import Servers_FL
 from Data.Classes.Model import *
 from Data.fl_parameters import *
 from Classes.Server import Server
-from Classes.User import User, Ptrans_max, fn_max, E_local_max, E_transmit_max, datarate_max
+from Classes.User import User, Ptrans_max, fn_max
 from Classes.CriticalPoint import CP
-from helping_functions import dataset_sizes, h
+from helping_functions import dataset_sizes, h, channel_gain
 from Regret_Matching.regret_matching import regret_matching
 from Regret_Matching.regret_matching_II import regret_matching_II
 from Regret_Matching.utility_function import user_utility_ext
@@ -440,7 +440,7 @@ for area, gt_users in gt_all_users.items():
         u = gt_users[i]
         u.set_available_servers(gt_servers)
         
-    # approximate_fedlearner_matching(gt_users, gt_servers)
+    approximate_fedlearner_matching(gt_users, gt_servers)
 
     print("Approximate FedLearner Matching:\n")
 
@@ -452,7 +452,7 @@ for area, gt_users in gt_all_users.items():
 
     # ============================== Accurate Matching ============================== #
         
-    # accurate_fedlearner_matching(gt_users, gt_servers)
+    accurate_fedlearner_matching(gt_users, gt_servers)
 
     print("Accurate FedLearner Matching:\n")
 
@@ -484,16 +484,15 @@ for area, regret_users in regret_all_users.items():
 
     regret_servers = regret_all_servers[area]
 
-    if area == "Urban":
-        iter = regret_matching(regret_users, regret_servers)
+    iter = regret_matching(regret_users, regret_servers)
 
-        print("REMORSE Matching:\n")
+    print("REMORSE Matching:\n")
 
-        for u in regret_users:
-            allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-            print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
+    for u in regret_users:
+        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
-        print()
+    print()
 
     regret_end = time.time()
 
@@ -518,16 +517,15 @@ for area, regretII_users in regretII_all_users.items():
 
     regretII_servers = regretII_all_servers[area]
 
-    if area == "Urban":
-        iter = regret_matching_II(regretII_users, regretII_servers)
+    iter = regret_matching_II(regretII_users, regretII_servers)
 
-        print("REMORSE Matching II:\n")
+    print("REMORSE Matching II:\n")
 
-        for u in regretII_users:
-            allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-            print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
+    for u in regretII_users:
+        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
-        print()
+    print()
 
     regret_end = time.time()
 
@@ -661,9 +659,13 @@ for matching in matchings:
     # User Utility
     mean_User_Utility = 0
 
-    for u in _users:
-        if u.get_alligiance() is not None:
-            E_local, payment_fn, payment_dn, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
+    for user in _users:
+        if user.get_alligiance() is not None:
+            E_local, payment_fn, payment_dn, datarate, E_transmit = user.get_magnitudes(user.get_alligiance())
+            
+            # Max Values
+            E_local_max, datarate_max, E_transmit_max = user.get_max_values(user.get_alligiance())
+            
             # Matched Users
             matched_users += 1
             # Energy

@@ -187,3 +187,21 @@ class User:
 
     def get_available_servers(self):
         return self.available_servers
+    
+    def get_max_values(self, server: Server):
+        E_local_max = (self.an/2) * self.qn * self.datasize * fn_max**2
+        user_group = set(server.get_coalition())
+        # We need only external, so remove myself
+        user_to_remove = next((u for u in user_group if self.num == u.num), None)
+        if user_to_remove is not None:
+            user_group.remove(user_to_remove)
+        denominator_sum = 0
+        for u in user_group:
+            g_ext = channel_gain(u.distances[server.num], u.num, server.num)
+            denominator_sum += g_ext * u.current_ptrans
+
+        g = channel_gain(self.distances[server.num], self.num, server.num)
+        datarate_max = B*math.log2(1 + g*Ptrans_max/(denominator_sum + g*Ptrans_max + I0))
+        E_transmit_max = Z*Ptrans_max/datarate_max
+
+        return E_local_max, datarate_max, E_transmit_max
