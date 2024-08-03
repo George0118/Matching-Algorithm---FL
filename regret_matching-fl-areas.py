@@ -80,6 +80,15 @@ while True:
 
 for s in servers:
         print("Server", s.num, " Resources: ", s.p)
+
+
+# Normalize payments
+payments_sum = 0
+for s in servers:
+    payments_sum += s.p
+
+for s in servers:
+    s.set_p(s.p/payments_sum)
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
@@ -326,63 +335,72 @@ for area, users in all_users.items():
 
 # ======================================================================================== #
 
+for area, users in all_users.items():
+    for user in users:
+        print(user.get_importance())
+
+
 # ========== Calculating parameters for utility functions =========== #
 
 for i in range(N):
     _users = [all_users["Urban"][i], all_users["Suburban"][i], all_users["Rural"][i]]
-    a_const = random.uniform(0.2, 0.4)
     for server in servers:
+        imp1 = _users[0].get_importance()[server.num]
+        imp2 = _users[1].get_importance()[server.num]
+        imp3 = _users[2].get_importance()[server.num]
         if i < rural_threshold:
-            imp1 = _users[0].get_importance()[server.num]
-            imp2 = _users[1].get_importance()[server.num]
-            imp3 = _users[2].get_importance()[server.num]
-
+            # Pns
+            a_pns_1 = random.uniform(max(0.4*imp1-0.05, 0.05), 0.4*imp1)
+            a_pns_2 = a_pns_1
+            a_pns_3 = a_pns_1
             # Fn
-            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
             a_fn_2 = a_fn_1
             a_fn_3 = a_fn_1
             # Dn
-            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
             a_dn_2 = a_dn_1
             a_dn_3 = a_dn_1
 
         elif i < suburban_threshold:
-            imp1 = _users[0].get_importance()[server.num]
-            imp2 = _users[1].get_importance()[server.num]
-            imp3 = _users[2].get_importance()[server.num]
-
+            # Pns
+            a_pns_1 = random.uniform(max(0.4*imp1-0.05, 0.05), 0.4*imp1)
+            a_pns_2 = a_pns_1
+            a_pns_3 = random.uniform(max(0.4*imp3-0.05, 0.05), 0.4*imp3)
             # Fn
-            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
-            a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
-            a_fn_3 = a_fn_1
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_2 = a_fn_1
+            a_fn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.05, 0.05), 0.57*math.sqrt(imp3))
             # Dn
-            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
-            a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
-            a_dn_3 = a_dn_1
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_2 = a_dn_1
+            a_dn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.05, 0.05), 0.57*math.sqrt(imp3))
 
         else:
-            imp1 = _users[0].get_importance()[server.num]
-            imp2 = _users[1].get_importance()[server.num]
-            imp3 = _users[2].get_importance()[server.num]
-
+            # Pns
+            a_pns_1 = random.uniform(max(0.4*imp1-0.05, 0.05), 0.4*imp1)
+            a_pns_2 = random.uniform(max(0.4*imp2-0.05, 0.05), 0.4*imp2)
+            a_pns_3 = random.uniform(max(0.4*imp3-0.05, 0.05), 0.4*imp3)
             # Fn
-            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
-            a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
-            a_fn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.1, 0.05), 0.57*math.sqrt(imp3))
+            a_fn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
+            a_fn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.05, 0.05), 0.57*math.sqrt(imp2))
+            a_fn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.05, 0.05), 0.57*math.sqrt(imp3))
             # Dn
-            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.1, 0.05), 0.57*math.sqrt(imp1))
-            a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.1, 0.05), 0.57*math.sqrt(imp2))
-            a_dn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.1, 0.05), 0.57*math.sqrt(imp3))
+            a_dn_1 = random.uniform(max(0.57*(math.sqrt(imp1))-0.05, 0.05), 0.57*math.sqrt(imp1))
+            a_dn_2 = random.uniform(max(0.57*(math.sqrt(imp2))-0.05, 0.05), 0.57*math.sqrt(imp2))
+            a_dn_3 = random.uniform(max(0.57*(math.sqrt(imp3))-0.05, 0.05), 0.57*math.sqrt(imp3))
 
-        _users[0].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[0].util_fun[server.num][0] = h(imp1,a_pns_1)   # Pns
         _users[0].util_fun[server.num][1] = h(imp1,a_fn_1)   # Fn
         _users[0].util_fun[server.num][2] = h(imp1,a_dn_1)   # Dn
-        _users[1].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[1].util_fun[server.num][0] = h(imp2,a_pns_2)   # Pns
         _users[1].util_fun[server.num][1] = h(imp2,a_fn_2)   # Fn
         _users[1].util_fun[server.num][2] = h(imp2,a_dn_2)   # Dn
-        _users[2].util_fun[server.num][0] = h(1,a_const)   # Pns
+        _users[2].util_fun[server.num][0] = h(imp3,a_pns_3)   # Pns
         _users[2].util_fun[server.num][1] = h(imp3,a_fn_3)   # Fn
         _users[2].util_fun[server.num][2] = h(imp3,a_dn_3)   # Dn
+
+        print(a_dn_1, a_dn_2, a_dn_3)
         
 
 # =================================================================== #
@@ -422,7 +440,7 @@ for area, gt_users in gt_all_users.items():
         u = gt_users[i]
         u.set_available_servers(gt_servers)
         
-    approximate_fedlearner_matching(gt_users, gt_servers)
+    # approximate_fedlearner_matching(gt_users, gt_servers)
 
     print("Approximate FedLearner Matching:\n")
 
@@ -434,7 +452,7 @@ for area, gt_users in gt_all_users.items():
 
     # ============================== Accurate Matching ============================== #
         
-    accurate_fedlearner_matching(gt_users, gt_servers)
+    # accurate_fedlearner_matching(gt_users, gt_servers)
 
     print("Accurate FedLearner Matching:\n")
 
@@ -466,15 +484,16 @@ for area, regret_users in regret_all_users.items():
 
     regret_servers = regret_all_servers[area]
 
-    iter = regret_matching(regret_users, regret_servers)
+    if area == "Urban":
+        iter = regret_matching(regret_users, regret_servers)
 
-    print("REMORSE Matching:\n")
+        print("REMORSE Matching:\n")
 
-    for u in regret_users:
-        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
+        for u in regret_users:
+            allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+            print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
-    print()
+        print()
 
     regret_end = time.time()
 
@@ -499,15 +518,16 @@ for area, regretII_users in regretII_all_users.items():
 
     regretII_servers = regretII_all_servers[area]
 
-    iter = regret_matching_II(regretII_users, regretII_servers)
+    if area == "Urban":
+        iter = regret_matching_II(regretII_users, regretII_servers)
 
-    print("REMORSE Matching II:\n")
+        print("REMORSE Matching II:\n")
 
-    for u in regretII_users:
-        allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
-        print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
+        for u in regretII_users:
+            allegiance_num = u.get_alligiance().num if u.get_alligiance() is not None else -1
+            print("User:", u.num, "Server:", allegiance_num, "Ptrans:", u.current_ptrans/Ptrans_max, "Fn:", u.current_fn/fn_max, "Dn:", u.used_datasize/(u.datasize))
 
-    print()
+        print()
 
     regret_end = time.time()
 
@@ -640,12 +660,10 @@ for matching in matchings:
     mean_Datarate = 0
     # User Utility
     mean_User_Utility = 0
-    # User Payments
-    user_payments = 0
 
     for u in _users:
         if u.get_alligiance() is not None:
-            E_local, _, payment, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
+            E_local, payment_fn, payment_dn, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
             # Matched Users
             matched_users += 1
             # Energy
@@ -659,15 +677,18 @@ for matching in matchings:
             mean_Datarate += datarate * datarate_max
             # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
-            # User Payments
-            user_payments += payment*u.get_alligiance().p
             
+    if matched_users != 0:
+        mean_Energy /= matched_users
+        mean_Elocal /= matched_users
+        mean_Etransfer /= matched_users
+        mean_Datarate /= matched_users
+        mean_User_Utility /= matched_users
 
-    mean_Energy /= matched_users
-    mean_Elocal /= matched_users
-    mean_Etransfer /= matched_users
-    mean_Datarate /= matched_users
-    mean_User_Utility /= matched_users
+    if matching[-1] == "RCI_URBAN":
+        user_utility_RCI = mean_User_Utility
+    elif matching[-1] == "RII_URBAN":
+        user_utility_RII = mean_User_Utility
 
     # Server Utility
     mean_Server_Utility = 0
@@ -687,7 +708,6 @@ for matching in matchings:
     Mean Datarate: {mean_Datarate} bps\n\
     Mean User Utility: {mean_User_Utility}\n\
     Mean Server Utility: {mean_Server_Utility}\n\
-    Sum User Payments: {user_payments}\n\
     Time: {duration}\n\
     Iterations: {iterations}\n\
     \n")
@@ -719,3 +739,9 @@ for matching in matchings:
             Accuracies: {user_accuracies[u.num]}\n")
                 
             file.write(f"FL Duration: {FL_duration/60:.2f}\n\n")
+
+
+if user_utility_RCI < user_utility_RII:
+    print("OOOOOOOOHHHH NOOOOOO: RII won by:", user_utility_RCI - user_utility_RII)
+else:
+    print("YYYYYYAAAAAYYYYY: RCI won by:", user_utility_RCI - user_utility_RII)

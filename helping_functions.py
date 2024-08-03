@@ -90,6 +90,6 @@ def f(x, a):
 def h(imp, a):
     def h_x(p,n):
         return g(p, imp, a) - f(n, a)
-    h_x.imp = imp  # Store parameter b in the function
-    h_x.a = a  # Store parameter d in the function
+    h_x.imp = imp  # Store parameter imp in the function
+    h_x.a = a  # Store parameter a in the function
     return h_x

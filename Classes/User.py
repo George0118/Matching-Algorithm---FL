@@ -2,7 +2,6 @@ from typing import List
 from Classes.Server import Server
 import random
 import math
-import numpy as np
 import copy
 from general_parameters import *
 from helping_functions import channel_gain
@@ -12,9 +11,6 @@ q = 20
 fn_max = 2 * 10**9  # Cycles per Sec
 Ptrans_max = 2  # Watt
 ds_max = 500 * 3*224*224*8  # bits
-E_local_max = a*1.05 * q*1.05 * ds_max * (fn_max)**2 # J
-datarate_max = B    # bits/sec
-E_transmit_max = Z*Ptrans_max*10/B  # J
 
 quantized_datasize = [0.5, 0.6667, 0.8333, 1]
 quantized_fn = [i * fn_max for i in [0.5, 0.6667, 0.8333, 1]]
@@ -94,24 +90,38 @@ class User:
 
             for u in user_group:
                 g_ext = channel_gain(u.distances[server.num], u.num, server.num)
-                denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
+                denominator_sum += g_ext * u.current_ptrans
                 
             external_denominators.append(denominator_sum)
 
         return external_denominators
     
     # Get magnitudes for the target server 
-    def get_magnitudes(self, server, external_denominator = None):
-
+    def get_magnitudes(self, server: Server, external_denominator = None, verbose = False):
+        # E_local
+        E_local_max = (self.an/2) * self.qn * self.datasize * fn_max**2
         E_local = self.E_local()/E_local_max
-        dataquality = self.used_datasize * self.importance[server.num] / ds_max
-        payment = self.current_fn * self.importance[server.num] / fn_max
-        datarate, E_transmit = self.get_external_values(server, external_denominator)
 
-        return E_local, dataquality, payment, datarate, E_transmit
+        # Payments
+        dataquality = self.used_datasize * self.importance[server.num] / ds_max
+        payment = self.current_fn * dataquality / fn_max
+        payment_fn = payment*ds_max/self.used_datasize
+        payment_dn = payment*fn_max/self.current_fn
+        # Get max payments
+        max_payment_fn = self.importance[server.num]
+        max_payment_dn = self.importance[server.num]
+
+        # Normalize for myself
+        payment_fn /= max_payment_fn
+        payment_dn /= max_payment_dn
+
+        # Datarate & E_transmit
+        datarate, E_transmit = self.get_external_values(server, external_denominator, verbose)
+
+        return E_local, payment_fn, payment_dn, datarate, E_transmit
     
     # Get only values that are influenced by external factors (other users)
-    def get_external_values(self, server: Server, external_denominator = None):
+    def get_external_values(self, server: Server, external_denominator = None, verbose = False):
         denominator_sum = 0
         user_group = set(server.get_coalition())
 
@@ -123,16 +133,20 @@ class User:
 
             for u in user_group:
                 g_ext = channel_gain(u.distances[server.num], u.num, server.num)
-                denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
+                denominator_sum += g_ext * u.current_ptrans
         else:
             denominator_sum = external_denominator
-
+        
         # Include myself to calculate the datarate
         g = channel_gain(self.distances[server.num], self.num, server.num)
-        denominator_sum += g * self.current_ptrans * self.distances[server.num]
 
-        datarate = B*math.log2(1 + g*self.current_ptrans/(denominator_sum + I0))/datarate_max
-        E_transmit = (Z*self.current_ptrans/(datarate*datarate_max))/E_transmit_max
+        # Datarate
+        max_datarate = B*math.log2(1 + g*Ptrans_max/(denominator_sum + g*Ptrans_max + I0))
+        datarate = B*math.log2(1 + g*self.current_ptrans/(denominator_sum + g*self.current_ptrans + I0))/max_datarate
+
+        # E_transmit
+        max_E_transmit = Z*Ptrans_max/max_datarate
+        E_transmit = (Z*self.current_ptrans/(datarate*max_datarate))/max_E_transmit
 
         return datarate, E_transmit
 
@@ -143,7 +157,7 @@ class User:
         return self.importance
     
     def get_payment(self, server: Server):
-        return self.current_fn * self.importance[server.num] / fn_max
+        return self.current_fn * self.get_dataquality(server) / fn_max
     
     def get_dataquality(self, server: Server):
         return self.used_datasize * self.importance[server.num] / ds_max
@@ -152,37 +166,21 @@ class User:
         return self.belongs_to
     
     def get_E_local(self):
+        E_local_max = (self.an/2) * self.qn * self.datasize * fn_max**2
         return self.E_local() / E_local_max
     
-    def get_E_transmit(self, datarate):
-        return (Z*self.current_ptrans/(datarate*datarate_max))/E_transmit_max
-    
-    def get_datarate(self, server: Server):
+    def get_datarate_Etransmit(self, server):         # NO EXTERNALITY
         g = channel_gain(self.distances[server.num], self.num, server.num)
-        datarate = B*math.log2(1 + g*self.current_ptrans/(g*self.current_ptrans+I0))/datarate_max
-        return datarate
 
-    # Magnitude Functions
+        max_datarate = B*math.log2(1 + g*Ptrans_max/(g*Ptrans_max + I0))
+        datarate = B*math.log2(1 + g*self.current_ptrans/(g*self.current_ptrans+I0))
+        E_transmit_max = Z*Ptrans_max/max_datarate
+        E_transmit = (Z*self.current_ptrans/datarate)/E_transmit_max
+        
+        return datarate, E_transmit
 
     def E_local(self):      # E_local calculation
-        return self.an * self.qn * self.used_datasize * self.current_fn**2
-    
-    def datarate_ext(self, servers: List[Server]):    # Datarate with extrenality calculation
-        datarate_ext_list = []
-        for server in servers:
-            denominator_sum = 0
-            for u in server.get_coalition().union({self}):
-                g_ext = channel_gain(u.distances[server.num], u.num, server.num)
-                denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
-                
-            g = channel_gain(self.distances[server.num], self.num, server.num)
-            dr = B*math.log2(1 + g*self.current_ptrans/(denominator_sum + I0))
-            datarate_ext_list.append(dr)
-        return datarate_ext_list 
-
-    def E_transmit_ext(self):   # E_transmit with externality calculation
-        E_transmit_ext_list = [Z*self.current_ptrans/(dr*datarate_max) for dr in self.datarate_ext_list]
-        return E_transmit_ext_list
+        return (self.an/2) * self.qn * self.used_datasize * self.current_fn**2
 
     def set_available_servers(self, list):  # Available server list for this user
         self.available_servers = list[:] 

@@ -1,16 +1,5 @@
 from Classes.Server import Server
-from Classes.User import User, fn_max, ds_max
-
-# Parameters
-
-alpha = 1
-beta = 1
-gamma = 1
-delta = 1
-epsilon = 1
-
-w_local = 0.5
-w_trans = 0.5
+from Classes.User import User, fn_max, ds_max, Ptrans_max
 
 def calculate_weights(ratio):
     pow = 4
@@ -35,57 +24,55 @@ def user_utility(user: User, server: Server, verbose = False):
     
     index = server.num
     
-    datarate = user.get_datarate(server)
     payment = user.get_payment(server)
-    dataquality = user.get_dataquality(server)
-    E_transmit = user.get_E_transmit(datarate)
     E_local = user.get_E_local()
-
+    datarate, E_transmit = user.get_datarate_Etransmit(server)
+        
     utility_functions = user.util_fun[index]
     
     utility =   utility_functions[0](datarate, E_transmit) + \
-                utility_functions[1](payment, E_local*(ds_max/user.used_datasize)) + \
-                utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2)
+                utility_functions[1](payment*ds_max/user.used_datasize, E_local*(ds_max/user.used_datasize)) + \
+                utility_functions[2](payment*fn_max/user.current_fn, E_local*(fn_max/user.current_fn)**2)
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate)
         print("Payment: ", payment)
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit)
-        print("Dataquality: ", dataquality)
         print()
 
     return utility
 
 # User Utility with Externality
 
-def user_utility_ext(user: User, server: Server, external_denominator = None, verbose = False):
+def user_utility_ext(user: User, server: Server, external_denominator = None, total_payments = None, verbose = False):
     if server is None:
         return 0
     
     index = server.num
     
     if external_denominator is None:
-        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server)
+        E_local, payment_fn, payment_dn, datarate, E_transmit = user.get_magnitudes(server, verbose=verbose)
     else:
-        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator)
+        E_local, payment_fn, payment_dn, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator, verbose=verbose)
 
     utility_functions = user.util_fun[index]
-    
+
     utility =   utility_functions[0](datarate, E_transmit) + \
-                utility_functions[1](payment, E_local*(ds_max/user.used_datasize)) + \
-                utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2)
+                utility_functions[1](payment_fn, E_local*(ds_max/user.used_datasize)) + \
+                utility_functions[2](payment_dn, E_local*(fn_max/user.current_fn)**2)
     
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate)
-        print("Payment: ", payment)
-        print("Energy Local: ", E_local)
+        print("Payment Fn: ", payment_fn)
+        print("Payment Dn: ", payment_dn)
+        print("Energy Local Fn: ", E_local*(ds_max/user.used_datasize))
+        print("Energy Local Dn: ", E_local*(fn_max/user.current_fn)**2)
         print("Energy Transmission: ", E_transmit)
-        print("Dataquality: ", dataquality)
         print("Util1: " , utility_functions[0](datarate, E_transmit))
-        print("Util2: " , utility_functions[1](payment, E_local*(ds_max/user.used_datasize)))
-        print("Util3: " , utility_functions[2](dataquality, E_local*(fn_max/user.current_fn)**2))
+        print("Util2: " , utility_functions[1](payment_fn, E_local*(ds_max/user.used_datasize)))
+        print("Util3: " , utility_functions[2](payment_dn, E_local*(fn_max/user.current_fn)**2))
         print()
 
     return utility

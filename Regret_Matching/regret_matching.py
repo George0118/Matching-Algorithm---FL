@@ -12,7 +12,7 @@ convergence_limit = 0.5
 
 # Learning rate
 def l(t):
-    return 1 / t**(1.5)
+    return 1 / t**(1)
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):
@@ -166,8 +166,12 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
     time1 = time.time()
     for user in users_copy:
         # For each user get its current utility and also calculate the externality of the rest of the users (for datarate, E_transmit)
-        current_utility = user_utility_ext(user, user.get_alligiance())
         current_external_denominators = user.get_external_denominators(servers_copy)
+        if user.get_alligiance() is not None:
+            current_utility = user_utility_ext(user, user.get_alligiance(),
+                                             current_external_denominators[user.get_alligiance().num])
+        else:
+            current_utility = 0
         for action_index, action in enumerate(actions):
             new_regret_term = update_regret(t, user, servers_copy, current_utility, action, current_external_denominators)
             regret_vector[user.num][action_index] =  (1-l(t)) * regret_vector[user.num][action_index] + new_regret_term
@@ -176,6 +180,8 @@ def update_regret_vector(regret_vector, users: List[User], servers: List[Server]
         execute_action(user, servers_copy, actions_taken[user.num])
         
     time2 = time.time()
+
+    # print("Time:", time2 - time1)
 
 # Update Probabilities
 def update_probabilities(probabilities: List[List], regret_vector: List[List], users: List[User]):

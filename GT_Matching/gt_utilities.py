@@ -1,6 +1,8 @@
 import math
 from Regret_Matching.utility_function import *
 
+epsilon = 1
+
 # Server's Utility function
 
 def server_utility(server, coalition, verbose = False):
@@ -23,14 +25,6 @@ def server_utility_externality(servers, coalition, server, verbose = False):
         utility += user_utility_ext(u,server,verbose=verbose) 
 
     utility -= epsilon * math.sqrt(server.p)
-
-    added_payment_of_rest = 0
-
-    for s in servers:
-        if(s != server):
-            added_payment_of_rest += s.p
-
-    utility = utility/added_payment_of_rest
         
     return utility 
 
