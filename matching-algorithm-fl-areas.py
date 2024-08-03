@@ -114,7 +114,7 @@ urban_users = []
 suburban_users = [] 
 rural_users = [] 
 
-distance_diff = 0.025
+distance_diff = 0.005
 
 for i in range(min(rural_threshold, N)):
 
@@ -129,9 +129,7 @@ for i in range(min(rural_threshold, N)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if j == 0 and distance >= 0.02 and distance < 0.025:
-            break
-        if j != 0 and distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(j+1)*distance_diff and distance >= 0.02+j*distance_diff:  # if in the desired sphere and good user then add the user
             break
 
     user = User(x,y,z,i)
@@ -153,7 +151,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(rural_threshold+j+1)*distance_diff and distance >= 0.02+(rural_threshold+j)*distance_diff:  # if in the desired sphere and good user then add the user
             break
         
     user = User(x,y,z,i+rural_threshold)
@@ -172,7 +170,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.3 and distance <= 0.4:     # if in the desired sphere and bad user then add the user
+        if distance < 0.3+(j+1)*distance_diff and distance >= 0.3+j*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+rural_threshold)
@@ -193,7 +191,7 @@ for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance < 0.05 and distance >= 0.025:  # if in the desired sphere and good user then add the user
+        if distance < 0.02+(suburban_threshold+j+1)*distance_diff and distance >= 0.02+(suburban_threshold+j)*distance_diff:  # if in the desired sphere and good user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
@@ -211,7 +209,7 @@ for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.2 and distance <= 0.3:     # if in the desired sphere and bad user then add the user
+        if distance < 0.2+(j+1)*distance_diff and distance >= 0.2+j*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
@@ -229,7 +227,7 @@ for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)
 
         distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
-        if distance > 0.3 and distance <= 0.4:     # if in the desired sphere and bad user then add the user
+        if distance < 0.3+(suburban_threshold-rural_threshold+j+1)*distance_diff and distance >= 0.3+(suburban_threshold-rural_threshold+j)*distance_diff:     # if in the desired sphere and bad user then add the user
             break
         
     user = User(x,y,z,i+suburban_threshold)
