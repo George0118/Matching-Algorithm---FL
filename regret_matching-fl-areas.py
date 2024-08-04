@@ -678,7 +678,7 @@ for matching in matchings:
             # Datarate
             mean_Datarate += datarate * datarate_max
             # User Utility
-            mean_User_Utility += user_utility_ext(u, u.get_alligiance())
+            mean_User_Utility += user_utility_ext(user, user.get_alligiance())
             
     if matched_users != 0:
         mean_Energy /= matched_users
