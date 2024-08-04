@@ -74,6 +74,14 @@ while True:
 for s in servers:
         print("Server", s.num, " Resources: ", s.p)
 
+# Normalize payments
+max_server_payment = 0
+for s in servers:
+    if server.p > max_server_payment:
+        max_server_payment = server.p
+
+for s in servers:
+    s.set_p(s.p/max_server_payment)
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
