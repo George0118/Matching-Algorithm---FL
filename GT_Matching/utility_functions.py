@@ -36,9 +36,6 @@ def user_utility(user: User, server: Server, verbose = False):
     if server is None:
         return 0
     
-    index = server.num
-    current_coalition = server.get_coalition()
-    
     datarate = user.get_datarate(server)
     payment = user.get_payment(server)
     dataquality = user.get_dataquality(server)
@@ -47,17 +44,12 @@ def user_utility(user: User, server: Server, verbose = False):
 
     w_local, w_trans = calculate_weights(user.get_energy_ratio(server))
 
-    if user not in current_coalition:
-        future_coal_length = len(current_coalition) + 1
-    else:
-        future_coal_length = len(current_coalition)
-    
-    utility = alpha * datarate + beta * payment*server.p/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
+    utility = alpha * datarate + beta * payment*server.p - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
 
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate)
-        print("Payment: ", payment*server.p/future_coal_length)
+        print("Payment: ", payment*server.p)
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit)
         print("Dataquality: ", dataquality)
@@ -71,7 +63,6 @@ def user_utility_ext(user: User, server: Server, external_denominator = None, ve
     if server is None:
         return 0
     
-    index = server.num
     current_coalition = server.get_coalition()
 
     if external_denominator is None:
@@ -82,16 +73,19 @@ def user_utility_ext(user: User, server: Server, external_denominator = None, ve
     w_local, w_trans = calculate_weights(user.get_energy_ratio(server))
 
     if user not in current_coalition:
-        future_coal_length = len(current_coalition) + 1
+        total_payment = payment
     else:
-        future_coal_length = len(current_coalition)
+        total_payment = 0
     
-    utility = alpha * datarate + beta * payment*server.p/future_coal_length - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
+    for u in current_coalition:
+        total_payment += u.get_payment(server)
+    
+    utility = alpha * datarate + beta * payment*server.p/total_payment - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
 
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate)
-        print("Payment: ", payment*server.p/future_coal_length)
+        print("Payment: ", payment*server.p/total_payment)
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit)
         print("Dataquality: ", dataquality)
@@ -107,7 +101,7 @@ def server_utility(server, coalition, verbose = False):
     for u in coalition:
         utility += user_utility(u,server,verbose=verbose) 
 
-    utility -= epsilon * math.sqrt(server.p)
+    utility -= epsilon * (server.p)**2
         
     return utility
 
@@ -120,7 +114,7 @@ def server_utility_externality(servers, coalition, server, verbose = False):
     for u in coalition:
         utility += user_utility_ext(u,server,verbose=verbose) 
 
-    utility -= epsilon * math.sqrt(server.p)
+    utility -= epsilon * (server.p)**2
 
     added_payment_of_rest = 0
 
