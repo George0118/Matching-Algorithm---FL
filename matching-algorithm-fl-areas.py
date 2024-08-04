@@ -74,6 +74,15 @@ while True:
 
 for s in servers:
         print("Server", s.num, " Resources: ", s.p)
+
+# Normalize payments
+max_server_payment = 0
+for s in servers:
+    if server.p > max_server_payment:
+        max_server_payment = server.p
+
+for s in servers:
+    s.set_p(s.p/max_server_payment)
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
@@ -480,8 +489,6 @@ for matching in matchings:
     mean_Datarate = 0
     # User Utility
     mean_User_Utility = 0
-    # User Payments
-    user_payments = 0
 
     for u in _users:
         if u.get_alligiance() is not None:
@@ -499,8 +506,6 @@ for matching in matchings:
             mean_Datarate += datarate * datarate_max
             # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
-            # User Payments
-            user_payments += payment*u.get_alligiance().p
             
 
     mean_Energy /= matched_users
@@ -527,7 +532,6 @@ for matching in matchings:
     Mean Datarate: {mean_Datarate} bps\n\
     Mean User Utility: {mean_User_Utility}\n\
     Mean Server Utility: {mean_Server_Utility}\n\
-    Sum User Payments: {user_payments}\n\
     \n")
         
     if federated_learning: 
