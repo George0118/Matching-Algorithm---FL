@@ -7,7 +7,7 @@ from keras.layers import Flatten
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
-from tensorflow.keras.applications import EfficientNetB4, MobileNetV3Large
+from tensorflow.keras.applications import MobileNetV3Large
 from tensorflow.keras.regularizers import L2
 from Data.fl_parameters import lr, epoch
 from keras.optimizers import Adam
