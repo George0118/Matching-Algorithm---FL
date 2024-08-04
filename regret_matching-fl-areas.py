@@ -83,12 +83,13 @@ for s in servers:
 
 
 # Normalize payments
-payments_sum = 0
+max_server_payment = 0
 for s in servers:
-    payments_sum += s.p
+    if server.p > max_server_payment:
+        max_server_payment = server.p
 
 for s in servers:
-    s.set_p(s.p/payments_sum)
+    s.set_p(s.p/max_server_payment)
     
 # Critical Points: inside a cube centered at (0,0,0) and side = 2
 critical_points = []
