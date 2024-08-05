@@ -32,25 +32,20 @@ def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[S
 
             # If the server has received invitations and has space it needs to choose its favorite User to pair
             if(invitations and len(server.get_coalition()) + 1 <= server.Ns_max):   
-                favorite_User = list(invitations)[0]
-                max_utility = server_utility(server, coalition.union({favorite_User}))
-
+                favorite_users = []
                 for u in invitations:
                     utility = server_utility(server, coalition.union({u}))
-                    if(utility > max_utility):
-                        max_utility = utility
-                        favorite_User = u
+                    if(utility > server_utility(server, coalition)):
+                        favorite_users.append(u)
 
-                server.add_to_coalition(favorite_User)      # server adds favorite User to its Coalition 
-                # print("Favorite User = ", favorite_User.num)
-                favorite_User.change_server(server)     # favorite User now belongs to server
-                favorite_User.set_available_servers([])     # favorite User deletes all its available servers since he is matched
+                for favorite_user in favorite_users:
+                    server.add_to_coalition(favorite_user)      # server adds favorite users to its Coalition 
+                    favorite_user.change_server(server)     # favorite users now belong to server
+                    favorite_user.set_available_servers([])     # favorite users delete all its available servers since they are matched
 
-                # num_list = [obj.num for obj in invitations]
-                # print("Invitations for server ", server.num," are ", num_list)
 
                 for u in invitations:           # The rest of the users need to remove this server from their available servers
-                    if(u != favorite_User):
+                    if(u not in favorite_users):
                         # print("Removing server ", server.num," from user", u.num)
                         available_servers = u.get_available_servers()
                         # num_list = [obj.num for obj in available_servers]
