@@ -1,8 +1,10 @@
 from config import S
-from Data.load_images import load_images, load_neutral_images
+from Data.load_images import load_images, load_neutral_images, count_images
 from Data.load_images import earthquake_input_paths, fire_input_paths, flood_input_paths
 from general_parameters import N_max
 from sklearn.utils import shuffle
+from helping_functions import dataset_sizes
+from Classes.Server import Server
 import numpy as np
 import math
 
@@ -35,11 +37,13 @@ class Get_data:
            (X_train_earthquake, X_server_earthquake, y_train_earthquake, y_server_earthquake, earthquake_img_num)
 
 
-  def split_data(self, data): 
+  def split_data(self, data, server: Server): 
     users = self.users
+    cps = server.get_critical_points()
+    total_images = count_images(fire_input_paths + flood_input_paths + earthquake_input_paths)
 
     # Get Sizes
-    sizes = [user.used_datasize//(3*224*224*8) for user in users]
+    sizes = dataset_sizes(server, None, users, cps, total_images)
 
     s_data = []
     
@@ -55,16 +59,16 @@ class Get_data:
     (X_train_earthquake, X_server_earthquake, y_train_earthquake, y_server_earthquake, earthquake_img_num) = self.load_data()
 
     # Split fire data to each user
-    X_train_fire=self.split_data(X_train_fire) 
-    y_train_fire=self.split_data(y_train_fire)
+    X_train_fire=self.split_data(X_train_fire, self.servers[0]) 
+    y_train_fire=self.split_data(y_train_fire, self.servers[0])
 
     # Split flood data to each user
-    X_train_flood=self.split_data(X_train_flood) 
-    y_train_flood=self.split_data(y_train_flood)
+    X_train_flood=self.split_data(X_train_flood, self.servers[1]) 
+    y_train_flood=self.split_data(y_train_flood, self.servers[1])
 
     # Split earthquake data to each user
-    X_train_earthquake=self.split_data(X_train_earthquake) 
-    y_train_earthquake=self.split_data(y_train_earthquake)
+    X_train_earthquake=self.split_data(X_train_earthquake, self.servers[2]) 
+    y_train_earthquake=self.split_data(y_train_earthquake, self.servers[2])
 
     print("Splited Successfully\n")
 
@@ -89,7 +93,7 @@ class Get_data:
 
     # Shuffle the training Data of each user
     for i in range(self.n):
-       X_train[i], y_train[i] = shuffle(X_train[i], y_train[i], random_state=42)
+       X_train[i], y_train[i] = shuffle_and_keep_percentage(X_train[i], y_train[i], self.users[i].used_datasize/self.users[i].datasize)
 
     # Shuffle Data for each Server
     for i in range(S):
@@ -99,10 +103,7 @@ class Get_data:
 
     # for i in range(self.n):
     #   print("I am user ", i, " and my datasize is: ", len(X_train[i]))
-    #   print("My distribution is:")
-    #   print("Fires: ", len(X_train_fire[i]))
-    #   print("Floods: ", len(X_train_flood[i]))
-    #   print("Earthquakes: ", len(X_train_earthquake[i]))
+    #   print("My actual datasize is:", self.users[i].datasize//(3*8*224*224))
     #   print()
 
     return X_train, y_train, X_server, y_server
@@ -116,3 +117,9 @@ def concatenate_non_empty_arrays(arrays):
         return np.array([])
   
   
+def shuffle_and_keep_percentage(X, y, percentage):
+    X, y = shuffle(X, y, random_state=42)
+    keep_size = int(len(X) * percentage)
+    X = X[:keep_size]
+    y = y[:keep_size]
+    return X, y

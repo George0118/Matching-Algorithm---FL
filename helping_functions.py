@@ -4,7 +4,7 @@ from Data.load_images import fire_input_paths, earthquake_input_paths, flood_inp
 from general_parameters import *
 import numpy as np
 
-def dataset_sizes(s: Server, area, users, cps, total_images):
+def dataset_sizes(s: Server, area, users, cps, total_images, verbose = False):
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
         image_num = count_images(fire_input_paths)
@@ -55,8 +55,9 @@ def dataset_sizes(s: Server, area, users, cps, total_images):
         temp_total = sum(sizes)
         sizes = [size*image_num/temp_total for size in sizes]
 
-    print("Sizes:")
-    print(sizes)
+    if verbose:
+        print("Sizes:")
+        print(sizes)
 
     return sizes
 
