@@ -10,7 +10,7 @@ def parse_log_file(file_path):
     with open(file_path, 'r') as file:
         for line in file:
             if 'Matching:' in line:
-                matching_type = line.split('Matching: ')[1].split(',')[0].strip()
+                matching_type = line.split('Matching: ')[1].split('_')[0].strip()
                 if matching_type not in matching:
                     matching[matching_type] = {}
 
@@ -26,7 +26,7 @@ def parse_log_file(file_path):
     return matching
 
 # Directory containing log files
-directory = '../../results/FL_matching_comp'
+directory = '../../results/regret_matching_FL'
 save_directory = './fl_matching_comp'
 os.makedirs(save_directory, exist_ok=True)
 
@@ -58,7 +58,7 @@ for i, server_type in enumerate(server_types):
 
 plt.xlabel('Matching Types', fontsize = 16)
 plt.ylabel('Accuracy', fontsize = 16)
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"], fontsize = 14)
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Game Theory", "Regret CI", "Regret II"], fontsize = 14)
 plt.yticks(fontsize = 14)
 plt.legend(loc='lower center', fontsize = 12)
 plt.tight_layout()
@@ -77,7 +77,7 @@ for i, server_type in enumerate(server_types):
 
 plt.xlabel('Matching Types', fontsize = 16)
 plt.ylabel('Loss', fontsize = 16)
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"], fontsize = 14)
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Game Theory", "Regret CI", "Regret II"], fontsize = 14)
 plt.yticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.tight_layout()

@@ -68,8 +68,8 @@ def plot_data(data, title, save_dir=None):
         plt.show()
 
 # Directory containing log files
-directory = '../../results/GT_FL_results'
-save_directory = './gt_fl_performance'
+directory = '../../results/regret_matching_FL'
+save_directory = './fl_performance'
 
 # Initialize dictionaries to store accumulated data across all files
 all_server_accuracies = {}

@@ -157,7 +157,7 @@ for i in range(min(rural_threshold, N)):
 for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
@@ -176,7 +176,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
     suburban_users.append(copy.deepcopy(user))
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
@@ -197,7 +197,7 @@ for i in range(min(suburban_threshold - rural_threshold, N - rural_threshold)):
 for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)):
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
@@ -215,7 +215,7 @@ for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)
     urban_users.append(copy.deepcopy(user))
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
@@ -233,7 +233,7 @@ for i in range(min(urban_threshold - suburban_threshold, N - suburban_threshold)
     suburban_users.append(copy.deepcopy(user))
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
@@ -336,10 +336,6 @@ for area, users in all_users.items():
 
 # ======================================================================================== #
 
-for area, users in all_users.items():
-    for user in users:
-        print(user.get_importance())
-
 
 # ========== Calculating parameters for utility functions =========== #
 
@@ -400,8 +396,6 @@ for i in range(N):
         _users[2].util_fun[server.num][0] = h(imp3,a_pns_3)   # Pns
         _users[2].util_fun[server.num][1] = h(imp3,a_fn_3)   # Fn
         _users[2].util_fun[server.num][2] = h(imp3,a_dn_3)   # Dn
-
-        print(a_dn_1, a_dn_2, a_dn_3)
         
 
 # =================================================================== #
@@ -416,8 +410,8 @@ all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': ru
 
 # ============================== Approximate Matching ============================== #
 
-gt_all_users = copy.deepcopy(all_users)
-gt_all_servers = copy.deepcopy(all_servers)
+gt_all_users = copy.deepcopy({'Urban': all_users['Urban']})
+gt_all_servers = copy.deepcopy({'Urban': all_servers['Urban']})
 
 for area, gt_users in gt_all_users.items(): 
     for user in gt_users:
@@ -618,17 +612,17 @@ if federated_learning:
 # For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
 
 matchings = []
-labels = ["GT_URBAN", "GT_SUBURBAN", "GT_RURAL", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
+labels = ["GT_URBAN", "RCI_URBAN", "RCI_SUBURBAN", "RCI_RURAL", "RII_URBAN", "RII_SUBURBAN", "RII_RURAL"]
 times = gt_times + regret_times + regretII_times
 iterations = gt_iterations + regret_iterations + regretII_iterations
 
 if federated_learning:
     # With Federated Learning
-    for i in range(9):
+    for i in range(len(labels)):
         matchings.append((user_lists[i], server_lists[i], times[i], iterations[i], matching_losses[i], matching_accuracies[i], matching_user_losses[i], matching_user_accuracies[i], matching_FL_times[i], labels[i]))
 else:
     # Without Federated Learning
-    for i in range(9):
+    for i in range(len(labels)):
         matchings.append((user_lists[i], server_lists[i], times[i], iterations[i], labels[i]))
 
 

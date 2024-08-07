@@ -4,15 +4,17 @@ import matplotlib.pyplot as plt
 
 # Function to parse accuracies and losses from log files
 def parse_log_file(file_path):
-    accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
-    losses = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
+    accuracies = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
+    losses = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
 
     with open(file_path, 'r') as file:
         for line in file:
             if 'Matching:' in line:
                 matching = line.split(":")[1].strip().split(",")[0]
 
-            
+            if matching.startswith("GT"):
+                continue
+
             if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
                 current_server = re.search(r'Fire Server|Flood Server|Earthquake Server', line).group()
                 loss_values = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
@@ -52,11 +54,11 @@ def plot_averages(data, title, save_dir=None):
 
 
 # Directory containing log files
-directory = '../../results/areas_results'
+directory = '../../results/regret_matching_FL'
 save_directory = './fl-areas'
 
-scalability_accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
-scalability_losses = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
+scalability_accuracies = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
+scalability_losses = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
 
 colors = {'Fire Server': 'r', 'Flood Server': 'b', 'Earthquake Server': 'g'}
 
@@ -80,12 +82,11 @@ for filename in os.listdir(directory):
                 scalability_accuracies[matching][server]['users'].append(num_users) 
                 scalability_losses[matching][server]['losses'].append(losses[matching][server])
                 scalability_losses[matching][server]['users'].append(num_users) 
-            if matching == 'RURAL' and num_users == '24':
-                    print(scalability_accuracies['RURAL'], filename)
+
 
 # Initialize dictionaries to store cumulative totals and counts for accuracies and losses
-average_accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
-average_losses = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
+average_accuracies = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
+average_losses = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
 
 # Function to calculate averages
 def calculate_averages(data, averages, str):
@@ -116,21 +117,21 @@ for area, area_data in average_accuracies.items():
             average_accuracies[area][server][num_users]['average_accuracy'] = average_accuracy
             average_losses[area][server][num_users]['average_loss'] = average_loss
 
-users = ["10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"]
+users = ["12", "15", "18", "21", "24", "27", "30"]
 
 # Summing average accuracy for each server
-sum_accuracy = {'URBAN': [0] * len(users), 'SUBURBAN': [0] * len(users), 'RURAL': [0] * len(users)}
-sum_loss = {'URBAN': [0] * len(users), 'SUBURBAN': [0] * len(users), 'RURAL': [0] * len(users)}
+sum_accuracy = {'RCI_URBAN': [0] * len(users), 'RCI_SUBURBAN': [0] * len(users), 'RCI_RURAL': [0] * len(users), 'RII_URBAN': [0] * len(users), 'RII_SUBURBAN': [0] * len(users), 'RII_RURAL': [0] * len(users)}
+sum_loss = {'RCI_URBAN': [0] * len(users), 'RCI_SUBURBAN': [0] * len(users), 'RCI_RURAL': [0] * len(users), 'RII_URBAN': [0] * len(users), 'RII_SUBURBAN': [0] * len(users), 'RII_RURAL': [0] * len(users)}
 
 for area, area_data in average_accuracies.items():
     for server, user_data in area_data.items():
         for user_count, metrics in user_data.items():
-            sum_accuracy[area][int((int(user_count)-10)/2)] += metrics['average_accuracy']
+            sum_accuracy[area][int((int(user_count)-12)/3)] += metrics['average_accuracy']
 
 for area, area_data in average_losses.items():
     for server, user_data in area_data.items():
         for user_count, metrics in user_data.items():
-            sum_loss[area][int((int(user_count)-10)/2)] += metrics['average_loss']
+            sum_loss[area][int((int(user_count)-12)/3)] += metrics['average_loss']
 
 print(sum_accuracy)
 

@@ -57,8 +57,8 @@ def plot_averages(data, title, save_dir=None):
 
 
 # Directory containing log files
-directory = '../../results/GT_FL_scalability_results'
-save_directory = './gt_fl_scalability'
+directory = '../../results/regret_matching_FL'
+save_directory = './fl_scalability'
 
 scalability_accuracies = {}
 scalability_losses = {}
@@ -126,7 +126,7 @@ for server, server_data in average_accuracies.items():
 plot_averages(average_accuracies, "Scalability of GT Accuracies", save_directory)
 plot_averages(average_losses, "Scalability of GT Losses", save_directory)
 
-users = ["10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"]
+users = ["12", "15", "18", "21", "24", "27", "30"]
 
 # Summing average accuracy for each server
 sum_accuracy = [0] * len(users)
@@ -134,11 +134,11 @@ sum_loss = [0] * len(users)
 
 for server, user_data in average_accuracies.items():
     for user_count, metrics in user_data.items():
-        sum_accuracy[int((int(user_count)-10)/2)] += metrics['average_accuracy']
+        sum_accuracy[int((int(user_count)-12)/3)] += metrics['average_accuracy']
 
 for server, user_data in average_losses.items():
     for user_count, metrics in user_data.items():
-        sum_loss[int((int(user_count)-10)/2)] += metrics['average_loss']
+        sum_loss[int((int(user_count)-12)/3)] += metrics['average_loss']
 
 # Plotting
 plt.figure(figsize=(10, 6))
