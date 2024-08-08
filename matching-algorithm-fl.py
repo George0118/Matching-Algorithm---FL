@@ -92,8 +92,8 @@ for i in range(K):
     z = random.uniform(-1, 1)
     distance = math.sqrt(x**2 + y**2 + z**2)
 
-    # Ensure that the distance between two critical points is at least 0.6
-    while any(math.sqrt((x - cp.x)**2 + (y - cp.y)**2 + (z - cp.z)**2) < 0.6 for cp in critical_points) or distance < 0.3:
+    # Ensure that the distance between two critical points is at least 0.4
+    while any(math.sqrt((x - cp.x)**2 + (y - cp.y)**2 + (z - cp.z)**2) < 0.4 for cp in critical_points) or distance < 0.3:
         x = random.uniform(-1, 1)
         y = random.uniform(-1, 1)
         z = random.uniform(-1, 1)
@@ -121,7 +121,7 @@ distance_diff = 0.025
 for i in range(N):
 
     while True:
-        j = i/K
+        j = i//K
         cp = critical_points[i%K]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
