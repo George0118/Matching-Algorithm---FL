@@ -1,5 +1,4 @@
 import random
-random.seed(42)
 from Classes.Server import Server
 from Classes.User import User
 from typing import List
