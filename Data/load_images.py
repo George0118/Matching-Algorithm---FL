@@ -81,7 +81,7 @@ def load_images(file_paths, disaster):
     # Shuffle images and labels in parallel
     combined = list(zip(images, labels))
     # Create a random number generator instance with a specific seed
-    rng = random.Random(42)
+    rng = random.Random()
     rng.shuffle(combined)
     images[:], labels[:] = zip(*combined)
 
@@ -112,7 +112,7 @@ def load_neutral_images():
     # Shuffle images and labels in parallel
     combined = list(zip(images, labels))
     # Create a random number generator instance with a specific seed
-    rng = random.Random(42)
+    rng = random.Random()
     rng.shuffle(combined)
     images[:], labels[:] = zip(*combined)
 

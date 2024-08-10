@@ -172,11 +172,11 @@ k_m = 5
 def boltzmann_gibbs(user_regret_vector: List):
     sum_value = 0
     for regret in user_regret_vector:
-        sum_value += np.exp(regret/k_m)
+        sum_value += np.exp(max(0, regret)/k_m)
 
     bg_vector = []
     for regret in user_regret_vector:
-        bg_vector.append(np.exp(regret/k_m)/sum_value)
+        bg_vector.append(np.exp(max(0, regret)/k_m)/sum_value)
 
     return bg_vector
 

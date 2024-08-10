@@ -422,7 +422,7 @@ for area, gt_users in gt_all_users.items():
         
 
 gt_times = []
-gt_iterations = [None, None, None]
+gt_iterations = [None]
 
 for area, gt_users in gt_all_users.items(): 
 
