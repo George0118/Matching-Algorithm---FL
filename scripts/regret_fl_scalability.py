@@ -27,35 +27,6 @@ def parse_log_file(file_path):
 
     return accuracies, losses
 
-# Function to plot data for each server
-def plot_averages(data, title, save_dir=None):
-    plt.figure(figsize=(10, 6))
-    for server, server_data in data.items():
-        num_users = list(server_data.keys())
-        average_accuracies = [user_data['average_accuracy'] for user_data in server_data.values() if 'average_accuracy' in user_data]
-        average_losses = [user_data['average_loss'] for user_data in server_data.values() if 'average_loss' in user_data]
-
-        if average_accuracies:
-            plt.plot(num_users, average_accuracies, label=f"{server} (Avg Accuracy)", color=colors[server])
-        if average_losses:
-            plt.plot(num_users, average_losses, label=f"{server} (Avg Loss)", color=colors[server])
-                
-    plt.title(title)
-    plt.xlabel('Number of Users')
-    plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss')
-    plt.legend()
-    plt.grid(True)
-    
-    # Save plot if save_dir is provided
-    if save_dir:
-        filename = title.replace(' ', '_') + '.png'
-        save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path)
-        print(f"Plot saved to: {save_path}")
-    else:
-        plt.show()
-
-
 # Directory containing log files
 directory = '../../results/regret_matching_FL'
 save_directory = './fl_scalability'
@@ -120,12 +91,6 @@ for server, server_data in average_accuracies.items():
                 average_losses[server][num_users]['average_loss'] = average_loss
 
 
-# print(average_accuracies)
-# print(average_losses)
-
-plot_averages(average_accuracies, "Scalability of GT Accuracies", save_directory)
-plot_averages(average_losses, "Scalability of GT Losses", save_directory)
-
 users = ["12", "15", "18", "21", "24", "27", "30"]
 
 # Summing average accuracy for each server
@@ -142,7 +107,7 @@ for server, user_data in average_losses.items():
 
 # Plotting
 plt.figure(figsize=(10, 6))
-plt.plot(users, sum_accuracy)
+plt.bar(users, sum_accuracy)
 
 plt.title('Sum of Average Accuracy vs Users')
 plt.xlabel('Number of Users')
@@ -158,7 +123,7 @@ else:
     plt.show()
 
 plt.figure(figsize=(10, 6))
-plt.plot(users, sum_loss)
+plt.bar(users, sum_loss)
 
 plt.title('Sum of Average Loss vs Users')
 plt.xlabel('Number of Users')

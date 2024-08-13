@@ -1,6 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Function to parse accuracies and losses from log files
 def parse_log_file(file_path):
@@ -138,17 +139,17 @@ print(sum_accuracy)
 # Plotting
 plt.figure(figsize=(10, 6))
 for area, values in sum_accuracy.items():
-    plt.plot(users, values, label=area, linewidth=2.5)
+    plt.bar(area, np.mean(values))
 
-plt.xlabel('Number of Users', fontsize = 18)
-plt.ylabel('Sum of Server Accuracies', fontsize = 18)
+plt.xlabel('Area', fontsize = 18)
+plt.ylabel('Average Server Accuracy', fontsize = 18)
 plt.legend(fontsize = 16)
 plt.xticks(fontsize=16) 
 plt.yticks(fontsize=16)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
-    filename = 'Sum_of_Average_Accuracy.png'
+    filename = 'Area_Average_Accuracy.png'
     save_path = os.path.join(save_directory, filename)
     plt.savefig(save_path)
     print(f"Plot saved to: {save_path}")
@@ -157,16 +158,16 @@ else:
 
 plt.figure(figsize=(10, 6))
 for area, values in sum_loss.items():
-    plt.plot(users, values, label=area)
+    plt.bar(area, np.mean(values))
 
-plt.title('Sum of Average Loss vs Users for Different Areas')
-plt.xlabel('Number of Users')
-plt.ylabel('Sum of Average Loss')
+plt.title('Average Loss for Different Areas')
+plt.xlabel('Areas')
+plt.ylabel('Average Loss')
 plt.legend()
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
-    filename = 'Sum_of_Average_Loss.png'
+    filename = 'Area_of_Average_Loss.png'
     save_path = os.path.join(save_directory, filename)
     plt.savefig(save_path)
     print(f"Plot saved to: {save_path}")

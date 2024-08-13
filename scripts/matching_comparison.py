@@ -6,10 +6,15 @@ import numpy as np
 results_directory = "../../results/regret_matching"
 matching_data = {}
 
-# Function to extract a single float value from a line
 def extract_value(line):
-    match = re.search(r'\b\d+\.\d+\b', line)
-    return float(match.group()) if match else None
+    # Regular expression to match either an integer or a float
+    match = re.search(r'\b\d+\.\d+\b|\b\d+\b', line)
+    if match:
+        value = match.group()
+        # Check if the value contains a decimal point
+        return float(value) if '.' in value else int(value)
+    return None
+
 
 # Loop through files in the results directory
 for filename in os.listdir(results_directory):
@@ -31,7 +36,7 @@ for filename in os.listdir(results_directory):
                     matching_data.setdefault(matching, {"Data": {}})
                 elif "Mean Energy" in line or "Mean Elocal" in line or "Mean Etransfer" in line \
                         or "Mean Datarate" in line or "Mean User Utility" in line or "Mean Server Utility" in line \
-                        or "Sum User Payments" in line:
+                        or "Sum User Payments" in line or "Time" in line or "Iterations" in line:
                     magnitude_match = re.search(r'^\s*([^:]+)\s*:', line)
                     if magnitude_match:
                         magnitude = magnitude_match.group(1).strip()
@@ -41,7 +46,7 @@ for filename in os.listdir(results_directory):
                         matching_data[matching]["Data"][magnitude]["Values"].append(value)
 
 # Create line plots for each magnitude
-magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Sum User Payments"]
+magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time", "Iterations"]
 
 plot_data = {}
 for matching in matching_data.keys():
@@ -53,6 +58,8 @@ for matching in matching_data.keys():
 # Aggregate and average data for the same number of users across multiple runs
 for matching, data in matching_data.items():
     for magnitude, values_data in data["Data"].items():
+        if matching == "GT" and magnitude == "Iterations":
+            continue
         users_values = {}
         for i, users in enumerate(values_data["Users"]):
             if users not in users_values:
@@ -66,7 +73,7 @@ for matching, data in matching_data.items():
 
 user_values = [12, 15, 18, 21, 24, 27, 30]
 save_directory = "./matching_comparison/"
-magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility"]
+magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time", "Iterations"]
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
