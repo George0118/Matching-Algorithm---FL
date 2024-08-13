@@ -31,11 +31,11 @@ def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[S
             coalition = server.get_coalition()
 
             # If the server has received invitations and has space it needs to choose its favorite User to pair
-            if(invitations and len(server.get_coalition()) + 1 <= server.Ns_max):   
+            if invitations:   
                 favorite_users = []
                 for u in invitations:
                     utility = server_utility(server, coalition.union({u}))
-                    if(utility > server_utility(server, coalition)):
+                    if(utility > server_utility(server, coalition) and len(server.get_coalition()) + 1 <= server.Ns_max):
                         favorite_users.append(u)
 
                 for favorite_user in favorite_users:
@@ -56,6 +56,7 @@ def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[S
                 server.clear_invitations_list()
 
         for u in unmatched_users:                   # if a user has not more available servers set its flag to False
+            print("User", u.num, "Servers:", u.get_available_servers())
             if(not u.get_available_servers()):
                 server_availability[u.num] = False
 
