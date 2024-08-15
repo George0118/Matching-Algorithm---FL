@@ -7,7 +7,7 @@ from keras.layers import Flatten
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import Input
-from tensorflow.keras.applications import EfficientNetB4, MobileNetV3Large
+from tensorflow.keras.applications import MobileNetV3Large
 from tensorflow.keras.regularizers import L2
 from Data.fl_parameters import lr, epoch
 from keras.optimizers import Adam
@@ -19,12 +19,11 @@ class Model:
 
 
   def global_model(self, input_shape):
-
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(256, activation='relu')(x)
+    x = Dense(128, activation='relu', kernel_regularizer=L2(0.01))(x)  # L2 regularization
     x = Dropout(0.5)(x)
-    x_output = Dense(1, activation='sigmoid')(x)
+    x_output = Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01))(x)  # L2 regularization
 
     model = keras.Model(inputs=input, outputs=x_output)
 
