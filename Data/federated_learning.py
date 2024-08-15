@@ -75,6 +75,8 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
       class_weights[u.num] = {0: class_0_weight, 1: class_1_weight}
 
 
+    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(X_server[i], y_server[i], test_size=0.5, random_state=42)
+
     # Feature Extraction for all
     print("Feature Extraction:")
 
@@ -83,15 +85,14 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
         X_train[u.num] = Model().extract_features(baseModel, X_train[u.num])
         X_test[u.num] = Model().extract_features(baseModel, X_test[u.num])
     
-    server_features = Model().extract_features(baseModel, X_server[i])
+    X_train_server = Model().extract_features(baseModel, X_train_server)
+    X_test_server = Model().extract_features(baseModel, X_test_server)
 
     print("Feature Extraction complete!\n")
 
-    X_train_server, X_test_server, y_train_server, y_test_server = train_test_split(server_features, y_server[i], test_size=0.5, random_state=42)
-
     # Begin training
   
-    global_model=Model().global_model(server_features.shape[1:])
+    global_model=Model().global_model(X_train_server.shape[1:])
 
     accuracy=[]
     losses=[]
