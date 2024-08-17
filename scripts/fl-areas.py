@@ -1,6 +1,7 @@
 import os
 import re
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Function to parse accuracies and losses from log files
 def parse_log_file(file_path):
@@ -12,7 +13,6 @@ def parse_log_file(file_path):
             if 'Matching:' in line:
                 matching = line.split(":")[1].strip().split(",")[0]
 
-            
             if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
                 current_server = re.search(r'Fire Server|Flood Server|Earthquake Server', line).group()
                 loss_values = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
@@ -80,8 +80,6 @@ for filename in os.listdir(directory):
                 scalability_accuracies[matching][server]['users'].append(num_users) 
                 scalability_losses[matching][server]['losses'].append(losses[matching][server])
                 scalability_losses[matching][server]['users'].append(num_users) 
-            if matching == 'RURAL' and num_users == '24':
-                    print(scalability_accuracies['RURAL'], filename)
 
 # Initialize dictionaries to store cumulative totals and counts for accuracies and losses
 average_accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
@@ -174,3 +172,27 @@ else:
 
 for area, data in sum_accuracy.items():
     print(sum(data))
+
+
+plt.figure(figsize=(10, 6))
+for i, (area, values) in enumerate(sum_loss.items()):
+    plt.bar(area, sum(values))
+    plt.text(i, sum(values), f'{sum(values):.4f}', ha='center', va='bottom', fontsize = 10)
+
+plt.title('Sum of Average Loss per Area')
+plt.xlabel('Areas')
+plt.ylabel('Sum of Average Loss')
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+for i, (area, values) in enumerate(sum_accuracy.items()):
+    plt.bar(area, sum(values))
+    plt.text(i, sum(values), f'{sum(values):.4f}', ha='center', va='bottom', fontsize = 10)
+
+plt.title('Sum of Average Accuracy per Area')
+plt.xlabel('Areas')
+plt.ylabel('Sum of Average Accuracy')
+plt.grid(True)
+plt.show()
+
