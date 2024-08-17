@@ -348,10 +348,11 @@ all_servers = {'Urban': urban_servers, 'Suburban': subruban_servers, 'Rural': ru
 
 # ============================== Approximate Matching ============================== #
 
-gt_start = time.time()
 
 for area, gt_users in all_users.items(): 
 
+    gt_start = time.time()
+    
     gt_servers = all_servers[area]
 
     # Initializing the available servers for each user
