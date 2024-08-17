@@ -10,6 +10,7 @@ import random
 import copy
 
 convergence_limit = 0.5
+ran = random.Random(42)
 
 # Learning rate
 def l(t):
@@ -17,7 +18,7 @@ def l(t):
 
 # White Noise
 def white_noise():
-    wn = np.random.normal(loc=0.0, scale=0.2, size=None)
+    wn = ran.gauss(mu=0.0, sigma=0.2)
     return wn
 
 # Function to create all possible actions of a user
@@ -120,7 +121,7 @@ def select_action(probabilities):
     # except if something changes we have no other reason to select something else
     repeat = all(p == 0 for p in probabilities)
     indices = list(range(len(probabilities)))
-    selected_index = random.choices(indices, weights=probabilities, k=1)[0]
+    selected_index = ran.choices(indices, weights=probabilities, k=1)[0]
     return selected_index, repeat
 
 

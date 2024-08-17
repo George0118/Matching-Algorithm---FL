@@ -14,6 +14,8 @@ from itertools import product
 
 rewards = [[0] * S for _ in range(N)]
 
+ran = random.Random(42)
+
 def accurate_fedlearner_matching(original_apprx_matched_users: List[User], original_servers: List[Server]):
     global rewards
 
@@ -46,7 +48,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users: List[User], origi
     t = 1
     while(t <= 1000*N):
 
-        random_user = apprx_matched_users[random.randint(0,N-1)]   # Select random user
+        random_user = apprx_matched_users[ran.randint(0,N-1)]   # Select random user
 
         if(random_user.get_alligiance() is None):     # If user does not belong to any coalition
             max_utility_diff = 0
@@ -95,9 +97,9 @@ def accurate_fedlearner_matching(original_apprx_matched_users: List[User], origi
                     current_server = server
                     break
 
-            other_server = random.choice(servers)      # select another server randomly
+            other_server = ran.choice(servers)      # select another server randomly
             while(other_server.num == current_server.num):     # different than the current server 
-                other_server = random.choice(servers)
+                other_server = ran.choice(servers)
 
             if(len(other_server.get_coalition()) < other_server.Ns_max):      # If the other server has space
                 utility_diff = check_user_changes_servers(servers, random_user, current_server, other_server)   # check if giving away a user is better
@@ -116,7 +118,7 @@ def accurate_fedlearner_matching(original_apprx_matched_users: List[User], origi
             else:   # if the other server has no space
                 other_coalition = other_server.get_coalition()
 
-                other_user_num = random.choice(list(other_coalition)).num  # select a random user from its coalition
+                other_user_num = ran.choice(list(other_coalition)).num  # select a random user from its coalition
 
                 for user in apprx_matched_users:
                     if user.num == other_user_num:
@@ -180,7 +182,7 @@ def final_matching(users: List[User], servers: List[Server]):
     
     while(flag):
         flag = False
-        random.shuffle(cartesian_product)     # shuffle cartesian product each iteration to not prioritize any server, user
+        ran.shuffle(cartesian_product)     # shuffle cartesian product each iteration to not prioritize any server, user
         for server, user in cartesian_product:
             user_reward = rewards[user.num][server.num]
 
