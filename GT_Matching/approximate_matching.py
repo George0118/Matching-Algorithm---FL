@@ -55,7 +55,6 @@ def approximate_fedlearner_matching(unmatched_users: List[User], servers: List[S
                 server.clear_invitations_list()
 
         for u in unmatched_users:                   # if a user has not more available servers set its flag to False
-            print("User", u.num, "Servers:", u.get_available_servers())
             if(not u.get_available_servers()):
                 server_availability[u.num] = False
 

@@ -337,7 +337,6 @@ for area, users in all_users.items():
         user.used_datasize = user.datasize
 
 
-
 urban_servers = copy.deepcopy(servers)
 subruban_servers = copy.deepcopy(servers)
 rural_servers = copy.deepcopy(servers)
@@ -354,6 +353,16 @@ for area, gt_users in all_users.items():
     gt_start = time.time()
     
     gt_servers = all_servers[area]
+
+    if area != "Urban":
+        if N <= rural_threshold:
+            all_users[area] = copy.deepcopy(all_users["Urban"])
+            all_servers[area] = copy.deepcopy(all_servers["Urban"])
+            continue
+        elif N <= suburban_threshold and area == "Suburban":
+            all_users[area] = copy.deepcopy(all_users["Urban"])
+            all_servers[area] = copy.deepcopy(all_servers["Urban"])
+            continue            
 
     # Initializing the available servers for each user
     for i in range(N):
@@ -455,12 +464,18 @@ if federated_learning:
 
 # For each Matching log the metrics (Energy, Datarate, Utilities, Payments, Accuracy, Loss)
 
+matchings = []
+labels = ["URBAN", "SUBURBAN", "RURAL"]
+
 if federated_learning:
     # With Federated Learning
-    matchings = []
-    labels = ["URBAN", "SUBURBAN", "RURAL"]
     for i in range(3):
         matchings.append((user_lists[i], server_lists[i], matching_losses[i], matching_accuracies[i], matching_user_losses[i], matching_user_accuracies[i], labels[i]))
+else:
+    # Without Federated Learning
+    for i in range(3):
+        matchings.append((user_lists[i], server_lists[i], labels[i]))
+
     
 
 timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
@@ -560,3 +575,7 @@ for matching in matchings:
                 file.write(f"User {u.num}:\n\
             Losses: {user_losses[u.num]}\n\
             Accuracies: {user_accuracies[u.num]}\n")
+                
+from matchingeq_functions import matching_equality
+print(matching_equality(all_servers["Urban"], all_servers["Suburban"]))
+print(matching_equality(all_servers["Urban"], all_servers["Rural"]))
