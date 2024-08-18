@@ -6,73 +6,60 @@ import numpy as np
 results_directory = "../../results/regret_matching"
 matching_data = {}
 
+# New data structure for storing area-specific data for RCI and RII
+area_data = {"RCI": {},
+             "RII": {}}
+
 def extract_value(line):
-    # Regular expression to match either an integer or a float
     match = re.search(r'\b\d+\.\d+\b|\b\d+\b', line)
     if match:
         value = match.group()
-        # Check if the value contains a decimal point
         return float(value) if '.' in value else int(value)
     return None
-
 
 # Loop through files in the results directory
 for filename in os.listdir(results_directory):
     file_path = os.path.join(results_directory, filename)
 
-    # Check if the path is a file
     if os.path.isfile(file_path):
         with open(file_path, 'r') as file:
-            # Read lines from the file
             lines = file.readlines()
 
-            matching = users = None
-            # Extract relevant data from each line
+            matching = users = area = None
             for line in lines:
                 match = re.match(r'Matching: (\w+_\w+), Users: (\d+), Critical Points: (\d+)', line)
                 if match:
-                    matching, users = match.groups()[0], int(match.groups()[1])  # Store Matching and Users
-                    matching = re.sub(r'(_URBAN|_SUBURBAN|_RURAL)$', '', matching)  # Normalize matching name
-                    matching_data.setdefault(matching, {"Data": {}})
+                    matching_full, users = match.groups()[0], int(match.groups()[1])
+                    area_match = re.search(r'_(URBAN|SUBURBAN|RURAL)$', matching_full)
+                    if area_match:
+                        area = area_match.group(1)
+                    matching = re.sub(r'(_URBAN|_SUBURBAN|_RURAL)$', '', matching_full)
+                    matching_data.setdefault(matching, {})
+
                 elif "Mean Energy" in line or "Mean Elocal" in line or "Mean Etransfer" in line \
                         or "Mean Datarate" in line or "Mean User Utility" in line or "Mean Server Utility" in line \
-                        or "Sum User Payments" in line or "Time" in line or "Iterations" in line:
+                        or "Sum User Payments" in line or "Time" in line or "Iterations" in line\
+                        or "Mean Energy" in line:
                     magnitude_match = re.search(r'^\s*([^:]+)\s*:', line)
                     if magnitude_match:
                         magnitude = magnitude_match.group(1).strip()
+                        if matching == "GT" and magnitude == "Iterations":
+                            continue
                         value = extract_value(line)
-                        matching_data[matching]["Data"].setdefault(magnitude, {"Users": [], "Values": []})
-                        matching_data[matching]["Data"][magnitude]["Users"].append(users)  # Users
-                        matching_data[matching]["Data"][magnitude]["Values"].append(value)
+                        matching_data[matching].setdefault(magnitude, {"Users": [], "Values": []})
+                        matching_data[matching][magnitude]["Users"].append(users)
+                        matching_data[matching][magnitude]["Values"].append(value)
 
-# Create line plots for each magnitude
-magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time", "Iterations"]
+                        # Store Time and Iterations data for area-specific RCI and RII matchings
+                        if magnitude in ["Time", "Iterations"] and matching in ["RCI", "RII"] and area:
+                            area_data[matching].setdefault(magnitude, {"URBAN": {"Users": [], "Values": []}, "SUBURBAN": {"Users": [], "Values": []}, "RURAL": {"Users": [], "Values": []}})
+                            area_data[matching][magnitude][area]["Users"].append(users)
+                            area_data[matching][magnitude][area]["Values"].append(value)
 
-plot_data = {}
-for matching in matching_data.keys():
-    plot_data[matching] = {}
-    for magnitude in magnitudes:
-        plot_data[matching][magnitude] = {"Users": [], "Values": []}
-        
-
-# Aggregate and average data for the same number of users across multiple runs
-for matching, data in matching_data.items():
-    for magnitude, values_data in data["Data"].items():
-        if matching == "GT" and magnitude == "Iterations":
-            continue
-        users_values = {}
-        for i, users in enumerate(values_data["Users"]):
-            if users not in users_values:
-                users_values[users] = []
-            users_values[users].append(values_data["Values"][i])
-        
-        for users, values_list in users_values.items():
-            averaged_value = np.mean(values_list)
-            plot_data[matching][magnitude]["Users"].append(users)
-            plot_data[matching][magnitude]["Values"].append(averaged_value)
-
+# Existing plotting code for each magnitude
 user_values = [12, 15, 18, 21, 24, 27, 30]
 save_directory = "./matching_comparison/"
+os.makedirs(save_directory, exist_ok=True)
 magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time", "Iterations"]
 
 for magnitude in magnitudes:
@@ -80,7 +67,10 @@ for magnitude in magnitudes:
     plt.xlabel("Users", fontsize=18)
     plt.ylabel(magnitude, fontsize=18)
 
-    for matching, data in plot_data.items():
+    for matching, data in matching_data.items():
+
+        if matching == "GT" and magnitude == "Iterations":
+            continue
 
         users = data[magnitude]["Users"]
         values = data[magnitude]["Values"]
@@ -94,39 +84,69 @@ for magnitude in magnitudes:
 
         plt.plot(users, values, marker='o', label=f"Matching: {m}")
 
-    plt.xticks(user_values, fontsize=16)  # Set x ticks to predefined user values
+    plt.xticks(user_values, fontsize=16)
     plt.yticks(fontsize=16)
     plt.legend(fontsize=16)
     
     # Save the plot as PNG
     plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
-    # plt.show()
 
-# Create bar plots for average magnitude values across all matchings
+# Existing bar plots for averages
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
     plt.title(f"Average {magnitude} for Each Matching")
     plt.xlabel("Matching")
     plt.ylabel("Average " + magnitude)
 
-    avg_values = []  # List to store average values for each matching
-    bar_colors = ['blue', 'green', 'red']  # Colors for the bars
+    avg_values = []
+    algorithms = ["Game Theory", "Regret Complete Information", "Regret Incomplete Information"]
+    bar_colors = ['blue', 'green', 'red']
 
-    for matching, data in plot_data.items():
+    for matching, data in matching_data.items():
+        if matching == "GT" and magnitude == "Iterations":
+            algorithms = ["Regret Complete Information", "Regret Incomplete Information"]
+            continue
         values = data[magnitude]["Values"]
         avg_value = np.mean(values)
         avg_values.append(avg_value)
 
-    # Plotting the bar plot with thinner bars
-    bars = plt.bar(["Game Theory", "Regret Complete Information", "Regret Incomplete Information"], avg_values, color=bar_colors, width=0.3)
+    bars = plt.bar(algorithms, avg_values, color=bar_colors, width=0.3)
 
-    # Adding text labels on top of each bar
     for bar, value in zip(bars, avg_values):
         if magnitude == "Mean Etransfer":
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.7f}', ha='center', va='bottom')
         else:
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
 
-    # Save the plot as PNG
+    algorithms = ["Game Theory", "Regret Complete Information", "Regret Incomplete Information"]
+
     plt.savefig(os.path.join(save_directory, f"Average_{magnitude.replace(' ', '_')}.png"), bbox_inches='tight')
-    # plt.show()
+
+
+areas = ["URBAN", "SUBURBAN", "RURAL"]
+magnitudes = ["Time", "Iterations"]
+matchings = {"RCI": "Regret Complete Information", "RII": "Regret Incomplete Information"}
+
+# New: Bar plots for average Time and Iterations for each area in RCI and RII
+for magnitude in magnitudes:
+    for matching_key, matching_name in matchings.items():
+
+        plt.figure(figsize=(10, 6))
+        plt.title(f"Average {magnitude} for {matching_name}")
+        plt.xlabel("Matching")
+        plt.ylabel(f"Average {magnitude}")
+
+        avg_values = []
+        bar_colors = ['blue', 'green', 'red']
+
+        for area in areas:
+            values = area_data[matching_key][magnitude][area]["Values"]
+            avg_value = np.mean(values)
+            avg_values.append(avg_value)
+
+        bars = plt.bar(areas, avg_values, color=bar_colors, width=0.3)
+
+        for bar, value in zip(bars, avg_values):
+            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
+
+        plt.savefig(os.path.join(save_directory, f"Average_{magnitude}_per_area_{matching_key}.png"), bbox_inches='tight')
