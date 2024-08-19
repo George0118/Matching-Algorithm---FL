@@ -477,6 +477,20 @@ for area, regret_users in regret_all_users.items():
 
     regret_start = time.time()
 
+    if area != "Urban":
+        if N <= rural_threshold:
+            regret_all_users[area] = copy.deepcopy(regret_all_users["Urban"])
+            regret_all_servers[area] = copy.deepcopy(regret_all_servers["Urban"])
+            regret_times.append(regret_times[0])
+            regret_iterations.append(regret_iterations[0])
+            continue
+        elif N <= suburban_threshold and area == "Suburban":
+            regret_all_users[area] = copy.deepcopy(regret_all_users["Urban"])
+            regret_all_servers[area] = copy.deepcopy(regret_all_servers["Urban"])
+            regret_times.append(regret_times[0])
+            regret_iterations.append(regret_iterations[0])
+            continue 
+
     regret_servers = regret_all_servers[area]
 
     iter = regret_matching(regret_users, regret_servers)
@@ -509,6 +523,20 @@ regretII_iterations = []
 for area, regretII_users in regretII_all_users.items(): 
 
     regret_start = time.time()
+
+    if area != "Urban":
+        if N <= rural_threshold:
+            regretII_all_users[area] = copy.deepcopy(regretII_all_users["Urban"])
+            regretII_all_servers[area] = copy.deepcopy(regretII_all_servers["Urban"])
+            regretII_times.append(regretII_times[0])
+            regretII_iterations.append(regretII_iterations[0])
+            continue
+        elif N <= suburban_threshold and area == "Suburban":
+            regretII_all_users[area] = copy.deepcopy(regretII_all_users["Urban"])
+            regretII_all_servers[area] = copy.deepcopy(regretII_all_servers["Urban"])
+            regretII_times.append(regretII_times[0])
+            regretII_iterations.append(regretII_iterations[0])
+            continue 
 
     regretII_servers = regretII_all_servers[area]
 
