@@ -118,25 +118,22 @@ class Server:
 
         factors = [0] * N
 
-        Ns = len(list(self.get_coalition()))
-
-        denominator = 0
+        max_factor = 0
         for u in coalition:
             importance_list = u.get_importance()
+            factor = 0
             for cp in critical_points:
-                denominator += importance_list[cp.num] * u.get_datasize()
+                 factor += importance_list[cp.num]
+            if factor > max_factor:
+                max_factor = factor
 
         for u in coalition:
             importance_list = u.get_importance()
-            numerator = 0
+            factor = 0
             for cp in critical_points:
-                numerator += importance_list[cp.num] * u.get_datasize()
-            factors[u.num] = numerator/denominator
+                factor += importance_list[cp.num]
+            factors[u.num] = factor/max_factor
 
-        factors = [factor/Ns for factor in factors]
-
-        factors_sum = sum(factors)
-        factors = [factor / factors_sum for factor in factors]
+        factors = [factor / 10 for factor in factors]
 
         return factors
-
