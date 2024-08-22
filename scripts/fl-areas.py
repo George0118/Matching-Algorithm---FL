@@ -22,38 +22,10 @@ def parse_log_file(file_path):
 
     return accuracies, losses
 
-# Function to plot data for each server
-def plot_averages(data, title, save_dir=None):
-    plt.figure(figsize=(10, 6))
-    for server, server_data in data.items():
-        num_users = list(server_data.keys())
-        average_accuracies = [user_data['average_accuracy'] for user_data in server_data.values() if 'average_accuracy' in user_data]
-        average_losses = [user_data['average_loss'] for user_data in server_data.values() if 'average_loss' in user_data]
-
-        if average_accuracies:
-            plt.plot(num_users, average_accuracies, label=f"{server} (Avg Accuracy)", color=colors[server])
-        if average_losses:
-            plt.plot(num_users, average_losses, label=f"{server} (Avg Loss)", color=colors[server])
-                
-    plt.title(title)
-    plt.xlabel('Number of Users')
-    plt.ylabel('Accuracy' if 'Accuracies' in title else 'Loss')
-    plt.legend()
-    plt.grid(True)
-    
-    # Save plot if save_dir is provided
-    if save_dir:
-        filename = title.replace(' ', '_') + '.png'
-        save_path = os.path.join(save_dir, filename)
-        plt.savefig(save_path)
-        print(f"Plot saved to: {save_path}")
-    else:
-        plt.show()
-
 
 # Directory containing log files
 directory = '../../results/areas_results'
-save_directory = './fl-areas'
+save_directory = './fl-areas/areas'
 
 scalability_accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
 scalability_losses = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
@@ -145,7 +117,8 @@ plt.yticks(fontsize=16)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
-    filename = 'Sum_of_Average_Accuracy.png'
+    os.makedirs(save_directory, exist_ok=True)
+    filename = 'Sum_of_Accuracies_vs_Users.png'
     save_path = os.path.join(save_directory, filename)
     plt.savefig(save_path)
     print(f"Plot saved to: {save_path}")
@@ -154,16 +127,18 @@ else:
 
 plt.figure(figsize=(10, 6))
 for area, values in sum_loss.items():
-    plt.plot(users, values, label=area)
+    plt.plot(users, values, label=area, linewidth = 2.5)
 
-plt.title('Sum of Average Loss vs Users for Different Areas')
-plt.xlabel('Number of Users')
-plt.ylabel('Sum of Average Loss')
-plt.legend()
+plt.xlabel('Number of Users', fontsize = 18)
+plt.ylabel('Sum of Server Losses', fontsize = 18)
+plt.legend(fontsize = 16)
+plt.xticks(fontsize=16) 
+plt.yticks(fontsize=16)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
-    filename = 'Sum_of_Average_Loss.png'
+    os.makedirs(save_directory, exist_ok=True)
+    filename = 'Sum_of_Losses_vs_Users.png'
     save_path = os.path.join(save_directory, filename)
     plt.savefig(save_path)
     print(f"Plot saved to: {save_path}")
@@ -177,22 +152,39 @@ for area, data in sum_accuracy.items():
 plt.figure(figsize=(10, 6))
 for i, (area, values) in enumerate(sum_loss.items()):
     plt.bar(area, sum(values))
-    plt.text(i, sum(values), f'{sum(values):.4f}', ha='center', va='bottom', fontsize = 10)
+    plt.text(i, sum(values) - (0.02 * sum(values)), f'{sum(values):.4f}', ha='center', va='top', fontsize=18)
 
-plt.title('Sum of Average Loss per Area')
-plt.xlabel('Areas')
-plt.ylabel('Sum of Average Loss')
+plt.xlabel('Areas', fontsize = 18)
+plt.ylabel('Sum of Server Losses', fontsize = 18)
+plt.xticks(fontsize=16) 
+plt.yticks(fontsize=16)
 plt.grid(True)
-plt.show()
+# Save plot if save_dir is provided
+if save_directory:
+    os.makedirs(save_directory, exist_ok=True)
+    filename = 'Sum_of_Losses_per_Area.png'
+    save_path = os.path.join(save_directory, filename)
+    plt.savefig(save_path)
+    print(f"Plot saved to: {save_path}")
+else:
+    plt.show()
 
 plt.figure(figsize=(10, 6))
 for i, (area, values) in enumerate(sum_accuracy.items()):
     plt.bar(area, sum(values))
-    plt.text(i, sum(values), f'{sum(values):.4f}', ha='center', va='bottom', fontsize = 10)
+    plt.text(i, sum(values) - (0.02 * sum(values)), f'{sum(values):.4f}', ha='center', va='top', fontsize=18)
 
-plt.title('Sum of Average Accuracy per Area')
-plt.xlabel('Areas')
-plt.ylabel('Sum of Average Accuracy')
+plt.xlabel('Areas', fontsize = 18)
+plt.ylabel('Sum of Server Accuracies', fontsize = 18)
+plt.xticks(fontsize=16) 
+plt.yticks(fontsize=16)
 plt.grid(True)
-plt.show()
-
+# Save plot if save_dir is provided
+if save_directory:
+    os.makedirs(save_directory, exist_ok=True)
+    filename = 'Sum_of_Accuracies_per_Area.png'
+    save_path = os.path.join(save_directory, filename)
+    plt.savefig(save_path)
+    print(f"Plot saved to: {save_path}")
+else:
+    plt.show()
