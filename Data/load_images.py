@@ -37,7 +37,6 @@ import cv2
 import os
 import math
 import numpy as np
-import random
 from config import N,S
 from general_parameters import N_neutral
 
@@ -78,13 +77,6 @@ def load_images(file_paths, disaster):
                 images.append(image)
                 labels.append(disaster)
 
-    # Shuffle images and labels in parallel
-    combined = list(zip(images, labels))
-    # Create a random number generator instance with a specific seed
-    rng = random.Random()
-    rng.shuffle(combined)
-    images[:], labels[:] = zip(*combined)
-
     selected_images = [images[i:i + N_neutral] for i in range(0, len(images), N_neutral)]
     selected_labels = [labels[i:i + N_neutral] for i in range(0, len(labels), N_neutral)]
 
@@ -108,13 +100,6 @@ def load_neutral_images():
                 image = cv2.imread(image_path)
                 images.append(image)
                 labels.append("neutral")
-
-    # Shuffle images and labels in parallel
-    combined = list(zip(images, labels))
-    # Create a random number generator instance with a specific seed
-    rng = random.Random()
-    rng.shuffle(combined)
-    images[:], labels[:] = zip(*combined)
 
     # Split the images and labels into N lists, each containing N_neutral images and labels
     neutral_image_lists = [images[i:i+N_neutral] for i in range(0, len(images), N_neutral)]
