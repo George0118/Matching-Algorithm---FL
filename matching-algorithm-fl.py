@@ -400,17 +400,17 @@ if federated_learning:
 if federated_learning:
     # With Federated Learning
     matchings = []
-    matchings.append((ran_users, ran_servers, matching_losses[0], matching_accuracies[0], matching_user_losses[0], matching_user_accuracies[0], "RAN"))
-    matchings.append((gt_users, gt_servers, matching_losses[1], matching_accuracies[1], matching_user_losses[1], matching_user_accuracies[1], "GT"))
-    matchings.append((rl1_users, rl1_servers, matching_losses[2], matching_accuracies[2], matching_user_losses[2], matching_user_accuracies[2], "RL1"))
-    matchings.append((rl2_users, rl2_servers, matching_losses[3], matching_accuracies[3], matching_user_losses[3], matching_user_accuracies[3], "RL2"))
+    matchings.append((ran_users, ran_servers, ran_end-ran_start, matching_losses[0], matching_accuracies[0], matching_user_losses[0], matching_user_accuracies[0], "RAN"))
+    matchings.append((gt_users, gt_servers, gt_end-gt_start, matching_losses[1], matching_accuracies[1], matching_user_losses[1], matching_user_accuracies[1], "GT"))
+    matchings.append((rl1_users, rl1_servers, rl1_end-rl1_start, matching_losses[2], matching_accuracies[2], matching_user_losses[2], matching_user_accuracies[2], "RL1"))
+    matchings.append((rl2_users, rl2_servers, rl2_end-rl2_start, matching_losses[3], matching_accuracies[3], matching_user_losses[3], matching_user_accuracies[3], "RL2"))
 else:
     # Without Federated Learning
     matchings = []
-    matchings.append((ran_users, ran_servers, "RAN"))
-    matchings.append((gt_users, gt_servers, "GT"))
-    matchings.append((rl1_users, rl1_servers, "RL1"))
-    matchings.append((rl2_users, rl2_servers, "RL2"))
+    matchings.append((ran_users, ran_servers, ran_end-ran_start, "RAN"))
+    matchings.append((gt_users, gt_servers, gt_end-gt_start, "GT"))
+    matchings.append((rl1_users, rl1_servers, rl1_end-rl1_start, "RL1"))
+    matchings.append((rl2_users, rl2_servers, rl2_end-rl2_start, "RL2"))
 
 timestamp = datetime.datetime.now().strftime("%d-%m_%H-%M-%S")
 
@@ -424,9 +424,9 @@ if not os.path.exists(directory_path):
 for matching in matchings:
 
     if federated_learning:
-        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+        _users, _servers, duration, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
     else:
-        _users, _servers, matching_label = matching     # Without Federated Learning
+        _users, _servers, duration, matching_label = matching     # Without Federated Learning
 
     # Energy (J)
     mean_Energy = 0
@@ -487,6 +487,7 @@ for matching in matchings:
     Mean User Utility: {mean_User_Utility}\n\
     Mean Server Utility: {mean_Server_Utility}\n\
     Sum User Payments: {user_payments}\n\
+    Time: {duration}\n\
     \n")
         
     if federated_learning: 

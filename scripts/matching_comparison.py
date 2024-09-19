@@ -30,7 +30,7 @@ for filename in os.listdir(results_directory):
                     matching_data.setdefault(matching, {"Data": {}})
                 elif "Mean Energy" in line or "Mean Elocal" in line or "Mean Etransfer" in line \
                         or "Mean Datarate" in line or "Mean User Utility" in line or "Mean Server Utility" in line \
-                        or "Sum User Payments" in line:
+                        or "Sum User Payments" or "Time" in line:
                     magnitude_match = re.search(r'^\s*([^:]+)\s*:', line)
                     if magnitude_match:
                         magnitude = magnitude_match.group(1).strip()
@@ -40,7 +40,7 @@ for filename in os.listdir(results_directory):
                         matching_data[matching]["Data"][magnitude]["Values"].append(value)
 
 # Create line plots for each magnitude
-magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Sum User Payments"]
+magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Sum User Payments", "Time"]
 
 plot_data = {}
 for matching in matching_data.keys():
@@ -65,7 +65,7 @@ for matching, data in matching_data.items():
 
 user_values = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
 save_directory = "./matching_comparison/"
-magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility"]
+magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time"]
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
