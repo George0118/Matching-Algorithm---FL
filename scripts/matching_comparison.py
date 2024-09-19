@@ -2,6 +2,7 @@ import os
 import re
 import matplotlib.pyplot as plt
 import numpy as np
+from collections import defaultdict
 
 results_directory = "../../results/regret_matching"
 matching_data = {}
@@ -58,7 +59,7 @@ for filename in os.listdir(results_directory):
 
 # Existing plotting code for each magnitude
 user_values = [12, 15, 18, 21, 24, 27, 30]
-save_directory = "./matching_comparison/"
+save_directory = "./matching_comparison/regret_comparison"
 os.makedirs(save_directory, exist_ok=True)
 magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time", "Iterations"]
 
@@ -74,6 +75,15 @@ for magnitude in magnitudes:
 
         users = data[magnitude]["Users"]
         values = data[magnitude]["Values"]
+        
+        # Step 1: Group the values 
+        grouped_data = defaultdict(list)
+
+        for user, val in zip(users, values):
+            grouped_data[user].append(val)
+
+        # Step 2: Calculate the mean for each group
+        average_values = {user: np.mean(vals) for user, vals in grouped_data.items()}
 
         if matching == "GT":
             m = "Game Theory"
@@ -82,7 +92,10 @@ for magnitude in magnitudes:
         else:
             m = "Regret Incomplete Information"
 
-        plt.plot(users, values, marker='o', label=f"Matching: {m}")
+        users_sorted = sorted(average_values.keys())  # Sort magnitudes
+        averages_sorted = [average_values[user] for user in users_sorted]
+
+        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Matching: {m}")
 
     plt.xticks(user_values, fontsize=16)
     plt.yticks(fontsize=16)
@@ -150,3 +163,35 @@ for magnitude in magnitudes:
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
 
         plt.savefig(os.path.join(save_directory, f"Average_{magnitude}_per_area_{matching_key}.png"), bbox_inches='tight')
+
+
+for matching_key, matching_name in matchings.items():
+    plt.figure(figsize=(10, 6))
+    plt.title(f"Average Iterations vs Users for {matching_name}")
+    plt.xlabel("Users")
+    plt.ylabel(f"Average Iterations")
+
+    for area in areas:
+        values = area_data[matching_key]["Iterations"][area]["Values"]
+        users = area_data[matching_key]["Iterations"][area]["Users"]
+
+        # Step 1: Group the values 
+        grouped_data = defaultdict(list)
+
+        for user, val in zip(users, values):
+            grouped_data[user].append(val)
+
+        # Step 2: Calculate the mean for each group
+        average_values = {user: np.mean(vals) for user, vals in grouped_data.items()}
+
+        users_sorted = sorted(average_values.keys())  # Sort magnitudes
+        averages_sorted = [average_values[user] for user in users_sorted]
+
+        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Area: {area}")
+
+    plt.xticks(user_values, fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.legend(fontsize=16)
+    
+    # Save the plot as PNG
+    plt.savefig(os.path.join(save_directory, f"{matching_key}_Iterations_vs_Users_per_Area.png"), bbox_inches='tight')

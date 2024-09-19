@@ -55,7 +55,7 @@ from general_parameters import *
 urban_threshold = 30    # In an Urban Area, after 30 users the users start to be further in proximity to the CPs
 suburban_threshold = 21 # In an Suburban Area, after 21 users the users start to be further in proximity to the CPs
 rural_threshold = 12    # In an Rural Area, after 12 users the users start to be further in proximity to the CPs
-federated_learning = False
+federated_learning = True
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
 

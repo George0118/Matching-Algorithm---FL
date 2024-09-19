@@ -4,6 +4,7 @@ from config import *
 disasters = ["fire", "flood", "earthquake"]
 
 N_max = 100 # At max set 100 users
+current_max_users = 30  # For our experiments we have max 30 users
 N_neutral = 250 # Neutral images per user
 
 # Data Rate
