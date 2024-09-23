@@ -349,13 +349,13 @@ matching_user_accuracies = []
 if federated_learning:
     prev_matchings = []
 
-    get_data = Get_data(users, servers)
-
-    X_train, y_train, X_server, y_server = get_data.pre_data()
-
     for _users, _servers in zip(user_lists, server_lists):
 
         same_matching = check_matching_equality(_servers, prev_matchings)
+
+        get_data = Get_data(users, servers)
+
+        X_train, y_train, X_server, y_server = get_data.pre_data()
 
         elapsed_time = 0
 
