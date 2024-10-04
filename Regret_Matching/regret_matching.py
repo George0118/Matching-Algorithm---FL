@@ -13,7 +13,7 @@ ran = random.Random(42)
 
 # Learning rate
 def l(t):
-    return 1 / t**(1)
+    return 1/t
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):

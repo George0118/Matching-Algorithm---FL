@@ -14,12 +14,13 @@ ran = random.Random(42)
 
 # Learning rate
 def l(t):
-    return 1 / ((t) ** 1)
+    return 1/t
 
 # White Noise
 def white_noise():
-    wn = ran.gauss(mu=0.0, sigma=0.2)
-    return wn
+    # wn = ran.gauss(mu=0.0, sigma=0.2)
+    # return wn
+    return 0
 
 # Function to create all possible actions of a user
 def matching_actions(servers, quantized_fn, quantized_ptrans, quantized_datasize):

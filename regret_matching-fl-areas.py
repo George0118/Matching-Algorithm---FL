@@ -723,7 +723,7 @@ for matching in matchings:
     mean_Server_Utility /= S
 
             
-    output_filename = f"../results/Areas-u{N}_cp{K}_{timestamp}.txt"  # Choose a desired filename
+    output_filename = f"../results/Areas-u{N}_cp{K}_{timestamp}_{num}.txt"  # Choose a desired filename
 
     with open(output_filename, 'a') as file:
         file.write(f"Matching: {matching_label}, Users: {N}, Critical Points: {K}\n\
