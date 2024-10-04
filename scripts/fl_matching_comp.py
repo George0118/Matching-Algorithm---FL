@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # Function to parse accuracies and losses from log files
-def parse_log_file(file_path):
-    matching = {}
+def parse_log_file(matching, file_path):
 
     with open(file_path, 'r') as file:
         for line in file:
@@ -23,7 +22,6 @@ def parse_log_file(file_path):
                 matching[matching_type][current_server]['losses'].append(loss_values[-1])  # Get the last loss value
                 matching[matching_type][current_server]['accuracies'].append(accuracy_values[-1])  # Get the last accuracy value
 
-    return matching
 
 # Directory containing log files
 directory = '../../results/regret_matching_FL'
@@ -33,10 +31,11 @@ os.makedirs(save_directory, exist_ok=True)
 colors = {'Fire Server': 'r', 'Flood Server': 'b', 'Earthquake Server': 'g'}
 
 # Iterate over files in directory
+matching = {}
 for filename in os.listdir(directory):
     if filename.endswith('.txt'):
         file_path = os.path.join(directory, filename)
-        matching = parse_log_file(file_path)
+        parse_log_file(matching, file_path)
 
 # Plotting accuracies
 matching_types = list(matching.keys())
@@ -63,7 +62,7 @@ plt.yticks(fontsize = 14)
 plt.legend(loc='lower center', fontsize = 12)
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'accuracy_plot.png'))  # Save the plot
-plt.show()
+# plt.show()
 
 # Plotting losses
 plt.figure(figsize=(10, 6))
@@ -82,4 +81,4 @@ plt.yticks(fontsize = 14)
 plt.legend(fontsize = 12)
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'loss_plot.png'))  # Save the plot
-plt.show()
+# plt.show()

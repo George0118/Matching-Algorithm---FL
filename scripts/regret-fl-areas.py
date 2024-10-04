@@ -146,7 +146,7 @@ plt.ylabel('Average Server Accuracy', fontsize = 18)
 plt.legend(fontsize = 16)
 plt.xticks(fontsize=16) 
 plt.yticks(fontsize=16)
-plt.ylim(bottom = 2.7, top = 2.75)
+plt.ylim(bottom = 2.65, top = 2.75)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
@@ -164,7 +164,7 @@ for area, values in sum_loss.items():
 plt.title('Average Loss for Different Areas')
 plt.xlabel('Areas')
 plt.ylabel('Average Loss')
-plt.ylim(bottom = 1, top = 1.2)
+plt.ylim(bottom = 1, top = 1.6)
 plt.legend()
 plt.grid(True)
 # Save plot if save_dir is provided

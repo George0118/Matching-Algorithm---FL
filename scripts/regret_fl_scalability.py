@@ -12,10 +12,10 @@ def parse_log_file(file_path):
     with open(file_path, 'r') as file:
         for line in file:
             if 'Matching:' in line:
-                if 'GT' in line:
-                    flag = True
-                else:
+                if 'RCI' in line:
                     flag = False
+                else:
+                    flag = True
 
             if flag:
                 if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
