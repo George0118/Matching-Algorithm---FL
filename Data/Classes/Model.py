@@ -21,9 +21,9 @@ class Model:
   def global_model(self, input_shape):
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(128, activation='relu', kernel_regularizer=L2(0.01))(x)  # L2 regularization
-    x = Dropout(0.5)(x)
-    x_output = Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01))(x)  # L2 regularization
+    x = Dense(64, activation='relu', kernel_regularizer=L2(0.01))(x)
+    x = Dropout(0.2)(x)
+    x_output = Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01))(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
 
