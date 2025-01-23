@@ -29,7 +29,8 @@ def parse_log_file(file_path):
 
 # Directory containing log files
 directory = '../../results/regret_matching_FL'
-save_directory = './fl_scalability'
+save_directory = './fl_scalability/regret'
+os.makedirs(save_directory, exist_ok=True)
 
 scalability_accuracies = {}
 scalability_losses = {}

@@ -56,7 +56,8 @@ def plot_averages(data, title, save_dir=None):
 
 # Directory containing log files
 directory = '../../results/regret_matching_FL'
-save_directory = './fl-areas'
+save_directory = './fl-areas/regret'
+os.makedirs(save_directory, exist_ok=True)
 
 scalability_accuracies = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
 scalability_losses = {'RCI_URBAN': {}, 'RCI_SUBURBAN': {}, 'RCI_RURAL': {}, 'RII_URBAN': {}, 'RII_SUBURBAN': {}, 'RII_RURAL': {}}
@@ -134,20 +135,22 @@ for area, area_data in average_losses.items():
         for user_count, metrics in user_data.items():
             sum_loss[area][int((int(user_count)-12)/3)] += metrics['average_loss']
 
-print(sum_accuracy)
 
 # Plotting
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 8))
 for area, values in sum_accuracy.items():
-    plt.bar(area, np.mean(values))
+    mean_values = np.mean(values)
+    plt.bar(area, mean_values)
 
-plt.xlabel('Area', fontsize = 18)
+plt.title('Average Accuracy for Different Areas', fontsize = 18)
+plt.xlabel('Areas', fontsize = 18)
 plt.ylabel('Average Server Accuracy', fontsize = 18)
 plt.legend(fontsize = 16)
-plt.xticks(fontsize=16) 
-plt.yticks(fontsize=16)
-plt.ylim(bottom = 2.65, top = 2.75)
+plt.xticks(fontsize = 16, rotation = 45) 
+plt.yticks(fontsize = 16)
+plt.ylim(bottom = 2.7, top = 2.75)
 plt.grid(True)
+plt.subplots_adjust(bottom=0.25)
 # Save plot if save_dir is provided
 if save_directory:
     filename = 'Area_Average_Accuracy.png'
@@ -157,15 +160,19 @@ if save_directory:
 else:
     plt.show()
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(10, 8))
 for area, values in sum_loss.items():
-    plt.bar(area, np.mean(values))
+    mean_values = np.mean(values)
+    plt.bar(area, mean_values)
 
-plt.title('Average Loss for Different Areas')
-plt.xlabel('Areas')
-plt.ylabel('Average Loss')
-plt.ylim(bottom = 1, top = 1.6)
-plt.legend()
+plt.title('Average Loss for Different Areas', fontsize = 18)
+plt.xlabel('Areas', fontsize = 18)
+plt.ylabel('Average Loss', fontsize = 18)
+plt.xticks(fontsize = 16, rotation = 45) 
+plt.yticks(fontsize = 16)
+plt.ylim(bottom = 0.8, top = 1.1)
+plt.legend(fontsize = 16)
+plt.subplots_adjust(bottom=0.25)
 plt.grid(True)
 # Save plot if save_dir is provided
 if save_directory:
@@ -176,5 +183,3 @@ if save_directory:
 else:
     plt.show()
 
-for area, data in sum_accuracy.items():
-    print(sum(data))
