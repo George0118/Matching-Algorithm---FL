@@ -4,6 +4,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 
+color_mapping_1 = {
+    "fire": "red",
+    "flood": "blue",
+    "earthquake": "green"
+}
+
+color_mapping_2 = {
+    "GT": "blue",
+    "RCI": "orange",
+    "RII": "green"
+}
+
+color_mapping_3 = {
+    "URBAN": "blue",
+    "SUBURBAN": "orange",
+    "RURAL": "green"
+}
+
 results_directory = "../../results/regret_matching"
 matching_data = {}
 
@@ -95,7 +113,7 @@ for magnitude in magnitudes:
         users_sorted = sorted(average_values.keys())  # Sort magnitudes
         averages_sorted = [average_values[user] for user in users_sorted]
 
-        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Matching: {m}")
+        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Matching: {m}", c = color_mapping_2[matching])
 
     plt.xticks(user_values, fontsize=16)
     plt.yticks(fontsize=16)
@@ -113,7 +131,6 @@ for magnitude in magnitudes:
 
     avg_values = []
     algorithms = ["Game Theory", "Regret Complete Information", "Regret Incomplete Information"]
-    bar_colors = ['blue', 'green', 'red']
 
     for matching, data in matching_data.items():
         if matching == "GT" and magnitude == "Iterations":
@@ -123,14 +140,15 @@ for magnitude in magnitudes:
         avg_value = np.mean(values)
         avg_values.append(avg_value)
 
-    bars = plt.bar(algorithms, avg_values, color=bar_colors, width=0.3)
+    colors = [color_mapping_2[value] for value in ["GT", "RCI", "RII"]]
+    bars = plt.bar(algorithms, avg_values, color=colors, width=0.3)
 
     for bar, value in zip(bars, avg_values):
-        if magnitude == "Mean Etransfer":
+        if magnitude != "Mean Datarate":
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.7f}', ha='center', va='bottom')
         else:
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
-
+            
     algorithms = ["Game Theory", "Regret Complete Information", "Regret Incomplete Information"]
 
     plt.savefig(os.path.join(save_directory, f"Average_{magnitude.replace(' ', '_')}.png"), bbox_inches='tight')
@@ -150,14 +168,14 @@ for magnitude in magnitudes:
         plt.ylabel(f"Average {magnitude}")
 
         avg_values = []
-        bar_colors = ['blue', 'green', 'red']
 
         for area in areas:
             values = area_data[matching_key][magnitude][area]["Values"]
             avg_value = np.mean(values)
             avg_values.append(avg_value)
 
-        bars = plt.bar(areas, avg_values, color=bar_colors, width=0.3)
+        colors = [color_mapping_2[value] for value in ["GT", "RCI", "RII"]]
+        bars = plt.bar(areas, avg_values, color=colors, width=0.3)
 
         for bar, value in zip(bars, avg_values):
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
@@ -187,7 +205,7 @@ for matching_key, matching_name in matchings.items():
         users_sorted = sorted(average_values.keys())  # Sort magnitudes
         averages_sorted = [average_values[user] for user in users_sorted]
 
-        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Area: {area}")
+        plt.plot(users_sorted, averages_sorted, marker='o', label=f"Area: {area}", c = color_mapping_3[area])
 
     plt.xticks(user_values, fontsize=16)
     plt.yticks(fontsize=16)
