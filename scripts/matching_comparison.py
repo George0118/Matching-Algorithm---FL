@@ -69,9 +69,17 @@ os.makedirs(save_directory, exist_ok=True)
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.title(f"{magnitude} vs Users for Each Matching")
-    plt.xlabel("Users")
-    plt.ylabel(magnitude)
+    if magnitude == "Mean User Utility":
+        plt.title(f"Mean Node Utility for different number of Nodes for Each Matching")
+    if magnitude == "Time":
+        plt.title("Mean Execution Time for different number of Nodes for Each Matching")
+    else:
+        plt.title(f"{magnitude} for different number of Nodes for Each Matching")
+    plt.xlabel("Nodes")
+    if magnitude == "Mean User Utility":
+        plt.ylabel("Node Utility")
+    else:
+        plt.ylabel(magnitude)
 
     for matching, data in plot_data.items():
 
@@ -85,7 +93,7 @@ for magnitude in magnitudes:
         elif matching == "RL1":
             m = "Server Focused RL"
         else:
-            m = "User Focused RL"
+            m = "Node Focused RL"
 
         plt.plot(users, values, marker='o', label=f"Matching: {m}")
 
@@ -93,15 +101,23 @@ for magnitude in magnitudes:
     plt.legend()
     
     # Save the plot as PNG
-    plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Users.png"), bbox_inches='tight')
+    plt.savefig(os.path.join(save_directory, f"{magnitude.replace(' ', '_')}_vs_Nodes.png"), bbox_inches='tight')
     # plt.show()
 
 # Create bar plots for average magnitude values across all matchings
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.title(f"Average {magnitude} for Each Matching")
+    if magnitude == "Mean User Utility":
+        plt.title("Average Mean Node Utility for Each Matching")
+    if magnitude == "Time":
+        plt.title("Average Mean Execution Time for Each Matching")
+    else:
+        plt.title(f"Average {magnitude} for Each Matching")
     plt.xlabel("Matching")
-    plt.ylabel("Average " + magnitude)
+    if magnitude == "Mean User Utility":
+        plt.ylabel("Average Node Utility")
+    else:
+        plt.ylabel("Average " + magnitude)
 
     avg_values = []  # List to store average values for each matching
     bar_colors = ['blue', 'orange', 'green', 'red']  # Colors for the bars
@@ -112,7 +128,7 @@ for magnitude in magnitudes:
         avg_values.append(avg_value)
 
     # Plotting the bar plot with thinner bars
-    bars = plt.bar(["Random", "Game Theory", "Server Focused RL", "User Focused RL"], avg_values, color=bar_colors, width=0.3)
+    bars = plt.bar(["Random", "Game Theory", "Server Focused RL", "Node Focused RL"], avg_values, color=bar_colors, width=0.3)
 
     # Adding text labels on top of each bar
     for bar, value in zip(bars, avg_values):
