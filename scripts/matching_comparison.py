@@ -83,8 +83,11 @@ magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.xlabel("Users", fontsize=18)
-    plt.ylabel(magnitude, fontsize=18)
+    plt.xlabel("Nodes", fontsize=18)
+    if magnitude == "Mean User Utility":
+        plt.ylabel("Mean Node Utility", fontsize=18)
+    else:
+        plt.ylabel(magnitude, fontsize=18)
 
     for matching, data in matching_data.items():
 
@@ -125,9 +128,15 @@ for magnitude in magnitudes:
 # Existing bar plots for averages
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))
-    plt.title(f"Average {magnitude} for Each Matching")
-    plt.xlabel("Matching")
-    plt.ylabel("Average " + magnitude)
+    if magnitude == "Mean User Utility":
+        plt.title(f"Average Mean Node Utility for Each Matching", fontsize = 18)
+    else:
+        plt.title(f"Average {magnitude} for Each Matching", fontsize = 18)
+    plt.xlabel("Matching", fontsize = 18)
+    if magnitude == "Mean User Utility":
+        plt.ylabel("Average Mean Node Utility", fontsize = 18)
+    else:
+        plt.ylabel("Average " + magnitude, fontsize = 18)
 
     avg_values = []
     algorithms = ["Game Theory", "Regret Complete Information", "Regret Incomplete Information"]
@@ -142,6 +151,8 @@ for magnitude in magnitudes:
 
     colors = [color_mapping_2[value] for value in ["GT", "RCI", "RII"]]
     bars = plt.bar(algorithms, avg_values, color=colors, width=0.3)
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
 
     for bar, value in zip(bars, avg_values):
         if magnitude != "Mean Datarate":
@@ -163,9 +174,9 @@ for magnitude in magnitudes:
     for matching_key, matching_name in matchings.items():
 
         plt.figure(figsize=(10, 6))
-        plt.title(f"Average {magnitude} for {matching_name}")
-        plt.xlabel("Matching")
-        plt.ylabel(f"Average {magnitude}")
+        plt.title(f"Average {magnitude} for {matching_name}", fontsize = 18)
+        plt.xlabel("Matching", fontsize = 18)
+        plt.ylabel(f"Average {magnitude}", fontsize = 18)
 
         avg_values = []
 
@@ -176,6 +187,9 @@ for magnitude in magnitudes:
 
         colors = [color_mapping_2[value] for value in ["GT", "RCI", "RII"]]
         bars = plt.bar(areas, avg_values, color=colors, width=0.3)
+        
+        plt.xticks(fontsize=16)
+        plt.yticks(fontsize=16)
 
         for bar, value in zip(bars, avg_values):
             plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01*bar.get_height(), f'{value:.2f}', ha='center', va='bottom')
@@ -185,9 +199,9 @@ for magnitude in magnitudes:
 
 for matching_key, matching_name in matchings.items():
     plt.figure(figsize=(10, 6))
-    plt.title(f"Average Iterations vs Users for {matching_name}")
-    plt.xlabel("Users")
-    plt.ylabel(f"Average Iterations")
+    plt.title(f"Average Iterations for different number of Nodes for {matching_name}", fontsize = 18)
+    plt.xlabel("Nodes", fontsize = 18)
+    plt.ylabel(f"Average Iterations", fontsize = 18)
 
     for area in areas:
         values = area_data[matching_key]["Iterations"][area]["Values"]
