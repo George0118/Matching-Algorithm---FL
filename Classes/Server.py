@@ -117,24 +117,23 @@ class Server:
         critical_points = self.get_critical_points()
 
         factors = [0] * N
-
-        max_factor = 0
-        for u in coalition:
-            importance_list = u.get_importance()
-            factor = 0
-            for cp in critical_points:
-                 factor += importance_list[cp.num]
-            if factor > max_factor:
-                max_factor = factor
+        min_factor = None
 
         for u in coalition:
             importance_list = u.get_importance()
             factor = 0
             for cp in critical_points:
-                factor += importance_list[cp.num]
-            factors[u.num] = factor/max_factor
+                factor += importance_list[cp.num] * u.used_datasize
+            factors [u.num] = factor
+            if min_factor is None or min_factor > factor:
+                min_factor = factor
 
-        factors = [factor / 10 for factor in factors]
+        fact_sum = 0
+        for u in coalition:
+            factors[u.num] = np.exp(factors[u.num]/min_factor)
+            fact_sum += factors[u.num]
 
+        for u in coalition:
+            factors[u.num] /= fact_sum
+        
         return factors
-

@@ -490,9 +490,9 @@ if not os.path.exists(directory_path):
 for matching in matchings:
 
     if federated_learning:
-        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+        _users, _servers, duration, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
     else:
-        _users, _servers, matching_label = matching     # Without Federated Learning
+        _users, _servers, duration, matching_label = matching     # Without Federated Learning
 
     # Energy (J)
     mean_Energy = 0
@@ -505,10 +505,13 @@ for matching in matchings:
     mean_Datarate = 0
     # User Utility
     mean_User_Utility = 0
+    # User Dataquality
+    mean_Dataquality = 0
 
     for u in _users:
         if u.get_alligiance() is not None:
-            E_local, _, payment, datarate, E_transmit = user.get_magnitudes(u.get_alligiance())
+            E_local, dataquality, payment, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
+            
             # Matched Users
             matched_users += 1
             # Energy
@@ -522,13 +525,15 @@ for matching in matchings:
             mean_Datarate += datarate * datarate_max
             # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
+            # User Dataquality
+            mean_Dataquality += dataquality    
             
-
     mean_Energy /= matched_users
     mean_Elocal /= matched_users
     mean_Etransfer /= matched_users
     mean_Datarate /= matched_users
     mean_User_Utility /= matched_users
+    mean_Dataquality /= matched_users
 
     # Server Utility
     mean_Server_Utility = 0

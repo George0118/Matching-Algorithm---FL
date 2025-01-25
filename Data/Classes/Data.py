@@ -4,7 +4,6 @@ from Data.load_images import earthquake_input_paths, fire_input_paths, flood_inp
 from general_parameters import N_max
 from sklearn.utils import shuffle
 import numpy as np
-import math
 
 # to get the training data, and split the data via the number of clients
 class Get_data:
@@ -45,7 +44,7 @@ class Get_data:
         user_x, user_y, user_z = u.x, u.y, u.z
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+        distance = np.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
         if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
           user_min_distances[u.num] = distance
@@ -64,7 +63,7 @@ class Get_data:
     def_len = img_num/N_max
 
     # Get Sizes
-    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * def_len) for ratio in ratios]
+    sizes = [int(1.8 * np.sqrt(np.sqrt(ratio)) * def_len) for ratio in ratios]
 
     s_data = []
     

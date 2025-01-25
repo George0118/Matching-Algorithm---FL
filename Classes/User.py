@@ -1,7 +1,6 @@
 from typing import List
 from Classes.Server import Server
 import random
-import math
 import numpy as np
 import copy
 from general_parameters import *
@@ -98,21 +97,22 @@ class User:
         return external_denominators
     
     # Get magnitudes for the target server 
-    def get_magnitudes(self, server, external_denominator = None):
+    def get_magnitudes(self, server, external_denominator = None, external_denominator_payment = None):
 
         E_local = self.E_local()/E_local_max
         dataquality = self.used_datasize * self.importance[server.num] / ds_max
-        payment = self.current_fn * self.importance[server.num] / fn_max
-        datarate, E_transmit = self.get_external_values(server, external_denominator)
 
+        datarate, E_transmit, payment = self.get_external_values(server, external_denominator, external_denominator_payment)
+        
         return E_local, dataquality, payment, datarate, E_transmit
     
     # Get only values that are influenced by external factors (other users)
-    def get_external_values(self, server: Server, external_denominator = None):
+    def get_external_values(self, server: Server, external_denominator = None, external_denominator_payment = None):
         denominator_sum = 0
+        denominator_sum_payment = 0
         user_group = set(server.get_coalition())
 
-        if external_denominator is None:
+        if external_denominator is None and external_denominator_payment is None:
             # We need only external, so remove myself
             user_to_remove = next((user for user in user_group if user.num == self.num), None)
             if user_to_remove is not None:
@@ -121,17 +121,21 @@ class User:
             for u in user_group:
                 g_ext = channel_gain(u.distances[server.num], u.num, server.num)
                 denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
+                denominator_sum_payment += u.current_fn * u.importance[server.num]
         else:
             denominator_sum = external_denominator
+            denominator_sum_payment = external_denominator_payment
 
         # Include myself to calculate the datarate
         g = channel_gain(self.distances[server.num], self.num, server.num)
         denominator_sum += g * self.current_ptrans * self.distances[server.num]
+        denominator_sum_payment += self.current_fn * self.importance[server.num]
 
-        datarate = B*math.log2(1 + g*self.current_ptrans/(denominator_sum + I0))/datarate_max
+        datarate = B*np.log2(1 + g*self.current_ptrans/(denominator_sum + I0))/datarate_max
         E_transmit = (Z[self.num]*self.current_ptrans/(datarate*datarate_max))/E_transmit_max
+        payment = self.current_fn * self.importance[server.num] / denominator_sum_payment
 
-        return datarate, E_transmit
+        return datarate, E_transmit, payment
 
     def get_datasize(self):
         return self.datasize
@@ -156,7 +160,7 @@ class User:
     
     def get_datarate(self, server: Server):
         g = channel_gain(self.distances[server.num], self.num, server.num)
-        datarate = B*math.log2(1 + g*self.current_ptrans/(g*self.current_ptrans+I0))/datarate_max
+        datarate = B*np.log2(1 + g*self.current_ptrans/(g*self.current_ptrans+I0))/datarate_max
         return datarate
     
     def get_energy_ratio(self, server):
@@ -178,7 +182,7 @@ class User:
                 denominator_sum += g_ext * u.current_ptrans * u.distances[server.num]
                 
             g = channel_gain(self.distances[server.num], self.num, server.num)
-            dr = B*math.log2(1 + g*self.current_ptrans/(denominator_sum + I0))
+            dr = B*np.log2(1 + g*self.current_ptrans/(denominator_sum + I0))
             datarate_ext_list.append(dr)
         return datarate_ext_list 
 

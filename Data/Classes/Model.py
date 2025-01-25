@@ -21,9 +21,9 @@ class Model:
   def global_model(self, input_shape):
     input = Input(shape=input_shape)
     x = Flatten()(input)
-    x = Dense(64, activation='relu', kernel_regularizer=L2(0.01))(x)
-    x = Dropout(0.2)(x)
-    x_output = Dense(1, activation='sigmoid', kernel_regularizer=L2(0.01))(x)
+    x = Dense(128, activation='relu', kernel_regularizer=L2(0.005))(x)
+    x = Dropout(0.25)(x)
+    x_output = Dense(1, activation='sigmoid', kernel_regularizer=L2(0.005))(x)
 
     model = keras.Model(inputs=input, outputs=x_output)
 
@@ -31,7 +31,7 @@ class Model:
   
 
   def evaluate_model(self, model, features, labels):
-    model.compile(optimizer='adam',
+    model.compile(optimizer=Adam(lr=lr),
       loss=keras.losses.BinaryCrossentropy(),
       metrics=[
         keras.metrics.TruePositives(name='tp'),
