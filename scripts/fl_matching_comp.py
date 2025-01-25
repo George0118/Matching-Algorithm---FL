@@ -26,8 +26,8 @@ def parse_log_file(file_path):
     return matching
 
 # Directory containing log files
-directory = '../../results/FL_matching_comp'
-save_directory = './fl_matching_comp'
+directory = '../../results/main_FL'
+save_directory = './fl_matching_comp/main'
 os.makedirs(save_directory, exist_ok=True)
 
 colors = {'Fire Server': 'r', 'Flood Server': 'b', 'Earthquake Server': 'g'}

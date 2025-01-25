@@ -3,26 +3,25 @@ import numpy as np
 from Classes.Server import Server
 from Data.load_images import fire_input_paths, earthquake_input_paths, flood_input_paths, count_images
 from general_parameters import *
-import math
 
 def dataset_sizes(s: Server, users, cps, total_images):
     # For each server count the images and select appropriate number of images to distribute
     if(s.num == 0): 
         image_num = count_images(fire_input_paths)
         ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
+        ratio = 1-np.sqrt(ratio)
         image_num = int(1.7*ratio*image_num)
         img_per_usr = image_num/N_max
     elif(s.num == 1):
         image_num = count_images(flood_input_paths)
         ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
+        ratio = 1-np.sqrt(ratio)
         image_num = int(1.3*ratio*image_num)
         img_per_usr = image_num/N_max
     else:
         image_num = count_images(earthquake_input_paths)
         ratio = image_num/total_images
-        ratio = 1-math.sqrt(ratio)
+        ratio = 1-np.sqrt(ratio)
         image_num = int(0.8*ratio*image_num)
         img_per_usr = image_num/N_max
 
@@ -35,7 +34,7 @@ def dataset_sizes(s: Server, users, cps, total_images):
             user_x, user_y, user_z = u.x, u.y, u.z
             cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
-            distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+            distance = np.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
             if(distance < user_min_distances[u.num] or user_min_distances[u.num] == -1):
                 user_min_distances[u.num] = distance
@@ -50,7 +49,7 @@ def dataset_sizes(s: Server, users, cps, total_images):
     ratios = [ratio/max(ratios) for ratio in ratios]
 
     # Get Sizes
-    sizes = [int(1.8 * math.sqrt(math.sqrt(ratio)) * img_per_usr) for ratio in ratios]
+    sizes = [int(1.8 * np.sqrt(np.sqrt(ratio)) * img_per_usr) for ratio in ratios]
 
     if sum(sizes) > image_num:
         temp_total = sum(sizes)

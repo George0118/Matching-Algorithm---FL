@@ -142,9 +142,9 @@ def Servers_FL(users, servers, R, lr, epoch, X_users, y_users, X_server, y_serve
 
       print(f"\nGlobal Round {r + 1} took {elapsed_time:.2f} seconds\n")
 
-      if len(losses_history) == 3 and max(losses_history) - min(losses_history) <= 0.05 and r+1 >= 40:
-        print("Stopping training. Three consecutive loss differences are within 0.05.\n")
-        break
+      # if len(losses_history) == 3 and max(losses_history) - min(losses_history) <= 0.05 and len(accuracies_history) == 3 and max(accuracies_history) - min(accuracies_history) <= 0.005 and r+1 >= 40:
+      #   print("Stopping training.\n")
+      #   break
 
     server_losses.append(losses)
     server_accuracy.append(accuracy)

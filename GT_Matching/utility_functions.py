@@ -1,6 +1,5 @@
 from Classes.User import User
 from Classes.Server import Server
-import math
 
 # Parameters
 
@@ -59,33 +58,23 @@ def user_utility(user: User, server: Server, verbose = False):
 
 # User Utility with Externality
 
-def user_utility_ext(user: User, server: Server, external_denominator = None, verbose = False):
+def user_utility_ext(user: User, server: Server, external_denominator = None, external_denominator_payment = None, verbose = False):
     if server is None:
         return 0
-    
-    current_coalition = server.get_coalition()
 
-    if external_denominator is None:
+    if external_denominator is None and external_denominator_payment is None:
         E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server)
     else:
-        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator)
+        E_local, dataquality, payment, datarate, E_transmit = user.get_magnitudes(server, external_denominator=external_denominator, external_denominator_payment=external_denominator_payment)
 
     w_local, w_trans = calculate_weights(user.get_energy_ratio(server))
 
-    if user not in current_coalition:
-        total_payment = payment
-    else:
-        total_payment = 0
-    
-    for u in current_coalition:
-        total_payment += u.get_payment(server)
-    
-    utility = alpha * datarate + beta * payment*server.p/total_payment - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
+    utility = alpha * datarate + beta * payment*server.p - gamma * (w_local*E_local + w_trans*E_transmit) + delta * dataquality
 
     if verbose:
         print("Utility: ", utility)
         print("Datarate: ", datarate)
-        print("Payment: ", payment*server.p/total_payment)
+        print("Payment: ", payment*server.p)
         print("Energy Local: ", E_local)
         print("Energy Transmission: ", E_transmit)
         print("Dataquality: ", dataquality)

@@ -3,7 +3,7 @@ import re
 import matplotlib.pyplot as plt
 import numpy as np
 
-results_directory = "../../results/matching_results"
+results_directory = "../../results/main"
 matching_data = {}
 
 # Function to extract a single float value from a line
@@ -40,7 +40,7 @@ for filename in os.listdir(results_directory):
                         matching_data[matching]["Data"][magnitude]["Values"].append(value)
 
 # Create line plots for each magnitude
-magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Sum User Payments", "Time"]
+magnitudes = ["Mean Energy", "Mean Elocal", "Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Mean Dataquality", "Time"]
 
 plot_data = {}
 for matching in matching_data.keys():
@@ -63,9 +63,9 @@ for matching, data in matching_data.items():
             plot_data[matching][magnitude]["Users"].append(users)
             plot_data[matching][magnitude]["Values"].append(averaged_value)
 
-user_values = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
-save_directory = "./matching_comparison/"
-magnitudes = ["Mean Etransfer", "Mean Datarate", "Mean User Utility", "Mean Server Utility", "Time"]
+user_values = [12, 15, 18, 21, 24, 27, 30]
+save_directory = "./matching_comparison/main"
+os.makedirs(save_directory, exist_ok=True)
 
 for magnitude in magnitudes:
     plt.figure(figsize=(10, 6))

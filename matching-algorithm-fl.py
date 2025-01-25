@@ -25,7 +25,7 @@ import numpy as np
 import time
 import copy
 import random
-import math
+import numpy as np
 import datetime
 from matchingeq_functions import check_matching_equality
 from Data.Classes.Data import Get_data
@@ -60,7 +60,7 @@ servers = []
 while True:
     # Create servers with random p values
     for i in range(S):
-        p = random.randint(math.ceil(0.333 * N), math.ceil(0.5 * N))
+        p = random.randint(np.ceil(0.333 * N), np.ceil(0.5 * N))
         server = Server(0,0,0,p,i)
         servers.append(server)
 
@@ -90,14 +90,14 @@ for i in range(K):
     x = random.uniform(-1, 1)
     y = random.uniform(-1, 1)
     z = random.uniform(-1, 1)
-    distance = math.sqrt(x**2 + y**2 + z**2)
+    distance = np.sqrt(x**2 + y**2 + z**2)
 
     # Ensure that the distance between two critical points is at least 0.4
-    while any(math.sqrt((x - cp.x)**2 + (y - cp.y)**2 + (z - cp.z)**2) < 0.4 for cp in critical_points) or distance < 0.3:
+    while any(np.sqrt((x - cp.x)**2 + (y - cp.y)**2 + (z - cp.z)**2) < 0.4 for cp in critical_points) or distance < 0.3:
         x = random.uniform(-1, 1)
         y = random.uniform(-1, 1)
         z = random.uniform(-1, 1)
-        distance = math.sqrt(x**2 + y**2 + z**2)
+        distance = np.sqrt(x**2 + y**2 + z**2)
 
     disaster = disasters[i % S]
 
@@ -129,7 +129,7 @@ for i in range(N):
         y = random.uniform(-1,1)
         z = random.uniform(-1,1)
 
-        distance = math.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
+        distance = np.sqrt((cp_x - x)**2 + (cp_y - y)**2 + (cp_z - z)**2)
 
         if distance > (j+1)*distance_diff and distance <= (j+2)*distance_diff:  # if in the desired sphere then add the user
             break
@@ -179,7 +179,7 @@ for i in range(N):
         s = servers[j]
         server_x, server_y, server_z = s.x, s.y, s.z
 
-        distance = math.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
+        distance = np.sqrt((server_x - user_x)**2 + (server_y - user_y)**2 + (server_z - user_z)**2)
 
         distances.append(distance)
     user.set_distances(distances)
@@ -198,7 +198,7 @@ for i in range(K):
         cp = critical_points[i]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
+        distance = np.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)
 
         if min_dist[i] is None or distance < min_dist[i]:
             min_dist[i] = distance
@@ -210,7 +210,7 @@ for i in range(K):
         cp = critical_points[i]
         cp_x, cp_y, cp_z = cp.x, cp.y, cp.z
 
-        distance = math.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)   
+        distance = np.sqrt((cp_x - user_x)**2 + (cp_y - user_y)**2 + (cp_z - user_z)**2)   
 
         importance = min_dist[i] / distance
 
@@ -439,12 +439,13 @@ for matching in matchings:
     mean_Datarate = 0
     # User Utility
     mean_User_Utility = 0
-    # User Payments
-    user_payments = 0
+    # User Dataquality
+    mean_Dataquality = 0
 
     for u in _users:
         if u.get_alligiance() is not None:
-            E_local, _, payment, datarate, E_transmit = user.get_magnitudes(u.get_alligiance())
+            E_local, dataquality, payment, datarate, E_transmit = u.get_magnitudes(u.get_alligiance())
+            
             # Matched Users
             matched_users += 1
             # Energy
@@ -458,15 +459,15 @@ for matching in matchings:
             mean_Datarate += datarate * datarate_max
             # User Utility
             mean_User_Utility += user_utility_ext(u, u.get_alligiance())
-            # User Payments
-            user_payments += payment*u.get_alligiance().p
+            # User Dataquality
+            mean_Dataquality += dataquality    
             
-
     mean_Energy /= matched_users
     mean_Elocal /= matched_users
     mean_Etransfer /= matched_users
     mean_Datarate /= matched_users
     mean_User_Utility /= matched_users
+    mean_Dataquality /= matched_users
 
     # Server Utility
     mean_Server_Utility = 0
@@ -486,7 +487,7 @@ for matching in matchings:
     Mean Datarate: {mean_Datarate} bps\n\
     Mean User Utility: {mean_User_Utility}\n\
     Mean Server Utility: {mean_Server_Utility}\n\
-    Sum User Payments: {user_payments}\n\
+    Mean Dataquality: {mean_Dataquality}\n\
     Time: {duration}\n\
     \n")
         

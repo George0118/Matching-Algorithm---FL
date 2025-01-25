@@ -5,7 +5,7 @@ from GT_Matching.utility_functions import *
 from GT_Matching.accurate_matching_conditions import *
 from RL_Matching.Action import Action
 from config import N,S
-import math
+import numpy as np
 from pprint import pprint
 import random
 import copy
@@ -149,9 +149,9 @@ def UCB_calc(utility, a, t, user: User):
     UCB_factor = 5  # set a big starting UCB factor to explore all actions available
 
     if a.target != None and Nt[user.num][a.target.num] != 0:
-        UCB_factor = c * math.sqrt(math.log(t)/Nt[user.num][a.target.num])
+        UCB_factor = c * np.sqrt(np.log(t)/Nt[user.num][a.target.num])
     elif a.target is None and Nt[user.num][S] != 0:
-        UCB_factor = c * math.sqrt(math.log(t)/Nt[user.num][S])
+        UCB_factor = c * np.sqrt(np.log(t)/Nt[user.num][S])
 
     return utility + UCB_factor
 
