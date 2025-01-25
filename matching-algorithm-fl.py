@@ -48,7 +48,7 @@ from RAND_Matching.random_matching import random_fedlearner_matching
 from config import N,S,K
 from general_parameters import *
 
-federated_learning = False
+federated_learning = True
 
 # ===================== Users', Servers' and Critical Points' Topology ===================== #
 
