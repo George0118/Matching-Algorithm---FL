@@ -490,9 +490,9 @@ if not os.path.exists(directory_path):
 for matching in matchings:
 
     if federated_learning:
-        _users, _servers, duration, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
+        _users, _servers, _losses, _accuracies, user_losses, user_accuracies, matching_label = matching     # With Federated Learning
     else:
-        _users, _servers, duration, matching_label = matching     # Without Federated Learning
+        _users, _servers, matching_label = matching     # Without Federated Learning
 
     # Energy (J)
     mean_Energy = 0

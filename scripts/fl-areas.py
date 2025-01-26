@@ -24,7 +24,7 @@ def parse_log_file(file_path):
 
 
 # Directory containing log files
-directory = '../../results/areas_results'
+directory = '../../results/areas'
 save_directory = './fl-areas/areas'
 
 scalability_accuracies = {'URBAN': {}, 'SUBURBAN': {}, 'RURAL': {}}
@@ -86,7 +86,7 @@ for area, area_data in average_accuracies.items():
             average_accuracies[area][server][num_users]['average_accuracy'] = average_accuracy
             average_losses[area][server][num_users]['average_loss'] = average_loss
 
-users = ["10", "12", "14", "16", "18", "20", "22", "24", "26", "28", "30"]
+users = ["12", "15", "18", "21", "24", "27", "30"]
 
 # Summing average accuracy for each server
 sum_accuracy = {'URBAN': [0] * len(users), 'SUBURBAN': [0] * len(users), 'RURAL': [0] * len(users)}
@@ -95,12 +95,12 @@ sum_loss = {'URBAN': [0] * len(users), 'SUBURBAN': [0] * len(users), 'RURAL': [0
 for area, area_data in average_accuracies.items():
     for server, user_data in area_data.items():
         for user_count, metrics in user_data.items():
-            sum_accuracy[area][int((int(user_count)-10)/2)] += metrics['average_accuracy']
+            sum_accuracy[area][int((int(user_count)-12)/3)] += metrics['average_accuracy']
 
 for area, area_data in average_losses.items():
     for server, user_data in area_data.items():
         for user_count, metrics in user_data.items():
-            sum_loss[area][int((int(user_count)-10)/2)] += metrics['average_loss']
+            sum_loss[area][int((int(user_count)-12)/3)] += metrics['average_loss']
 
 print(sum_accuracy)
 
@@ -151,8 +151,8 @@ for area, data in sum_accuracy.items():
 
 plt.figure(figsize=(10, 6))
 for i, (area, values) in enumerate(sum_loss.items()):
-    plt.bar(area, sum(values))
-    plt.text(i, sum(values) - (0.02 * sum(values)), f'{sum(values):.4f}', ha='center', va='top', fontsize=18)
+    plt.bar(area, np.mean(values))
+    plt.text(i, np.mean(values) - (0.02 * np.mean(values)), f'{np.mean(values):.4f}', ha='center', va='top', fontsize=18)
 
 plt.xlabel('Areas', fontsize = 18)
 plt.ylabel('Sum of Server Losses', fontsize = 18)
@@ -171,8 +171,8 @@ else:
 
 plt.figure(figsize=(10, 6))
 for i, (area, values) in enumerate(sum_accuracy.items()):
-    plt.bar(area, sum(values))
-    plt.text(i, sum(values) - (0.02 * sum(values)), f'{sum(values):.4f}', ha='center', va='top', fontsize=18)
+    plt.bar(area, np.mean(values))
+    plt.text(i, np.mean(values) - (0.02 * np.mean(values)), f'{np.mean(values):.4f}', ha='center', va='top', fontsize=18)
 
 plt.xlabel('Areas', fontsize = 18)
 plt.ylabel('Sum of Server Accuracies', fontsize = 18)

@@ -9,30 +9,28 @@ def parse_log_file(file_path):
     losses = {}
     matching = {}
 
-    flag = False
-
     with open(file_path, 'r') as file:
         for line in file:
             if 'Matching:' in line:
-                if 'GT'in line:
-                    flag = True
-                else:
-                    flag = False
+                matching_type = line.split('Matching: ')[1].split('_')[0].strip()
+                if matching_type not in accuracies:
+                    accuracies[matching_type] = {}
+                    losses[matching_type] = {}
+                    matching[matching_type] = {}
 
-            if flag:
-                if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
-                    current_server = re.search(r'Fire Server|Flood Server|Earthquake Server', line).group()
-                    losses[current_server] = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')][:40]
-                    accuracies[current_server] = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')][:40]
+            if 'Fire Server' in line or 'Flood Server' in line or 'Earthquake Server' in line:
+                current_server = re.search(r'Fire Server|Flood Server|Earthquake Server', line).group()
+                losses[matching_type][current_server] = [float(x) for x in re.findall(r'Losses: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
+                accuracies[matching_type][current_server] = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
 
-                match_user = re.search(r'User \d+', line)
-                if match_user:
-                    user = match_user.group()
-                    user_losses = [float(x) for x in re.findall(r'Losses: \[([\d.e,+,\-\s]+)\]', next(file))[0].split(', ')]
-                    user_accuracies = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
-                    accuracies[user] = user_accuracies[:40]
-                    losses[user] = user_losses[:40]
-                    matching[user] = current_server
+            match_user = re.search(r'User \d+', line)
+            if match_user:
+                user = match_user.group()
+                user_losses = [float(x) for x in re.findall(r'Losses: \[([\d.e,+,\-\s]+)\]', next(file))[0].split(', ')]
+                user_accuracies = [float(x) for x in re.findall(r'Accuracies: \[([\d.,\s]+)\]', next(file))[0].split(', ')]
+                accuracies[matching_type][user] = user_accuracies
+                losses[matching_type][user] = user_losses
+                matching[matching_type][user] = current_server
 
     return accuracies, losses, matching
 
@@ -68,7 +66,7 @@ def plot_data(data, title, save_dir=None):
         plt.show()
 
 # Directory containing log files
-directory = '../../results/GT_FL_results'
+directory = '../../results/areas'
 save_directory = './gt_fl_performance'
 
 # Initialize dictionaries to store accumulated data across all files
@@ -86,28 +84,30 @@ for filename in os.listdir(directory):
         accuracies, losses, matching = parse_log_file(file_path)
 
         # Aggregate User accuracies and User losses for each server
-        for user, server in matching.items():
-            if server not in all_user_accuracies_per_server:
-                all_user_accuracies_per_server[server] = {'accuracies': [], 'count': 0}
-                all_user_losses_per_server[server] = {'losses': [], 'count': 0}
+        for matching_type, users in matching.items():
+            for user, server in users.items():
+                if server not in all_user_accuracies_per_server:
+                    all_user_accuracies_per_server[server] = {'accuracies': [], 'count': 0}
+                    all_user_losses_per_server[server] = {'losses': [], 'count': 0}
 
-            all_user_accuracies_per_server[server]['accuracies'].append(accuracies[user])
-            all_user_accuracies_per_server[server]['count'] += 1
+                all_user_accuracies_per_server[server]['accuracies'].append(accuracies[matching_type][user])
+                all_user_accuracies_per_server[server]['count'] += 1
 
-            all_user_losses_per_server[server]['losses'].append(losses[user])
-            all_user_losses_per_server[server]['count'] += 1
+                all_user_losses_per_server[server]['losses'].append(losses[matching_type][user])
+                all_user_losses_per_server[server]['count'] += 1
 
         # Aggregate Server accuracies and Server losses for each server
-        for server in unique_servers:
-            if server not in all_server_accuracies:
-                all_server_accuracies[server] = {'accuracies': [], 'count': 0}
-                all_server_losses[server] = {'losses': [], 'count': 0}
+        for matching_type, users in matching.items():
+            for server in unique_servers:
+                if server not in all_server_accuracies:
+                    all_server_accuracies[server] = {'accuracies': [], 'count': 0}
+                    all_server_losses[server] = {'losses': [], 'count': 0}
 
-            all_server_accuracies[server]['accuracies'].append(accuracies[server])
-            all_server_accuracies[server]['count'] += 1
+                all_server_accuracies[server]['accuracies'].append(accuracies[matching_type][server])
+                all_server_accuracies[server]['count'] += 1
 
-            all_server_losses[server]['losses'].append(losses[server])
-            all_server_losses[server]['count'] += 1  
+                all_server_losses[server]['losses'].append(losses[matching_type][server])
+                all_server_losses[server]['count'] += 1  
 
 # Calculate average user accuracies and losses per server across all files
 average_all_user_accuracies_per_server = {}
