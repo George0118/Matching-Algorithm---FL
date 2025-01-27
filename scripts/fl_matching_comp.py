@@ -59,7 +59,7 @@ for i, server_type in enumerate(server_types):
 plt.xlabel('Matching Types')
 plt.ylabel('Accuracy')
 plt.title('Accuracy by Matching Types')
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"])
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "Node Focused RL"])
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'accuracy_plot.png'))  # Save the plot
@@ -78,7 +78,7 @@ for i, server_type in enumerate(server_types):
 plt.xlabel('Matching Types')
 plt.ylabel('Loss')
 plt.title('Loss by Matching Types')
-plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "User Focused RL"])
+plt.xticks(index + bar_width * (num_server_types - 1) / 2, ["Random", "Game Theory", "Server Focused RL", "Node Focused RL"])
 plt.legend()
 plt.tight_layout()
 plt.savefig(os.path.join(save_directory, 'loss_plot.png'))  # Save the plot
